@@ -31,15 +31,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
 
-      - name: Cache Python dependencies
-        uses: actions/cache@v2
-        with:
-          path: |
-            ~/.cache/pip
-          key: ${{ runner.os }}-python-${{ hashFiles('**/*.lock') }}-${{ env.PYTHON_VERSION }}
-          restore-keys: |
-            ${{ runner.os }}-python-
-
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
