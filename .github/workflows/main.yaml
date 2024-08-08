@@ -3,7 +3,7 @@ name: AWS CDK Action
 on:
   push:
     branches:
-      main
+      - main
 
 jobs:
   deploy:
@@ -27,26 +27,40 @@ jobs:
           path: |
             ~/.npm
             ~/.cache
-          key: ${{ runner.os }}-node-${{ hashFiles('**/*.json') }}
+          key: ${{ runner.os }}-node-${{ hashFiles('**/*.json') }}-${{ env.NODE_VERSION }}
+          restore-keys: |
+            ${{ runner.os }}-node-
 
       - name: Cache Python dependencies
         uses: actions/cache@v2
         with:
           path: |
             ~/.cache/pip
-          key: ${{ runner.os }}-python-${{ hashFiles('**/*.lock') }}
+          key: ${{ runner.os }}-python-${{ hashFiles('**/*.lock') }}-${{ env.PYTHON_VERSION }}
+          restore-keys: |
+            ${{ runner.os }}-python-
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: ${{ env.NODE_VERSION }}
 
+      - name: Install Node.js dependencies
+        run: npm ci
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
       - name: Installing Serverless Plugins
-        run: serverless plugin install -n serverless-deployment-bucket
+        run: npm install -g serverless
+        continue-on-error: true
 
-      - run: npm ci
-
-      - name: Serverless deploy
+      - name: Deploy with Serverless
         uses: serverless/github-action@master
         with:
           args: deploy
@@ -54,8 +68,14 @@ jobs:
           LOG_LEVEL: debug
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ env.AWS_REGION }}
 
 
-      #- name: Destroy stack
+      # Uncomment to destroy the stack on push to main (use with caution)
+      #- name: Destroy CDK Stack
       #  if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-      #  run: cdk destroy --app="cdk.out" --force --all
+      #  run: npx cdk destroy --all --force
+      #  env:
+      #    AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #    AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #    AWS_REGION: ${{ env.AWS_REGION }}
