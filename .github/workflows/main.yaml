@@ -44,6 +44,8 @@ jobs:
       - name: Installing Serverless Plugins
         run: serverless plugin install -n serverless-deployment-bucket
 
+      - run: npm ci
+
       - name: Serverless deploy
         uses: serverless/github-action@master
         with:
