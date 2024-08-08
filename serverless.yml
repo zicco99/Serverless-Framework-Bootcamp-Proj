@@ -10,7 +10,7 @@ provider:
   stage: ${opt:stage, 'development'}
   stackName: ${self:service}-${self:provider.stage}
   apiName: ${self:service}-${self:provider.stage}
-  region: ${env:AWS_REGION, 'us-west-2'}
+  region: eu-west-1
   memorySize: 128
   timeout: 30
   deploymentBucket:
@@ -19,7 +19,7 @@ provider:
     blockPublicAccess: true
   environment:
     LOG_LEVEL: debug
-    
+
 package:
   exclude:
     - tests/**
