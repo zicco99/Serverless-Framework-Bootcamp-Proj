@@ -48,14 +48,6 @@ jobs:
       - name: Install Node.js dependencies
         run: npm ci
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: Install Python dependencies
-        run: pip install -r requirements.txt
-
       - name: Installing Serverless Plugins
         run: npm install -g serverless
         continue-on-error: true
