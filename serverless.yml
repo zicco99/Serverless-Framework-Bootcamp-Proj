@@ -1,0 +1,37 @@
+app: github-action-demo
+
+service: simple-rest-services
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs20.9.0.x
+  stage: ${opt:stage, 'development'}
+  stackName: ${self:service}-${self:provider.stage}
+  apiName: ${self:service}-${self:provider.stage}
+  region: ${env:AWS_REGION, 'us-west-2'}
+  memorySize: 128
+  timeout: 30
+  deploymentBucket:
+    name: simple-service-${self:provider.stage}
+    serverSideEncryption: AES256
+    blockPublicAccess: true
+  environment:
+    LOG_LEVEL: debug
+    
+package:
+  exclude:
+    - tests/**
+plugins:
+  - serverless-deployment-bucket
+  - serverless-plugin-typescript
+  - serverless-offline
+
+functions:
+  trigger:
+    handler: index.handler
+    events:
+      - http:
+          path: hello
+          method: get

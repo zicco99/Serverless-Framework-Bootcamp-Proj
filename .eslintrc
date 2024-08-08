@@ -1,0 +1,33 @@
+{
+    "root": true,
+    "parser": "@typescript-eslint/parser",
+    "plugins": [
+      "@typescript-eslint",
+      "no-loops",
+      "import"
+    ],
+    "extends": [
+      "eslint:recommended",
+      "plugin:@typescript-eslint/eslint-recommended",
+      "plugin:@typescript-eslint/recommended"
+    ],
+    // override rules here.
+    "rules": {
+      "no-loops/no-loops": 2,
+      "import/order": [
+        "error",
+        {
+          "groups": [ "builtin", "external", "internal", ["parent", "sibling"] ],
+          "pathGroups": [
+            {
+              "pattern": "react",
+              "group": "external",
+              "position": "before"
+            }
+          ],
+          "pathGroupsExcludedImportTypes": ["react"],
+          "newlines-between": "always"
+        }
+      ]
+    }
+}
