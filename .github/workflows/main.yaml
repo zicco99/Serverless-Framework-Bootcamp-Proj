@@ -39,10 +39,6 @@ jobs:
       - name: Install Node.js dependencies
         run: npm ci
 
-      - name: Installing Serverless Plugins
-        run: npm install -g serverless
-        continue-on-error: true
-
       - name: serverless deploy
         uses: serverless/github-action@v3
         with:
