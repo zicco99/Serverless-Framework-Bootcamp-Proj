@@ -43,15 +43,14 @@ jobs:
         run: npm install -g serverless
         continue-on-error: true
 
-      - name: Deploy with Serverless
-        uses: serverless/github-action@master
+      - name: serverless deploy
+        uses: serverless/github-action@v3
         with:
           args: deploy
         env:
-          LOG_LEVEL: debug
+          SERVERLESS_ACCESS_KEY: 
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: ${{ env.AWS_REGION }}
 
 
       # Uncomment to destroy the stack on push to main (use with caution)
