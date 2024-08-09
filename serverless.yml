@@ -6,7 +6,7 @@ frameworkVersion: '3'
 
 provider:
   name: aws
-  runtime: nodejs20.x 
+  runtime: nodejs16.x
   stage: ${opt:stage, 'development'}
   stackName: ${self:service}-${self:provider.stage}
   apiName: ${self:service}-${self:provider.stage}
