@@ -14,7 +14,7 @@ provider:
   memorySize: 128
   timeout: 30
   deploymentBucket:
-    name: simple-service-${self:provider.stage}
+    name: zik-serverless-${self:provider.stage}
     serverSideEncryption: AES256
     blockPublicAccess: true
   environment:
