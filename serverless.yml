@@ -9,13 +9,14 @@ provider:
   stage: ${opt:stage, 'development'}
   stackName: ${self:service}-${self:provider.stage}
   apiName: ${self:service}-${self:provider.stage}
-  region: eu-west-1
+  region: ${opt:region, 'us-east-1'}
   memorySize: 128
   timeout: 30
   deploymentBucket:
     name: zik-serverless-${self:provider.stage}
     serverSideEncryption: AES256
     blockPublicAccess: true
+
   environment:
     LOG_LEVEL: debug
 
