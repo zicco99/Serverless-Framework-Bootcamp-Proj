@@ -1,6 +1,6 @@
 app: zik-prova
 
-service:  
+service: microservice
 frameworkVersion: '3'
 
 provider:
