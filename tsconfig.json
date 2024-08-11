@@ -15,12 +15,12 @@
     "types": ["node", "mocha"],
     "baseUrl": ".",
     "paths": {
-      "src/*": ["src/*"]
+      "src/*": ["src/*"],
+      "serverless-backend/*": ["serverless-backend/*"]
     }
   },
   "exclude": ["node_modules"],
   "include": [
-    "serverless-backend/",
     "src/",
     "src/**/**/*.json",
     "src/**/**/*.html",
