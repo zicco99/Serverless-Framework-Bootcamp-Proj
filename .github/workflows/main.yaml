@@ -39,6 +39,11 @@ jobs:
       - name: Install Node.js dependencies
         run: npm ci
 
+      - name: Install NestJS
+        run: | 
+            npm install -g @nestjs/cli
+
+
       - name: Deploy to AWS using Serverless
         run: npm run deploy
         env:
