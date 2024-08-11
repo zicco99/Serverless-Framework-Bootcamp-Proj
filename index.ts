@@ -1,19 +1,24 @@
-import {APIGatewayEvent, APIGatewayProxyResult, Context} from 'aws-lambda';
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './serverless-backend/src/app.module';
+import { Callback, Context, Handler } from 'aws-lambda';
+import { configure } from '@codegenie/serverless-express';
 
-/**
- * Follow the guide https://docs.aws.amazon.com/lambda/latest/dg/typescript-handler.html
- * @param event
- * @param context
- */
+let server: Handler;
 
-export const handler = async (
-  event: APIGatewayEvent,
-  context: Context
-): Promise<APIGatewayProxyResult> => {
-  console.log(`Event: ${JSON.stringify(event)}`);
-  console.log(`Context: ${JSON.stringify(context)}`);
-  return {
-    statusCode: 200,
-    body: 'Hello World working',
-  };
-};
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+  await app.init();
+
+  const expressHandler = app.getHttpAdapter().getInstance();
+
+  return configure({ app: expressHandler });
+}
+
+export const handler: Handler = async (
+  event: any,
+  context: Context,
+  callback: Callback
+) => {
+  server = server ?? (await bootstrap());
+  return server(event, context, callback);
+}
