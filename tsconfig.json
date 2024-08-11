@@ -22,6 +22,7 @@
   "exclude": ["node_modules"],
   "include": [
     "src/",
+    "serverless-backend/",
     "src/**/**/*.json",
     "src/**/**/*.html",
     "tests/"
