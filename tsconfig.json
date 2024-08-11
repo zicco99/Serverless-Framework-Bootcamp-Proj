@@ -18,13 +18,12 @@
     "baseUrl": ".",
     "paths": {
       "src/*": ["src/*"],
-      "serverless-backend/*": ["serverless-backend/*"]
     }
   },
-  "exclude": ["node_modules"],
+  "exclude": ["node_modules","serverless-backend/node_modules"],
   "include": [
     "src/",
-    "serverless-backend/",
+    "serverless-backend/**/*",
     "src/**/**/*.json",
     "src/**/**/*.html",
     "tests/"
