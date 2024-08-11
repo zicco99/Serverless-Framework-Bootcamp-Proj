@@ -1,5 +1,7 @@
 {
   "compilerOptions": {
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "allowSyntheticDefaultImports": true,
     "preserveConstEnums": true,
     "strictNullChecks": true,
@@ -12,7 +14,7 @@
     "lib": ["es2015"],
     "skipLibCheck": true,
     "esModuleInterop": true,
-    "types": ["node", "mocha"],
+    "types": ["node", "mocha","jest"],
     "baseUrl": ".",
     "paths": {
       "src/*": ["src/*"],

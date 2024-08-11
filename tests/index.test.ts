@@ -53,7 +53,9 @@ describe('App', () => {
     });
 
     it('should process message successfully', async () => {
-      await handler(event, context);
+      await handler(event, context, () => {
+        return;
+      })
     });
   });
 });

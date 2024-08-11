@@ -34,5 +34,5 @@ functions:
     handler: index.handler
     events:
       - http:
-          path: hello
-          method: get
+          method: GET
+          path: /hello
