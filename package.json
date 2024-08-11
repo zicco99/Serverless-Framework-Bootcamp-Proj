@@ -20,7 +20,8 @@
         "@nestjs/core": "^10.3.10",
         "@nestjs/platform-express": "^10.3.10",
         "aws-sdk": "^2.1101.0",
-        "D": "^1.0.0"
+        "D": "^1.0.0",
+        "rxjs": "^7.8.1"
     },
     "devDependencies": {
         "@types/aws-lambda": "^8.10.143",
