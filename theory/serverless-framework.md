@@ -1,19 +1,26 @@
 # Introduction to the Serverless Framework
 
-The Serverless Framework is a robust open-source tool designed to streamline the creation, deployment, and management of cloud-native applications. By abstracting away the complexities of server infrastructure management, the Serverless Framework enables developers to concentrate on writing business logic rather than handling the underlying servers. This approach is powered by a cloud computing model known as Function as a Service (FaaS), which treats individual functions as the primary building blocks of an application.
+The Serverless Framework is a robust open-source tool designed to streamline the creation, deployment, and management of cloud-native applications. By abstracting away the complexities of server infrastructure management, the Serverless Framework enables developers to concentrate on writing business logic rather than handling the underlying servers. This approach is powered by a cloud computing model known as **Function as a Service (FaaS)**, which treats individual functions as the primary building blocks of an application.
 
 ## What is FaaS (Function as a Service)?
 
-Function as a Service (FaaS) is a cloud computing paradigm that allows developers to deploy and run individual functions in the cloud. Each function is a small, discrete piece of code that performs a specific task and is triggered by events such as HTTP requests, database changes, or messaging queue updates. Key features of FaaS include:
+**Function as a Service (FaaS)** is a cloud computing paradigm that allows developers to deploy and run individual functions in the cloud. Each function is a small, discrete piece of code that performs a specific task and is triggered by events such as HTTP requests, database changes, or messaging queue updates. Key features of FaaS include:
 
-### 1. Event-Driven Execution: Functions are executed in response to specific events, which can range from HTTP requests to changes in cloud storage.
+### 1. Event-Driven Execution
 
-### 2. Automatic Scaling: The cloud provider automatically scales the functions based on demand, ensuring that they handle the incoming load efficiently without manual intervention.
+Functions are executed in response to specific events, which can range from HTTP requests to changes in cloud storage.
 
-### 3. Cost Efficiency: You pay only for the compute time your functions use, as opposed to maintaining and paying for idle server capacity.
+### 2. Automatic Scaling
 
-### 4. No Server Management: The cloud provider takes care of server provisioning, patching, and maintenance, allowing you to focus solely on writing code.
+The cloud provider automatically scales the functions based on demand, ensuring that they handle the incoming load efficiently without manual intervention.
 
+### 3. Cost Efficiency
+
+You pay only for the compute time your functions use, as opposed to maintaining and paying for idle server capacity.
+
+### 4. No Server Management
+
+The cloud provider takes care of server provisioning, patching, and maintenance, allowing you to focus solely on writing code.
 ## Example of a `serverless.yml` File
 
 The `serverless.yml` file is the core configuration file in a Serverless Framework project. It defines your service's functions, the events that trigger them, and any additional resources needed. Below is a basic example:
