@@ -26,13 +26,13 @@ functions:
           method: POST
           path: /auction
     dependsOn:
-      - FileDynamoDbTable
+      - AuctionsTable
 
 custom:
   AuctionsTable:
     name: !Ref AuctionsTable
     arn:
-      Fn::GetAtt: [ FileDynamoDbTable, Arn ]
+      Fn::GetAtt: [ AuctionsTable, Arn ]
   bundle:
     linting: false
 
