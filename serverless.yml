@@ -2,7 +2,6 @@ service: sls
 
 plugins:
   - serverless-bundle
-  - serverless-pseudo-parameters
 
 provider:
   name: aws
