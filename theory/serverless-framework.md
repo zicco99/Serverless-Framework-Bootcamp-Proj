@@ -41,7 +41,7 @@ resources:
         ProvisionedThroughput:
           ReadCapacityUnits: 5
           WriteCapacityUnits: 5
-
+```
 
 ## Serverless Framework Plugins
 
@@ -88,10 +88,9 @@ module.exports = {
     ]
   }
 };
+```
 
-- **Deployd
-```bash
-npm install serverless-webpack webpack webpack-cli --save-dev
+- **Deploy
 
 
 ### 3. 
