@@ -25,6 +25,8 @@ functions:
       - http:
           method: POST
           path: /auction
+    dependsOn:
+      - FileDynamoDbTable
 
 custom:
   AuctionsTable:
@@ -33,7 +35,5 @@ custom:
       Fn::GetAtt: [ FileDynamoDbTable, Arn ]
   bundle:
     linting: false
-  dependsOn:
-    - FileDynamoDbTable
 
  
