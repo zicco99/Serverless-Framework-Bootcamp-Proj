@@ -29,7 +29,7 @@ functions:
 custom:
   AuctionsTable:
     name: !Ref AuctionsTable
-    arn: !GetAtt  "arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${self:custom.AuctionsTable.name}"
+    arn: "arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${self:custom.AuctionsTable.name}"
   bundle:
    linting: false
 
