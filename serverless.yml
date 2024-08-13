@@ -15,6 +15,6 @@ functions:
     handler: src/handlers/createAuction.handler
     events:
       - http:
-          method: GET
+          method: POST
           path: /createAuction
  
