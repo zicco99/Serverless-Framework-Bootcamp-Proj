@@ -1,7 +1,7 @@
 AuctionTable:
   Type: AWS::DynamoDB::Table
   Properties:
-    TableName: AuctionsTable
+    TableName: AuctionsTable-${opt:provider.stage, 'dev'}
     BillingMode: PAY_PER_REQUEST
     AttributeDefinitions:
       - AttributeName: id

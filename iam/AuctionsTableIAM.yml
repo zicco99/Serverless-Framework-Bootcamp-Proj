@@ -6,4 +6,5 @@ AuctionsTableIAM:
         - dynamodb:DeleteItem
         - dynamodb:Scan
         - dynamodb:Query
-      Resource: 'arn:aws:dynamodb:#{AWS::Region}::#{AWS::AccountId}:table/AuctionsTable'
+    Resource:
+      - ${self.custom.AuctionsTable.arn}

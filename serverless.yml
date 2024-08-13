@@ -12,6 +12,8 @@ provider:
   region: eu-west-1
   iamRoleStatements:
     - ${file(iam/AuctionsTableIAM.yml):AuctionsTableIAM}
+  environment:
+    AUCTIONS_TABLE_NAME: ${self.custom.AuctionsTable.name}
     
 resources:
   Resources:
@@ -24,4 +26,12 @@ functions:
       - http:
           method: POST
           path: /auction
+
+custom:
+  AuctionsTable:
+    name: !Ref AuctionsTable
+    arn: !GetAtt AuctionsTable.Arn # LogicalName.Attribute
+  bundle:
+   linting: false
+
  
