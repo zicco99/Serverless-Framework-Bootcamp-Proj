@@ -8,7 +8,7 @@ Serverless computing is a cloud computing model where the cloud provider manages
 
 ![alt text](https://github.com/zicco99/Serverless-Framework-Bootcamp-Proj/blob/main/theory/res/inside.png?raw=true)
 
-## What is FaaS (Function as a Service)?
+## What is FaaS (Function as a Service)? (AWS lambda,Google Cloud Functions etc.)
 
 Function as a Service (FaaS) on the key building blocks within serverless computing. 
 
@@ -23,11 +23,11 @@ Function as a Service (FaaS) on the key building blocks within serverless comput
 | **Cost Efficiency**        | You pay only for the compute time your functions use, avoiding costs for idle server capacity.                |
 | **No Server Management**   | The cloud provider manages server provisioning, patching, and maintenance, allowing you to focus on code.      |
 
-# How a Function is Deployed: IaC with the Serverless Framework
+## How Lambdas, API Gateways, and Other AWS Resources are Deployed: IaC with the Serverless Framework
 
 The Serverless Framework leverages Infrastructure as Code (IaC) to simplify the deployment and management of serverless applications. It provides a declarative approach to define cloud resources and services in a single configuration file.
 
-## How It Works
+### How It Works
 
 1. **Define Infrastructure in Code**: 
    - You specify your serverless functions, events, and cloud resources in a `serverless.yml` file. This file acts as the blueprint for your serverless application.
@@ -41,7 +41,7 @@ The Serverless Framework leverages Infrastructure as Code (IaC) to simplify the 
 4. **Monitor and Maintain**: 
    - The framework integrates with monitoring tools to provide insights into function performance and resource usage. It helps in maintaining the infrastructure by managing configurations and scaling automatically based on demand.
 
-## Example `serverless.yml` Configuration
+### Example `serverless.yml` Configuration
 
 Here’s a sample `serverless.yml` file that defines a simple serverless service, namely service's functions, the events that trigger them, and any additional resources needed.
 
