@@ -12,7 +12,7 @@ Function as a Service (FaaS) is a cloud computing paradigm that allows developer
 
 ### 3. Cost Efficiency: You pay only for the compute time your functions use, as opposed to maintaining and paying for idle server capacity.
 
-### 4. No Server Management: The cloud provider takes care of server provisioning, patching, and maintenance, allowing you to focus solely on writing code.
+### 4. No Server Management: The cloud provider takes care of segirver provisioning, patching, and maintenance, allowing you to focus solely on writing code.
 
 ## Example of a `serverless.yml` File
 
