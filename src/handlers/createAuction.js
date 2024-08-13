@@ -10,17 +10,17 @@ async function createAuction(event, context) {
     title: title,
     status: 'OPEN',
     createdAt: new Date().toISOString()
-  }
+  };
 
   await dynamodb.put({
     TableName: 'AuctionsTable',
     Item: auction
-  }).promise()
+  }).promise();
 
   return {
     statusCode: 201,
     body: JSON.stringify(auction),
-  }
+  };
 }
 
 export const handler = createAuction;
