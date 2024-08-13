@@ -12,7 +12,12 @@
     "webpack-cli": "^5.0.1"
   },
   "dependencies": {
+    "@middy/core": "^5.4.6",
+    "@middy/http-error-handler": "^5.4.6",
+    "@middy/http-event-normalizer": "^5.4.6",
+    "@middy/http-json-body-parser": "^5.4.6",
     "aws-sdk": "^2.1397.0",
+    "http-errors": "^2.0.0",
     "uuid": "^10.0.0"
   }
 }
