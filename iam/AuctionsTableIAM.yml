@@ -8,3 +8,5 @@ AuctionsTableIAM:
     - dynamodb:Query
   Resource:
     - ${self.custom.AuctionsTableMeta.arn}
+  dependsOn:
+    - AuctionsTableMeta
