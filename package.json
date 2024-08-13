@@ -2,16 +2,16 @@
   "name": "sls",
   "version": "1.0.0",
   "devDependencies": {
-    "babel-core": "^6.25.0",
-    "babel-loader": "^7.1.1",
-    "babel-plugin-transform-runtime": "^6.23.0",
-    "babel-polyfill": "^6.23.0",
-    "babel-preset-env": "^1.6.0",
-    "serverless-bundle": "^1.3.3",
+    "@babel/core": "^7.21.0",
+    "@babel/preset-env": "^7.21.0",
+    "@babel/plugin-transform-runtime": "^7.21.0",
+    "@babel/polyfill": "^7.12.1",
+    "serverless-bundle": "^6.0.0",
     "serverless-pseudo-parameters": "^2.5.0",
-    "webpack": "^4.35.2"
+    "webpack": "^5.77.0",
+    "webpack-cli": "^5.0.1"
   },
   "dependencies": {
-    "aws-sdk": "^2.639.0"
+    "aws-sdk": "^2.1397.0"
   }
 }
