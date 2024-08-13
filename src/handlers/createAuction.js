@@ -1,10 +1,10 @@
-async function hello(event, context) {
+async function createAuction(event, context) {
   return {
     statusCode: 200,
     body: JSON.stringify({ message: 'It works :)' }),
   };
 }
 
-export const handler = hello;
+export const handler = createAuction;
 
 

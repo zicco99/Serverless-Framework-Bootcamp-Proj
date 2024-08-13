@@ -11,9 +11,10 @@ provider:
   stage: ${opt:stage, 'dev'}
   
 functions:
-  hello:
-    handler: src/handlers/hello.handler
+  createAuction:
+    handler: src/handlers/createAuction.handler
     events:
       - http:
           method: GET
-          path: /hello
+          path: /createAuction
+ 
