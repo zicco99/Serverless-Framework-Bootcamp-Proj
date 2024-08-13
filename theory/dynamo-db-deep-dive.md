@@ -70,7 +70,7 @@ A composite primary key consists of two attributes: the partition key and the so
 }
 ```
 
-Under-the-Hood: DynamoDB efficiently stores data by partitioning it based on the CustomerID. `Within each partition, items are sorted by the OrderID`. This sorting mechanism allows DynamoDB to quickly retrieve all orders for a specific customer and efficiently return results sorted by OrderID.
+Under-the-Hood: DynamoDB efficiently stores data by partitioning it based on the CustomerID. `Within each partition, items are sorted by the OrderID`. This sorting mechanism allows DynamoDB to quickly retrieve all orders for a specific customer and efficiently return results sorted by OrderID. **[THIS STUFF IS USEFUL WHEN WE GONNA FILTER]**
 
 ## Secondary Indexes
 
@@ -157,8 +157,62 @@ aws dynamodb query \
 
 This command retrieves the user with the specified Email from the EmailIndex GSI.
 
-# Summary
 
-DynamoDB's key structure and data modeling capabilities provide a flexible and powerful foundation for building scalable applications. By understanding the primary key concepts, secondary indexes, and practical querying techniques, you can design efficient schemas and queries that leverage DynamoDB's strengths. 
+-------
 
-Whether you're managing user profiles, order histories, or any other type of data, DynamoDB's managed service model allows you to focus on application logic rather than infrastructure concerns, making it a robust choice for modern, high-performance applications.
+# [Read Consistency]
+
+Read consistency in AWS DynamoDB refers to how up-to-date the data is when it’s read from the database. DynamoDB offers two types of read consistency: eventual consistency and strong consistency. Here's a breakdown of each:
+
+## Eventual Consistency
+  When you perform a read operation with eventual consistency, DynamoDB might return a result that is slightly out-of-date. This is because `data changes are propagated to all storage nodes asynchronously`.
+
+  Eventual consistency typically provides better performance and lower latency because it uses less overhead. It's ideal `for scenarios where having the most up-to-date data is not crucial`.
+
+  This type of consistency is the default for read operations and is often used in scenarios `where high throughput and low latency are more important than immediate consistency`, such as in caching or reporting systems.
+
+## Strong Consistency
+
+  With strong consistency, DynamoDB ensures that when you read data, you always get the most recent update. This means that `the read operation waits until the data has been fully propagated and is consistent across all storage nodes`.
+
+  Strong consistency can lead to slightly higher latency and reduced throughput compared to eventual consistency, as it involves more coordination to ensure all copies of the data are up-to-date.
+
+  Strong consistency is useful in situations where it's crucial to get the latest state of the data immediately, such as in `financial transactions or real-time analytics where data accuracy is critical`.
+
+## Configuring Consistency in DynamoDB
+
+  ### Eventual Consistency: 
+  
+  This is the `[default read consistency option]`, you can perform a read operation without specifying any consistency settings, and it will be eventually consistent.
+
+  ### Strong Consistency:
+  To request strongly consistent reads, you need to explicitly specify this when performing a read operation. For example, `in the AWS SDK for JavaScript, you would use { ConsistentRead: true }` in the parameters for get or query operations.
+
+# [R/W Capacity Modes]
+
+Amazon DynamoDB provides two capacity modes for handling read and write operations:
+
+## Provisioned Capacity Mode
+
+- **Description**: In Provisioned Capacity Mode, you specify the number of read and write capacity units (RCUs and WCUs) for your table.
+  
+- **Read Capacity Units (RCUs)**:
+  - One RCU allows you to perform one strongly consistent read per second, or two eventually consistent reads per second, for items up to 4 KB in size.
+
+- **Write Capacity Units (WCUs)**:
+  - One WCU allows you to perform one write per second for items up to 1 KB in size.
+
+- **Use Case**: This mode is suitable for applications with predictable workloads. It allows you to control costs by specifying the exact number of read and write operations you expect.
+
+## On-Demand Capacity Mode
+
+- **Description**: In On-Demand Capacity Mode, DynamoDB automatically scales to accommodate the request traffic. You do not need to specify RCUs or WCUs.
+
+- **How it Works**: DynamoDB handles scaling automatically based on your application's traffic. You pay only for the actual read and write requests your application makes.
+
+- **Use Case**: This mode is ideal for applications with unpredictable or variable workloads. It simplifies capacity planning and eliminates the need for manual scaling adjustments.
+
+## Choosing the Right Mode
+
+- **Provisioned Capacity**: Best for applications with stable and predictable workloads.
+- **On-Demand Capacity**: Best for applications with unpredictable workloads or varying traffic patterns.
