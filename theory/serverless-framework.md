@@ -1,12 +1,18 @@
 # Introduction to the Serverless Framework
 
-The Serverless Framework is a powerful open-source tool designed to simplify the creation, deployment, and management of cloud-native applications. By abstracting away the complexities of server infrastructure management, it allows developers to focus on writing business logic rather than dealing with server management. This approach leverages **Function as a Service (FaaS)**, which treats individual functions as the primary building blocks of an application.
+The Serverless Framework is a robust open-source tool designed to streamline the creation, deployment, and management of cloud-native applications. It eliminates the need for developers to manage server infrastructure, allowing them to focus on writing business logic and developing features. By abstracting away the complexities of server management, the Serverless Framework simplifies the development lifecycle, making it easier to build and scale applications.
+
+## What is Serverless Computing?
+
+Serverless computing is a cloud computing model where the cloud provider manages the infrastructure and resources needed to run applications. Instead of provisioning and managing servers, developers write code that is executed in response to events. This model allows developers to deploy functions that handle specific tasks, with the cloud provider automatically handling scaling, load balancing, and infrastructure maintenance.
+
+![alt text](https://github.com/zicco99/Serverless-Framework-Bootcamp-Proj/blob/main/theory/res/inside.png?raw=true)
 
 ## What is FaaS (Function as a Service)?
 
-**Function as a Service (FaaS)** is a cloud computing model where developers deploy and run individual functions in the cloud. Each function is a small, discrete piece of code that performs a specific task and is triggered by events like HTTP requests, database changes, or messaging queue updates.
+Function as a Service (FaaS) on the key building blocks within serverless computing. 
 
-![alt text](https://github.com/[username]/[reponame]/blob/[branch]/theory/res/inside.png?raw=true)
+**Function as a Service (FaaS)** is a cloud computing model where developers deploy and run individual functions in the cloud. Each function is a small, discrete piece of code that performs a specific task and is triggered by events like HTTP requests, database changes, or messaging queue updates.
 
 ### Key Features of FaaS
 
@@ -116,11 +122,6 @@ plugins:
   - serverless-webpack
 ```
 
-
-
-
-
-### 3. 
 
 
 
