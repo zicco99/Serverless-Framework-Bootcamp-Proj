@@ -32,6 +32,6 @@ custom:
     name: 
       Fn::Sub: "AuctionsTable-${opt:stage, 'dev'}"
     arn: 
-      Fn::Sub: "arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/${self:custom.AuctionsTable.name}"
+      !GetAtt AuctionsTable.Arn
   bundle:
     linting: false
