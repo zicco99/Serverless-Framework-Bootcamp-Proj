@@ -1,10 +1,10 @@
 AuctionsTableIAM:
   - Effect: Allow
-      Action:
-        - dynamodb:PutItem
-        - dynamodb:GetItem
-        - dynamodb:DeleteItem
-        - dynamodb:Scan
-        - dynamodb:Query
+    Action:
+      - dynamodb:PutItem
+      - dynamodb:GetItem
+      - dynamodb:DeleteItem
+      - dynamodb:Scan
+      - dynamodb:Query
     Resource:
       - ${self.custom.AuctionsTable.arn}
