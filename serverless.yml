@@ -30,10 +30,7 @@ functions:
 
 custom:
   AuctionsTableMeta:
-   variables:name: 
     name: !Ref AuctionsTable
     arn: !GetAtt AuctionsTable.Arn
   bundle:
     linting: false
-
- 
