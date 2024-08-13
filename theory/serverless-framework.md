@@ -23,9 +23,27 @@ Function as a Service (FaaS) on the key building blocks within serverless comput
 | **Cost Efficiency**        | You pay only for the compute time your functions use, avoiding costs for idle server capacity.                |
 | **No Server Management**   | The cloud provider manages server provisioning, patching, and maintenance, allowing you to focus on code.      |
 
-## Example of a `serverless.yml` File
+# How a Function is Deployed: IaC with the Serverless Framework
 
-The `serverless.yml` file is the core configuration file in a Serverless Framework project. It defines your service's functions, the events that trigger them, and any additional resources needed.
+The Serverless Framework leverages Infrastructure as Code (IaC) to simplify the deployment and management of serverless applications. It provides a declarative approach to define cloud resources and services in a single configuration file.
+
+## How It Works
+
+1. **Define Infrastructure in Code**: 
+   - You specify your serverless functions, events, and cloud resources in a `serverless.yml` file. This file acts as the blueprint for your serverless application.
+
+2. **Automate Provisioning**: 
+   - The Serverless Framework reads the `serverless.yml` file and automates the provisioning of cloud resources. It interacts with cloud providers (e.g., AWS) to create, update, or delete resources as defined in the configuration.
+
+3. **Deploy and Manage**: 
+   - With a single command (`serverless deploy`), the framework deploys your application to the cloud, ensuring that the infrastructure matches the defined configuration. It also handles updates and rollbacks as needed.
+
+4. **Monitor and Maintain**: 
+   - The framework integrates with monitoring tools to provide insights into function performance and resource usage. It helps in maintaining the infrastructure by managing configurations and scaling automatically based on demand.
+
+## Example `serverless.yml` Configuration
+
+Here’s a sample `serverless.yml` file that defines a simple serverless service, namely service's functions, the events that trigger them, and any additional resources needed.
 
 ```yaml
 service: my-serverless-app
