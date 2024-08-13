@@ -1,29 +1,25 @@
 # Introduction to the Serverless Framework
 
-The Serverless Framework is a robust open-source tool designed to streamline the creation, deployment, and management of cloud-native applications. By abstracting away the complexities of server infrastructure management, the Serverless Framework enables developers to concentrate on writing business logic rather than handling the underlying servers. This approach is powered by a cloud computing model known as **Function as a Service (FaaS)**, which treats individual functions as the primary building blocks of an application.
+The Serverless Framework is a powerful open-source tool designed to simplify the creation, deployment, and management of cloud-native applications. By abstracting away the complexities of server infrastructure management, it allows developers to focus on writing business logic rather than dealing with server management. This approach leverages **Function as a Service (FaaS)**, which treats individual functions as the primary building blocks of an application.
 
 ## What is FaaS (Function as a Service)?
 
-**Function as a Service (FaaS)** is a cloud computing paradigm that allows developers to deploy and run individual functions in the cloud. Each function is a small, discrete piece of code that performs a specific task and is triggered by events such as HTTP requests, database changes, or messaging queue updates. Key features of FaaS include:
+**Function as a Service (FaaS)** is a cloud computing model where developers deploy and run individual functions in the cloud. Each function is a small, discrete piece of code that performs a specific task and is triggered by events like HTTP requests, database changes, or messaging queue updates.
 
-### 1. Event-Driven Execution
+![alt text](https://github.com/[username]/[reponame]/blob/[branch]/theory/res/inside.png?raw=true)
 
-Functions are executed in response to specific events, which can range from HTTP requests to changes in cloud storage.
+### Key Features of FaaS
 
-### 2. Automatic Scaling
+| Feature                  | Description                                                                                                    |
+|--------------------------|----------------------------------------------------------------------------------------------------------------|
+| **Event-Driven Execution** | Functions are executed in response to specific events, such as HTTP requests or database changes.           |
+| **Automatic Scaling**      | Functions automatically scale based on demand, handling incoming load efficiently without manual intervention. |
+| **Cost Efficiency**        | You pay only for the compute time your functions use, avoiding costs for idle server capacity.                |
+| **No Server Management**   | The cloud provider manages server provisioning, patching, and maintenance, allowing you to focus on code.      |
 
-The cloud provider automatically scales the functions based on demand, ensuring that they handle the incoming load efficiently without manual intervention.
-
-### 3. Cost Efficiency
-
-You pay only for the compute time your functions use, as opposed to maintaining and paying for idle server capacity.
-
-### 4. No Server Management
-
-The cloud provider takes care of server provisioning, patching, and maintenance, allowing you to focus solely on writing code.
 ## Example of a `serverless.yml` File
 
-The `serverless.yml` file is the core configuration file in a Serverless Framework project. It defines your service's functions, the events that trigger them, and any additional resources needed. Below is a basic example:
+The `serverless.yml` file is the core configuration file in a Serverless Framework project. It defines your service's functions, the events that trigger them, and any additional resources needed.
 
 ```yaml
 service: my-serverless-app
@@ -56,11 +52,18 @@ resources:
         ProvisionedThroughput:
           ReadCapacityUnits: 5
           WriteCapacityUnits: 5
+```
 
+In this configuration:
+
+    - service: Defines the name of the service.
+    - provider: Specifies the cloud provider and runtime environment.
+    - functions: Lists the Lambda functions, their handlers, and event triggers.
+    - resources: Defines additional resources, such as a DynamoDB table, used by the service.
 
 ## Serverless Framework Plugins
 
-The Serverless Framework's functionality can be extended through the use of plugins. Plugins allow you to add custom behavior, automate tasks, and integrate with other tools or services. Below are some popular plugins that are widely used in the Serverless community:
+The Serverless Framework can be extended through plugins that add functionality, automate tasks, and integrate with various tools. Below are some popular and useful plugins:
 
 ### 1. **serverless-offline**
 
@@ -106,10 +109,15 @@ module.exports = {
   }
 };
 
-- **Deployd
-```bash
-npm install serverless-webpack webpack webpack-cli --save-dev
+- **Integration**:
+Add serverless-webpack to the plugins section of serverless.yml:
+```yaml
+plugins:
+  - serverless-webpack
 ```
+
+
+
 
 
 ### 3. 
