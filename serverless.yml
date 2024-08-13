@@ -9,6 +9,21 @@ provider:
   runtime: nodejs16.x
   memorySize: 256
   stage: ${opt:stage, 'dev'}
+  region: eu-west-1
+
+resources:
+  Resources:
+    AuctionTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: AuctionsTable
+        BillingMode: PAY_PER_REQUEST
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
   
 functions:
   createAuction:
