@@ -29,9 +29,8 @@ functions:
 
 custom:
   AuctionsTable:
-    name: 
-      Fn::Sub: "AuctionsTable-${opt:stage, 'dev'}"
+    name: !Sub "AuctionsTable-${opt:stage, 'dev'}"
     arn: 
-      !GetAtt AuctionsTable.Arn
+      !Sub "arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/AuctionsTable-${opt:stage, 'dev'}"
   bundle:
     linting: false
