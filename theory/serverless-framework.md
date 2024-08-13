@@ -6,7 +6,7 @@ The Serverless Framework is a powerful open-source tool designed to simplify the
 
 **Function as a Service (FaaS)** is a cloud computing model where developers deploy and run individual functions in the cloud. Each function is a small, discrete piece of code that performs a specific task and is triggered by events like HTTP requests, database changes, or messaging queue updates.
 
-![alt text]([https://github.com/[username]/[reponame]/blob/[branch]/theory/](https://github.com/zicco99/Serverless-Framework-Bootcamp-Proj/blob/main/theory/res/inside.png?raw=true)
+![alt text](https://github.com/zicco99/Serverless-Framework-Bootcamp-Proj/blob/main/theory/res/inside.png?raw=true)
 
 ### Key Features of FaaS
 
