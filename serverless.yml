@@ -12,12 +12,12 @@ provider:
   iamRoleStatements:
     - ${file(iam/AuctionsTableIAM.yml):AuctionsTableIAM}
   environment:
-    AUCTIONS_TABLE_NAME: ${self.custom.AuctionsTable.name}
-    
+    AUCTIONS_TABLE_NAME: ${self:custom.AuctionsTableMeta.name}
+
 resources:
   Resources:
     AuctionsTable: ${file(resources/AuctionsTable.yml):AuctionsTable}
-  
+
 functions:
   createAuction:
     handler: src/handlers/createAuction.handler
@@ -29,7 +29,7 @@ functions:
       - AuctionsTable
 
 custom:
-  AuctionsTable:
+  AuctionsTableMeta:
     name: !Ref AuctionsTable
     arn:
       Fn::GetAtt: [ AuctionsTable, Arn ]

@@ -7,4 +7,4 @@ AuctionsTableIAM:
     - dynamodb:Scan
     - dynamodb:Query
   Resource:
-    - ${self.custom.AuctionsTable.arn}
+    - ${self.custom.AuctionsTableMeta.arn}
