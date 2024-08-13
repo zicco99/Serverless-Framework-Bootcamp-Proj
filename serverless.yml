@@ -31,8 +31,9 @@ custom:
     name: !Ref AuctionsTable
     arn:
       Fn::GetAtt: [ FileDynamoDbTable, Arn ]
-    
   bundle:
     linting: false
+  dependsOn:
+    - FileDynamoDbTable
 
  
