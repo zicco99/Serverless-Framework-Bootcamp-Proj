@@ -70,4 +70,95 @@ A composite primary key consists of two attributes: the partition key and the so
 }
 ```
 
-In this table, CustomerID is the partition key and OrderID is the sort key. This setup enables you to `query all orders for a specific customer efficiently and sort them by OrderID.
+Under-the-Hood: DynamoDB efficiently stores data by partitioning it based on the CustomerID. `Within each partition, items are sorted by the OrderID`. This sorting mechanism allows DynamoDB to quickly retrieve all orders for a specific customer and efficiently return results sorted by OrderID.
+
+## Secondary Indexes
+
+DynamoDB provides secondary indexes to support queries that use attributes other than the primary key. Secondary indexes come in two types: global secondary indexes (GSI) and local secondary indexes (LSI).
+
+
+### Global Secondary Index (GSI)
+
+A GSI allows you to query on attributes other than the primary key. It can have a different partition key and sort key from the table's primary key.
+
+**Example:** If you want to query users by their Email address, `you can create a GSI with Email` as the partition key.
+
+```json
+{
+  "TableName": "Users",
+  "IndexName": "EmailIndex",
+  "KeySchema": [
+    { "AttributeName": "Email", "KeyType": "HASH" }
+  ],
+  "Projection": {
+    "ProjectionType": "ALL"
+  }
+}
+```
+
+`With this index you can efficiently query users by their Email address`, even though Email is not the primary key.
+
+### Local Secondary Index (LSI)
+
+An LSI allows you to query on attributes that are not part of the primary key but must share the same partition key as the base table. It provides an alternative sort key for the data.
+
+Example: If you want to query orders by `OrderDate` for a specific customer, `you can create an LSI with OrderDate as the sort key`.
+
+```json
+{
+  "TableName": "Orders",
+  "IndexName": "OrderDateIndex",
+  "KeySchema": [
+    { "AttributeName": "CustomerID", "KeyType": "HASH" },
+    { "AttributeName": "OrderDate", "KeyType": "RANGE" }
+  ],
+  "Projection": {
+    "ProjectionType": "ALL"
+  }
+}
+```
+
+This setup allows you to retrieve all orders for a specific CustomerID and sort them by OrderDate.
+
+# AWS cli query cheatsheet
+
+Simple Query
+
+```bash
+
+aws dynamodb get-item \
+    --table-name Users \
+    --key '{"UserID": {"S": "12345"}}'
+```
+Composite Query
+
+To retrieve all orders for a customer and sort them by OrderID:
+
+```bash
+aws dynamodb query \
+    --table-name Orders \
+    --key-condition-expression "CustomerID = :customerId" \
+    --expression-attribute-values '{":customerId": {"S": "C001"}}'
+```
+
+This command retrieves all orders for CustomerID C001, sorted by OrderID.
+
+Query with Global Secondary Index
+
+To find a user by Email using the GSI:
+
+```bash
+aws dynamodb query \
+    --table-name Users \
+    --index-name EmailIndex \
+    --key-condition-expression "Email = :email" \
+    --expression-attribute-values '{":email": {"S": "john.doe@example.com"}}'
+```
+
+This command retrieves the user with the specified Email from the EmailIndex GSI.
+
+# Summary
+
+DynamoDB's key structure and data modeling capabilities provide a flexible and powerful foundation for building scalable applications. By understanding the primary key concepts, secondary indexes, and practical querying techniques, you can design efficient schemas and queries that leverage DynamoDB's strengths. 
+
+Whether you're managing user profiles, order histories, or any other type of data, DynamoDB's managed service model allows you to focus on application logic rather than infrastructure concerns, making it a robust choice for modern, high-performance applications.
