@@ -9,11 +9,10 @@ provider:
   memorySize: 256
   stage: ${opt:stage, 'dev'}
   region: eu-west-1
-  variablesResolutionMode: 20210326
   iamRoleStatements:
     - ${file(iam/AuctionsTableIAM.yml):AuctionsTableIAM}
   environment:
-    AUCTIONS_TABLE_NAME: ${self:custom.AuctionsTable.name}
+    AUCTIONS_TABLE_NAME: ${self.custom.AuctionsTable.name}
     
 resources:
   Resources:
@@ -29,8 +28,11 @@ functions:
 
 custom:
   AuctionsTable:
-    name: !Sub "AuctionsTable-${opt:stage, 'dev'}"
-    arn: 
-      !Sub "arn:aws:dynamodb:${self:provider.region}:${aws:accountId}:table/AuctionsTable-${opt:stage, 'dev'}"
+    name: !Ref AuctionsTable
+    arn:
+      Fn::GetAtt: [ FileDynamoDbTable, Arn ]
+    
   bundle:
     linting: false
+
+ 
