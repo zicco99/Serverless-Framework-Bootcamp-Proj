@@ -34,3 +34,7 @@ custom:
     arn: !GetAtt AuctionsTable.Arn
   bundle:
     linting: false
+    include:
+      - src/**
+      - lib/**
+
