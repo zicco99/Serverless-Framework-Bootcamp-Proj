@@ -1,37 +1,19 @@
-app: zik-prova
+service:
+  name: sls
 
-service: microservice
-frameworkVersion: '3'
+plugins:
+  - serverless-bundle
+  - serverless-pseudo-parameters
 
 provider:
   name: aws
   runtime: nodejs16.x
-  stage: ${opt:stage, 'development'}
-  stackName: ${self:service}-${self:provider.stage}
-  apiName: ${self:service}-${self:provider.stage}
-  region: ${opt:region, 'us-east-1'}
-  memorySize: 128
-  timeout: 30
-  deploymentBucket:
-    name: zik-serverless-${self:provider.stage}
-    serverSideEncryption: AES256
-    blockPublicAccess: true
-
-  environment:
-    LOG_LEVEL: debug
-
-
-package:
-  exclude:
-    - tests/**
-plugins:
-  - serverless-deployment-bucket
-  - serverless-plugin-typescript
-  - serverless-offline
-
+  memorySize: 256
+  stage: ${opt:stage, 'dev'}
+  
 functions:
-  trigger:
-    handler: index.handler
+  hello:
+    handler: src/handlers/hello.handler
     events:
       - http:
           method: GET

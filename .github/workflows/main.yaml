@@ -3,7 +3,54 @@ name: AWS CDK Action
 on:
   push:
     branches:
-      #- main
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      AWS_REGION: us-east-1
+      NODE_VERSION: '20.9.0'
+      PYTHON_VERSION: '3.10'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Print directory contents
+        run: ls -la
+
+      - name: Cache Node.js dependencies
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.npm
+            ~/.cache
+          key: ${{ runner.os }}-node-${{ hashFiles('**/*.json') }}-${{ env.NODE_VERSION }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install Node.js dependencies
+        run: npm ci
+
+      - name: Deploy to AWS using Serverless
+        run: npm run deploy
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      
+      name: AWS CDK Action
+
+on:
+  push:
+    branches:
+      - main
 
 jobs:
   deploy:
@@ -45,8 +92,11 @@ jobs:
 
 
       - name: Deploy to AWS using Serverless
-        run: npm run deploy
+        uses: serverless/github-action@master
+        with:
+          args: deploy
         env:
+          LOG_LEVEL: debug
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
