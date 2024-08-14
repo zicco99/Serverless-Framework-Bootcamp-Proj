@@ -3,6 +3,7 @@ import commonMiddleware from '../lib/commonMiddleware';
 import validator from '@middy/validator';
 import createError from 'http-errors';
 import { v4 as uuid } from 'uuid';
+import { transpileSchema } from '@middy/validator/transpile';
 import createAuctionSchema from '../lib/schemas/createAuctionSchema';
 
 
@@ -44,5 +45,5 @@ async function createAuction(event) {
 
 // Apply common middleware and validator middleware
 export const handler = commonMiddleware(createAuction).use(
-  validator({ inputSchema: createAuctionSchema })
+  validator({ eventSchema: transpileSchema(createAuctionSchema) })
 );
