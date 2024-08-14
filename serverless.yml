@@ -77,7 +77,7 @@ functions:
       - schedule: rate(1 minute)
   
   authService:
-    handler: src/handlers/authService.handler
+    handler: src/authorizer/authorizer.handler
     events:
       - http:
           method: POST
