@@ -10,7 +10,7 @@ provider:
   stage: ${opt:stage, 'dev'}
   region: eu-west-1
   environment:
-    AUCTIONS_TABLE_NAME: ${self:custom.AuctionsTableMeta.name}
+    AUCTIONS_TABLE_NAME: ${self:custom.AuctionsTable.name}
     MAIL_QUEUE_URL: ${self:custom.MailQueue.url}
     AUCTIONS_BUCKET_NAME: ${self:custom.AuctionsBucket.name}
   iamRoleStatements:
