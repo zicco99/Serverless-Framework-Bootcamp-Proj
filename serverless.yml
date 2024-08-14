@@ -36,5 +36,3 @@ custom:
     linting: false
     include:
       - src/**
-      - lib/**
-
