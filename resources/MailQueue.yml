@@ -1,0 +1,4 @@
+MailQueue:
+  Type: "AWS::SQS::Queue"
+  Properties:
+    QueueName: "mail-queue-${self:provider.stage}"
