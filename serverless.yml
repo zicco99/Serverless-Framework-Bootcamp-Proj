@@ -75,6 +75,13 @@ functions:
     handler: src/handlers/processAuctions.handler
     events:
       - schedule: rate(1 minute)
+  
+  authService:
+    handler: src/handlers/authService.handler
+    events:
+      - http:
+          method: POST
+          path: /auth
 
 custom:
   authorizer: arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:auth-service-${self:provider.stage}-auth
