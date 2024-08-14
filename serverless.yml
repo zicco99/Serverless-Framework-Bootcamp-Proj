@@ -33,7 +33,7 @@ functions:
           method: POST
           path: /auction
           cors: true
-          authorizer: ${self:custom.authorizer}
+          authorizer: ${self:custom.Authorizer.arn}
 
   getAuctions:
     handler: src/handlers/getAuctions.handler
@@ -42,7 +42,7 @@ functions:
           method: GET
           path: /auctions
           cors: true
-          authorizer: ${self:custom.authorizer}
+          authorizer: ${self:custom.Authorizer.arn}
 
   getAuction:
     handler: src/handlers/getAuction.handler
@@ -51,7 +51,7 @@ functions:
           method: GET
           path: /auction/{id}
           cors: true
-          authorizer: ${self:custom.authorizer}
+          authorizer: ${self:custom.Authorizer.arn}
 
   placeBid:
     handler: src/handlers/placeBid.handler
@@ -60,7 +60,7 @@ functions:
           method: PATCH
           path: auction/{id}/bid
           cors: true
-          authorizer: ${self:custom.authorizer}
+          authorizer: ${self:custom.Authorizer.arn}
 
   uploadAuctionPicture:
     handler: src/handlers/uploadAuctionPicture.handler
@@ -69,14 +69,14 @@ functions:
           method: PATCH
           path: auction/{id}/picture
           cors: true
-          authorizer: ${self:custom.authorizer}
+          authorizer: ${self:custom.Authorizer.arn}
 
   processAuctions:
     handler: src/handlers/processAuctions.handler
     events:
       - schedule: rate(1 minute)
   
-  authService:
+  Authorizer:
     handler: src/authorizer/authorizer.handler
     events:
       - http:
@@ -84,7 +84,6 @@ functions:
           path: /auth
 
 custom:
-  authorizer: arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:auth-service-${self:provider.stage}-auth
   AuctionsTable:
     name: !Ref AuctionsTable
     arn: !GetAtt AuctionsTable.Arn
@@ -92,6 +91,10 @@ custom:
     arn: !GetAtt MailQueue.Arn
     url: !Ref MailQueue
   AuctionsBucket:
-    name: auctions-bucket-sj19asxm-${self:provider.stage}
+    name: !Ref AuctionsBucket
+    arn: !GetAtt AuctionsBucket.Arn
+  Authorizer:
+    name: !Ref Authorizer
+    arn: !GetAtt Authorizer.Arn
   bundle:
     linting: false
