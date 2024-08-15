@@ -21,8 +21,8 @@ provider:
 resources:
   Resources:
     AuctionsTable: ${file(resources/AuctionsTable.yml)}
-    AuctionsBucket: ${file(resources/AuctionsBucket.yml:AuctionsBucket)}
-    AuctionsBucketPolicy: ${file(resources/AuctionsBucket.yml:AuctionsBucketPolicy)}
+    AuctionsBucket: ${file(resources/AuctionsBucket.yml):AuctionsBucket}
+    AuctionsBucketPolicy: ${file(resources/AuctionsBucket.yml):AuctionsBucketPolicy}
     MailQueue: ${file(resources/MailQueue.yml)}
       
 functions:
