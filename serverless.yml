@@ -33,7 +33,7 @@ functions:
           method: POST
           path: /auction
           cors: true
-          authorizer: ${self:custom.Authorizer.arn}
+          authorizer: ${self:custom.Authorizer.name}
 
   getAuctions:
     handler: src/handlers/getAuctions.handler
@@ -42,7 +42,7 @@ functions:
           method: GET
           path: /auctions
           cors: true
-          authorizer: ${self:custom.Authorizer.arn}
+          authorizer: ${self:custom.Authorizer.name}
 
   getAuction:
     handler: src/handlers/getAuction.handler
@@ -51,7 +51,7 @@ functions:
           method: GET
           path: /auction/{id}
           cors: true
-          authorizer: ${self:custom.Authorizer.arn}
+          authorizer: ${self:custom.Authorizer.name}
 
   placeBid:
     handler: src/handlers/placeBid.handler
@@ -60,7 +60,7 @@ functions:
           method: PATCH
           path: /auction/{id}/bid
           cors: true
-          authorizer: ${self:custom.Authorizer.arn}
+          authorizer: ${self:custom.Authorizer.name}
 
   uploadAuctionPicture:
     handler: src/handlers/uploadAuctionPicture.handler
@@ -69,7 +69,7 @@ functions:
           method: PATCH
           path: /auction/{id}/picture
           cors: true
-          authorizer: ${self:custom.Authorizer.arn}
+          authorizer: ${self:custom.Authorizer.name}
 
   processAuctions:
     handler: src/handlers/processAuctions.handler
@@ -87,10 +87,10 @@ custom:
     arn: !GetAtt MailQueue.Arn
     url: !Ref MailQueue
   AuctionsBucket:
-    name: AuctionsBucket-${opt:stage, 'dev'}
+    name: ${self:service}-auctions-bucket-${opt:stage, 'dev'}
     arn: !GetAtt AuctionsBucket.Arn
   Authorizer:
-    name: ${self:custom.Authorizer.arn}
+    name: ${self:service}-authorizer-${opt:stage, 'dev'}
     arn: !GetAtt Authorizer.Arn
   bundle:
     linting: false
