@@ -42,7 +42,7 @@ functions:
           method: POST
           path: /auction
           authorizer:
-            name: mainAuthorizer
+            name: customAuthorizer
             type: request
 
   getAuctions:
@@ -52,7 +52,7 @@ functions:
           method: GET
           path: /auctions
           authorizer:
-            name: mainAuthorizer
+            name: customAuthorizer
             type: request
 
   getAuction:
@@ -62,7 +62,7 @@ functions:
           method: GET
           path: /auction/{id}
           authorizer:
-            name: mainAuthorizer
+            name: customAuthorizer
             type: request
 
   placeBid:
@@ -72,7 +72,7 @@ functions:
           method: PATCH
           path: /auction/{id}/bid
           authorizer:
-            name: mainAuthorizer
+            name: customAuthorizer
             type: request
 
   uploadAuctionPicture:
@@ -82,7 +82,7 @@ functions:
           method: PATCH
           path: /auction/{id}/picture
           authorizer:
-            name: mainAuthorizer
+            name: customAuthorizer
             type: request
 
   processAuctions:
