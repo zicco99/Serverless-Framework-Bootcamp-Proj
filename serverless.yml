@@ -8,7 +8,7 @@ provider:
   runtime: nodejs16.x
   httpApi:
   authorizers:
-    customAuthorizer:
+    mainAuthorizer:
       type: request
       functionName: mainAuthorizer
   memorySize: 256
@@ -105,10 +105,6 @@ custom:
   auctionsBucket:
     name: AuctionsBucket-${opt:stage, 'dev'}
     arn: !GetAtt AuctionsBucket.Arn
-
-  authorizer:
-    functionName: !Ref Authorizer
-    arn: !GetAtt Authorizer.Arn
 
   bundle:
     linting: false
