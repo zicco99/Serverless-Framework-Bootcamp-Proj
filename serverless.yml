@@ -12,7 +12,7 @@ provider:
   httpApi:
     authorizers:
       mainAuthorizer:
-        type: custom
+        type: request
         functionName: ${self:custom.authorizer.functionName}
   environment:
     AUCTIONS_TABLE_NAME: ${self:custom.auctionsTable.name}
