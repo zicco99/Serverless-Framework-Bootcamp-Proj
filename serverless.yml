@@ -9,6 +9,7 @@ provider:
   memorySize: 256
   stage: ${opt:stage, 'dev'}
   region: eu-west-1
+  lambdaHashingVersion: 20201221
   environment:
     AUCTIONS_TABLE_NAME: ${self:custom.auctionsTable.name}
     MAIL_QUEUE_URL: ${self:custom.mailQueue.url}
@@ -32,7 +33,11 @@ functions:
       - httpApi:
           method: POST
           path: /auction
-          authorizer: mainAuthorizer
+          authorizer:
+            name: mainAuthorizer
+            resultTtlInSeconds: 30
+            identitySource: method.request.header.Authorization
+            type: token
 
   getAuctions:
     handler: src/handlers/getAuctions.handler
@@ -40,7 +45,11 @@ functions:
       - httpApi:
           method: GET
           path: /auctions
-          authorizer: mainAuthorizer
+          authorizer:
+            name: mainAuthorizer
+            resultTtlInSeconds: 30
+            identitySource: method.request.header.Authorization
+            type: token
 
   getAuction:
     handler: src/handlers/getAuction.handler
@@ -48,7 +57,11 @@ functions:
       - httpApi:
           method: GET
           path: /auction/{id}
-          authorizer: mainAuthorizer
+          authorizer:
+            name: mainAuthorizer
+            resultTtlInSeconds: 30
+            identitySource: method.request.header.Authorization
+            type: token
 
   placeBid:
     handler: src/handlers/placeBid.handler
@@ -56,7 +69,11 @@ functions:
       - httpApi:
           method: PATCH
           path: /auction/{id}/bid
-          authorizer: mainAuthorizer
+          authorizer:
+            name: mainAuthorizer
+            resultTtlInSeconds: 30
+            identitySource: method.request.header.Authorization
+            type: token
 
   uploadAuctionPicture:
     handler: src/handlers/uploadAuctionPicture.handler
@@ -64,7 +81,11 @@ functions:
       - httpApi:
           method: PATCH
           path: /auction/{id}/picture
-          authorizer: mainAuthorizer
+          authorizer:
+            name: mainAuthorizer
+            resultTtlInSeconds: 30
+            identitySource: method.request.header.Authorization
+            type: token
 
   processAuctions:
     handler: src/handlers/processAuctions.handler
