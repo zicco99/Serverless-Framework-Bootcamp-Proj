@@ -9,11 +9,6 @@ provider:
   memorySize: 256
   stage: ${opt:stage, 'dev'}
   region: eu-west-1
-  httpApi:
-    authorizers:
-      mainAuthorizer:
-        type: request
-        functionName: !Ref mainAuthorizer
   environment:
     AUCTIONS_TABLE_NAME: ${self:custom.auctionsTable.name}
     MAIL_QUEUE_URL: ${self:custom.mailQueue.url}
