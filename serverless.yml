@@ -35,9 +35,7 @@ functions:
           path: /auction
           authorizer:
             name: mainAuthorizer
-            resultTtlInSeconds: 30
-            identitySource: method.request.header.Authorization
-            type: token
+            type: request
 
   getAuctions:
     handler: src/handlers/getAuctions.handler
@@ -47,9 +45,7 @@ functions:
           path: /auctions
           authorizer:
             name: mainAuthorizer
-            resultTtlInSeconds: 30
-            identitySource: method.request.header.Authorization
-            type: token
+            type: request
 
   getAuction:
     handler: src/handlers/getAuction.handler
@@ -59,9 +55,7 @@ functions:
           path: /auction/{id}
           authorizer:
             name: mainAuthorizer
-            resultTtlInSeconds: 30
-            identitySource: method.request.header.Authorization
-            type: token
+            type: request
 
   placeBid:
     handler: src/handlers/placeBid.handler
@@ -71,9 +65,7 @@ functions:
           path: /auction/{id}/bid
           authorizer:
             name: mainAuthorizer
-            resultTtlInSeconds: 30
-            identitySource: method.request.header.Authorization
-            type: token
+            type: request
 
   uploadAuctionPicture:
     handler: src/handlers/uploadAuctionPicture.handler
@@ -83,9 +75,7 @@ functions:
           path: /auction/{id}/picture
           authorizer:
             name: mainAuthorizer
-            resultTtlInSeconds: 30
-            identitySource: method.request.header.Authorization
-            type: token
+            type: request
 
   processAuctions:
     handler: src/handlers/processAuctions.handler
