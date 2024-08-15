@@ -1,7 +1,7 @@
 AuctionsBucket:
   Type: AWS::S3::Bucket
   Properties:
-    BucketName: ${self:custom.AuctionsBucket.name}
+    BucketName: ${self:custom.auctionsBucket.name}
     LifecycleConfiguration:
       Rules:
         - Id: ExpirePictures
@@ -19,4 +19,4 @@ AuctionsBucketPolicy:
           Principal: '*'
           Action:
             - s3:GetObject
-          Resource: arn:aws:s3:::${self:custom.AuctionsBucket.name}/*
+          Resource: arn:aws:s3:::${self:custom.auctionsBucket.name}/*

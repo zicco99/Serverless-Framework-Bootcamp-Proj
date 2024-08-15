@@ -91,6 +91,7 @@ custom:
     arn: !GetAtt AuctionsTable.Arn
 
   mailQueue:
+    name: MailQueue-${opt:stage, 'dev'}
     arn: !GetAtt MailQueue.Arn
     url: !Ref MailQueue
 
