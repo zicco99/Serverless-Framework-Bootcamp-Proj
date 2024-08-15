@@ -78,6 +78,10 @@ functions:
   
   Authorizer:
     handler: src/authorizer/authorizer.handler
+    events:
+      - http:
+          method: POST
+          path: /auth
 
 custom:
   AuctionsTable:
@@ -90,7 +94,7 @@ custom:
     name: ${self:service}-auctions-bucket-${opt:stage, 'dev'}
     arn: !GetAtt AuctionsBucket.Arn
   Authorizer:
-    name: ${self:service}-authorizer-${opt:stage, 'dev'}
+    name: !Ref Authorizer
     arn: !GetAtt Authorizer.Arn
   bundle:
     linting: false
