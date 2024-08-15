@@ -13,7 +13,7 @@ provider:
     authorizers:
       mainAuthorizer:
         type: request
-        functionName: ${self:custom.authorizer.functionName}
+        functionName: !Ref mainAuthorizer
   environment:
     AUCTIONS_TABLE_NAME: ${self:custom.auctionsTable.name}
     MAIL_QUEUE_URL: ${self:custom.mailQueue.url}
@@ -77,7 +77,7 @@ functions:
       - schedule:
           rate: rate(1 minute)
   
-  authorizer:
+  mainAuthorizer:
     handler: src/authorizer/authorizer.handler
 
 custom:
