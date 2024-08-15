@@ -27,6 +27,9 @@ resources:
     MailQueue: ${file(resources/MailQueue.yml):MailQueue}
 
 functions:
+  mainAuthorizer:
+      handler: src/authorizer/authorizer.handler
+
   createAuction:
     handler: src/handlers/createAuction.handler
     events:
@@ -82,9 +85,7 @@ functions:
     events:
       - schedule:
           rate: rate(1 minute)
-  
-  mainAuthorizer:
-    handler: src/authorizer/authorizer.handler
+
 
 custom:
   auctionsTable:
