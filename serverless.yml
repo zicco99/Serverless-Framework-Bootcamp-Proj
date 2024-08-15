@@ -91,7 +91,7 @@ custom:
     arn: !GetAtt MailQueue.Arn
     url: !Ref MailQueue
   AuctionsBucket:
-    name: !Ref AuctionsBucket
+    name: AuctionsTable-${opt:stage, 'dev'}
     arn: !GetAtt AuctionsBucket.Arn
   Authorizer:
     name: !Ref Authorizer
