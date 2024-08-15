@@ -14,9 +14,9 @@ provider:
     MAIL_QUEUE_URL: ${self:custom.MailQueue.url}
     AUCTIONS_BUCKET_NAME: ${self:custom.AuctionsBucket.name}
   iamRoleStatements:
-    - ${file(iam/AuctionsTableIAM.yml)}
-    - ${file(iam/AuctionsBucketIAM.yml)}
-    - ${file(iam/MailQueueIAM.yml)}
+    - ${file(iam/AuctionsTableIAM.yml):AuctionsTableIAM}
+    - ${file(iam/AuctionsBucketIAM.yml):AuctionsBucketIAM}
+    - ${file(iam/MailQueueIAM.yml):MailQueueIAM}
 
 resources:
   Resources:
