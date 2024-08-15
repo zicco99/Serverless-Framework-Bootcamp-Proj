@@ -37,7 +37,6 @@ functions:
       - httpApi:
           method: POST
           path: /auction
-          cors: true
           authorizer: customAuthorizer
 
   getAuctions:
@@ -46,7 +45,6 @@ functions:
       - httpApi:
           method: GET
           path: /auctions
-          cors: true
           authorizer: customAuthorizer
 
   getAuction:
@@ -55,7 +53,6 @@ functions:
       - httpApi:
           method: GET
           path: /auction/{id}
-          cors: true
           authorizer: customAuthorizer
 
   placeBid:
@@ -64,7 +61,6 @@ functions:
       - httpApi:
           method: PATCH
           path: /auction/{id}/bid
-          cors: true
           authorizer: customAuthorizer
 
   uploadAuctionPicture:
@@ -73,7 +69,6 @@ functions:
       - httpApi:
           method: PATCH
           path: /auction/{id}/picture
-          cors: true
           authorizer: customAuthorizer
 
   processAuctions:
