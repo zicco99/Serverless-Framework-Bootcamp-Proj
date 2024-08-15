@@ -9,10 +9,15 @@ provider:
   memorySize: 256
   stage: ${opt:stage, 'dev'}
   region: eu-west-1
+  httpApi:
+    authorizers:
+      customAuthorizer:
+        type: request
+        functionName: ${self:custom.authorizer.functionName}
   environment:
-    AUCTIONS_TABLE_NAME: ${self:custom.AuctionsTable.name}
-    MAIL_QUEUE_URL: ${self:custom.MailQueue.url}
-    AUCTIONS_BUCKET_NAME: ${self:custom.AuctionsBucket.name}
+    AUCTIONS_TABLE_NAME: ${self:custom.auctionsTable.name}
+    MAIL_QUEUE_URL: ${self:custom.mailQueue.url}
+    AUCTIONS_BUCKET_NAME: ${self:custom.auctionsBucket.name}
   iamRoleStatements:
     - ${file(iam/AuctionsTableIAM.yml):AuctionsTableIAM}
     - ${file(iam/AuctionsBucketIAM.yml):AuctionsBucketIAM}
@@ -29,67 +34,74 @@ functions:
   createAuction:
     handler: src/handlers/createAuction.handler
     events:
-      - http:
+      - httpApi:
           method: POST
           path: /auction
           cors: true
-          authorizer: ${self:custom.Authorizer.arn}
+          authorizer: customAuthorizer
 
   getAuctions:
     handler: src/handlers/getAuctions.handler
     events:
-      - http:
+      - httpApi:
           method: GET
           path: /auctions
           cors: true
-          authorizer: ${self:custom.Authorizer.arn}
+          authorizer: customAuthorizer
 
   getAuction:
     handler: src/handlers/getAuction.handler
     events:
-      - http:
+      - httpApi:
           method: GET
           path: /auction/{id}
           cors: true
-          authorizer: ${self:custom.Authorizer.arn}
+          authorizer: customAuthorizer
 
   placeBid:
     handler: src/handlers/placeBid.handler
     events:
-      - http:
+      - httpApi:
           method: PATCH
           path: /auction/{id}/bid
           cors: true
-          authorizer: ${self:custom.Authorizer.arn}
+          authorizer: customAuthorizer
 
   uploadAuctionPicture:
     handler: src/handlers/uploadAuctionPicture.handler
     events:
-      - http:
+      - httpApi:
           method: PATCH
           path: /auction/{id}/picture
           cors: true
-          authorizer: ${self:custom.Authorizer.arn}
+          authorizer: customAuthorizer
 
   processAuctions:
     handler: src/handlers/processAuctions.handler
     events:
       - schedule: rate(1 minute)
   
-  Authorizer:
+  authorizer:
     handler: src/authorizer/authorizer.handler
 
 custom:
-  AuctionsTable:
+  auctionsTable:
     name: !Ref AuctionsTable
     arn: !GetAtt AuctionsTable.Arn
-  MailQueue:
+
+  mailQueue:
     arn: !GetAtt MailQueue.Arn
     url: !Ref MailQueue
-  AuctionsBucket:
+
+  auctionsBucket:
     name: AuctionsBucket-${opt:stage, 'dev'}
     arn: !GetAtt AuctionsBucket.Arn
-  Authorizer:
+
+  authorizer:
     arn: !GetAtt Authorizer.Arn
+    functionName: Authorizer
+
   bundle:
     linting: false
+    sourcemaps: false
+    caching: true
