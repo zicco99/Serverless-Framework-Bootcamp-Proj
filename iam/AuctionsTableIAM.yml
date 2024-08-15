@@ -7,5 +7,5 @@ AuctionsTableIAM:
     - dynamodb:Scan
     - dynamodb:Query
   Resource:
-    - ${self:custom.AuctionsTable.arn}
-    - !Join ['/', [ '${self:custom.AuctionsTable.arn}', 'index', 'statusAndEndDate' ]]
+    - ${self:custom.auctionsTable.arn}
+    - !Join ['/', [ '${self:custom.auctionsTable.arn}', 'index', 'statusAndEndDate' ]]
