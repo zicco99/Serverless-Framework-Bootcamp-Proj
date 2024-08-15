@@ -6,6 +6,11 @@ plugins:
 provider:
   name: aws
   runtime: nodejs16.x
+  httpApi:
+  authorizers:
+    customAuthorizer:
+      type: request
+      functionName: mainAuthorizer
   memorySize: 256
   stage: ${opt:stage, 'dev'}
   region: eu-west-1
