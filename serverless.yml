@@ -79,7 +79,8 @@ functions:
   processAuctions:
     handler: src/handlers/processAuctions.handler
     events:
-      - schedule: rate(1 minute)
+      - schedule:
+          rate: rate(1 minute)
   
   authorizer:
     handler: src/authorizer/authorizer.handler
@@ -98,8 +99,8 @@ custom:
     arn: !GetAtt AuctionsBucket.Arn
 
   authorizer:
+    functionName: Authorizer-${opt:stage, 'dev'}
     arn: !GetAtt Authorizer.Arn
-    functionName: Authorizer
 
   bundle:
     linting: false
