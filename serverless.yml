@@ -94,16 +94,16 @@ functions:
 
 custom:
   auctionsTable:
-    name: !Ref AuctionsTable
+    name: !Ref ${self:service}-AuctionsTable-${opt:stage, 'dev'}
     arn: !GetAtt AuctionsTable.Arn
 
   mailQueue:
-    name: MailQueue-${opt:stage, 'dev'}
+    name: ${self:service}-MailQueue-${opt:stage, 'dev'}
     arn: !GetAtt MailQueue.Arn
     url: !Ref MailQueue
 
   auctionsBucket:
-    name: AuctionsBucket-${opt:stage, 'dev'}
+    name: ${self:service}-AuctionsBucket-${opt:stage, 'dev'}
     arn: !GetAtt AuctionsBucket.Arn
 
   bundle:
