@@ -38,6 +38,9 @@ jobs:
 
       - name: Install Node.js dependencies
         run: npm ci
+      
+      - name: upgrade to last serverless version
+        run: npm install -g serverless
 
       - name: Deploy to AWS using Serverless
         uses: serverless/github-action@master
