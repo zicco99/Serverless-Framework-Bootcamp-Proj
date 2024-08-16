@@ -2,4 +2,9 @@ AuctionsBucketIAM:
   Effect: Allow
   Action:
     - s3:PutObject
-  Resource: arn:aws:s3:::${self:custom.AuctionsBucket.name}/*
+    - s3:PutBucketPolicy
+    - s3:GetBucketPolicy
+    - s3:ListBucket
+  Resource:
+    - arn:aws:s3:::${self:custom.AuctionsBucket.name}
+    - arn:aws:s3:::${self:custom.AuctionsBucket.name}/*
