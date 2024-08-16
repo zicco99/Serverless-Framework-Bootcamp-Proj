@@ -7,10 +7,10 @@ provider:
   name: aws
   runtime: nodejs16.x
   httpApi:
-  authorizers:
-    mainAuthorizer:
-      type: request
-      functionName: ${self:custom.mainAuthorizer.name}
+    authorizers:
+      mainAuthorizerGlobalRef:
+        type: request
+        functionName: mainAuthorizer
   memorySize: 256
   stage: ${opt:stage, 'dev'}
   region: eu-west-1
@@ -32,8 +32,6 @@ resources:
     MailQueue: ${file(resources/MailQueue.yml):MailQueue}
 
 functions:
-  mainAuthorizer:
-      handler: src/authorizer/authorizer.handler
 
   createAuction:
     handler: src/handlers/createAuction.handler
@@ -42,8 +40,7 @@ functions:
           method: POST
           path: /auction
           authorizer:
-            name: ${self:custom.mainAuthorizer.name}
-            type: request
+            name: mainAuthorizerGlobalRef
 
   getAuctions:
     handler: src/handlers/getAuctions.handler
@@ -52,8 +49,7 @@ functions:
           method: GET
           path: /auctions
           authorizer:
-            name: ${self:custom.mainAuthorizer.name}
-            type: request
+            name: mainAuthorizerGlobalRef
 
   getAuction:
     handler: src/handlers/getAuction.handler
@@ -62,8 +58,7 @@ functions:
           method: GET
           path: /auction/{id}
           authorizer:
-            name: ${self:custom.mainAuthorizer.name}
-            type: request
+            name: mainAuthorizerGlobalRef
 
   placeBid:
     handler: src/handlers/placeBid.handler
@@ -72,8 +67,7 @@ functions:
           method: PATCH
           path: /auction/{id}/bid
           authorizer:
-            name: ${self:custom.mainAuthorizer.name}
-            type: request
+            name: mainAuthorizerGlobalRef
 
   uploadAuctionPicture:
     handler: src/handlers/uploadAuctionPicture.handler
@@ -82,15 +76,17 @@ functions:
           method: PATCH
           path: /auction/{id}/picture
           authorizer:
-            name: ${self:custom.mainAuthorizer.name}
-            type: request
+            name: mainAuthorizerGlobalRef
 
   processAuctions:
     handler: src/handlers/processAuctions.handler
     events:
       - schedule:
           rate: rate(1 minute)
+  
 
+  mainAuthorizer:
+      handler: src/authorizer/authorizer.handler
 
 custom:
   auctionsTable:
