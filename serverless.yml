@@ -7,7 +7,7 @@ plugins:
 
 provider:
   name: aws
-  runtime: nodejs12.x
+  runtime: nodejs16.x
   memorySize: 256
   stage: ${opt:stage, 'dev'}
   region: eu-west-1
@@ -87,13 +87,13 @@ functions:
       - schedule: rate(1 minute)
 
 custom:
-  authorizer: arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:serverless-auth0-authorizer-${self:provider.stage}-auth
+  base: ${self:service.name}-${self:provider.stage}
   AuctionsBucket:
-    name: ${self:service.name}-auctions-bucket-${self:provider.stage}
+    name: ${self:custom.base}-auctions-bucket
   AuctionsTable:
-    name: !Ref AuctionsTable
+    name: ${self:custom.base}-auctions-table
     arn: !GetAtt AuctionsTable.Arn
   mailQueue:
-    name: MailQueue-${self:provider.stage}
+    name: ${self:custom.base}-mail-queue
     arn: !GetAtt MailQueue.Arn
     url: !Ref MailQueue
