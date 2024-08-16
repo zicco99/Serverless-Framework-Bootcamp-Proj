@@ -10,7 +10,7 @@ provider:
   authorizers:
     mainAuthorizer:
       type: request
-      functionName: mainAuthorizer
+      functionName: ${self:custom.mainAuthorizer.name}
   memorySize: 256
   stage: ${opt:stage, 'dev'}
   region: eu-west-1
@@ -42,7 +42,7 @@ functions:
           method: POST
           path: /auction
           authorizer:
-            name: customAuthorizer
+            name: ${self:custom.mainAuthorizer.name}
             type: request
 
   getAuctions:
@@ -52,7 +52,7 @@ functions:
           method: GET
           path: /auctions
           authorizer:
-            name: customAuthorizer
+            name: ${self:custom.mainAuthorizer.name}
             type: request
 
   getAuction:
@@ -62,7 +62,7 @@ functions:
           method: GET
           path: /auction/{id}
           authorizer:
-            name: customAuthorizer
+            name: ${self:custom.mainAuthorizer.name}
             type: request
 
   placeBid:
@@ -72,7 +72,7 @@ functions:
           method: PATCH
           path: /auction/{id}/bid
           authorizer:
-            name: customAuthorizer
+            name: ${self:custom.mainAuthorizer.name}
             type: request
 
   uploadAuctionPicture:
@@ -82,7 +82,7 @@ functions:
           method: PATCH
           path: /auction/{id}/picture
           authorizer:
-            name: customAuthorizer
+            name: ${self:custom.mainAuthorizer.name}
             type: request
 
   processAuctions:
@@ -105,6 +105,9 @@ custom:
   auctionsBucket:
     name: ${self:service}-AuctionsBucket-${opt:stage, 'dev'}
     arn: !GetAtt AuctionsBucket.Arn
+
+  mainAuthorizer:
+    name: ${self:service}-Authorizer-${opt:stage, 'dev'}
 
   bundle:
     linting: false
