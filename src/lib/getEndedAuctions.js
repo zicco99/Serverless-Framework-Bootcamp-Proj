@@ -1,6 +1,6 @@
 import AWS from "aws-sdk";
 
-const dynamodb = new AWS.DynamoDB.DocumentClient();
+const dynamoDB = new AWS.DynamoDB.DocumentClient();
 
 export async function getEndedAuctions() {
   const now = new Date();
@@ -17,6 +17,8 @@ export async function getEndedAuctions() {
       "#status": "status",
     },
   };
-  const result = await dynamodb.query(params).promise();
+
+  const result = await dynamoDB.query(params).promise();
+
   return result.Items;
 }

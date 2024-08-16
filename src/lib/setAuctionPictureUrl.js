@@ -1,18 +1,19 @@
-import AWS from 'aws-sdk';
+import AWS from "aws-sdk";
 
-const dynamodb = new AWS.DynamoDB.DocumentClient();
+const dynamoDB = new AWS.DynamoDB.DocumentClient();
 
-export async function setAuctionPictureUrl(id, pictureUrl) {
-  const params = {
-    TableName: process.env.AUCTIONS_TABLE_NAME,
-    Key: { id },
-    UpdateExpression: 'set pictureUrl = :pictureUrl',
-    ExpressionAttributeValues: {
-      ':pictureUrl': pictureUrl,
-    },
-    ReturnValues: 'ALL_NEW',
-  };
+export async function setAuctionPicturUrl(id, pictureUrl) {
+  const result = await dynamoDB
+    .update({
+      Key: { id },
+      TableName: process.env.AUCTIONS_TABLE_NAME,
+      UpdateExpression: "set pictureUrl = :pictureUrl",
+      ExpressionAttributeValues: {
+        ":pictureUrl": pictureUrl,
+      },
+      ReturnValues: "ALL_NEW",
+    })
+    .promise();
 
-  const result = await dynamodb.update(params).promise();
   return result.Attributes;
 }

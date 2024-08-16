@@ -1,41 +1,36 @@
-import AWS from 'aws-sdk';
-import createError from 'http-errors';
-import validator from '@middy/validator';
-import commonMiddleware from '../lib/commonMiddleware';
-import getAuctionsSchema from '../lib/schemas/getAuctionsSchema';
+import AWS from "aws-sdk";
+import createError from "http-errors";
+import validator from "@middy/validator";
+import commonMiddleware from "../lib/commonMiddleware";
+import getAuctionsSchema from "../lib/schemas/getAuctionsSchema";
 
-const dynamodb = new AWS.DynamoDB.DocumentClient();
+const dynamoDB = new AWS.DynamoDB.DocumentClient();
 
-async function getAuctions(event, context) {
-  const { status } = event.queryStringParameters;
-  let auctions;
-
+async function getAuctions(event) {
   const params = {
     TableName: process.env.AUCTIONS_TABLE_NAME,
-    IndexName: 'statusAndEndDate',
-    KeyConditionExpression: '#status = :status',
+    IndexName: "statusAndEndDate",
+    KeyConditionExpression: "#status = :status",
     ExpressionAttributeValues: {
-      ':status': status,
+      ":status": event.queryStringParameters.status,
     },
     ExpressionAttributeNames: {
-      '#status': 'status',
+      "#status": "status",
     },
   };
 
   try {
-    const result = await dynamodb.query(params).promise();
+    const { Items } = await dynamoDB.query(params).promise();
 
-    auctions = result.Items;
+    return {
+      statusCode: 200,
+      body: JSON.stringify(Items),
+    };
   } catch (error) {
-    console.error(error);
     throw new createError.InternalServerError(error);
   }
-
-  return {
-    statusCode: 200,
-    body: JSON.stringify(auctions),
-  };
 }
 
-export const handler = commonMiddleware(getAuctions)
-  .use(validator({ inputSchema: getAuctionsSchema, useDefaults: true }));
+export const handler = commonMiddleware(getAuctions).use(
+  validator({ inputSchema: getAuctionsSchema, useDefaults: true })
+);

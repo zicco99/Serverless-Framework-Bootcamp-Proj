@@ -1,18 +1,24 @@
 AuctionsTable:
   Type: AWS::DynamoDB::Table
   Properties:
-    TableName: ${self:custom.AuctionsTable.name}
+    TableName: AuctionsTable-${self:provider.stage}
     BillingMode: PAY_PER_REQUEST
     AttributeDefinitions:
       - AttributeName: id
         AttributeType: S
-      - AttributeName: statusAndEndDate
+      - AttributeName: status
+        AttributeType: S
+      - AttributeName: endingAt
         AttributeType: S
     KeySchema:
       - AttributeName: id
         KeyType: HASH
-      - AttributeName: statusAndEndDate
-        KeyType: RANGE
-    ProvisionedThroughput:
-      ReadCapacityUnits: 5
-      WriteCapacityUnits: 5
+    GlobalSecondaryIndexes:
+      - IndexName: statusAndEndDate
+        KeySchema:
+          - AttributeName: status
+            KeyType: HASH
+          - AttributeName: endingAt
+            KeyType: RANGE
+        Projection:
+          ProjectionType: ALL

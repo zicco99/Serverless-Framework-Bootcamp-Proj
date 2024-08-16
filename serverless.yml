@@ -1,114 +1,99 @@
-org: chilledpanda
-app: prova
-service: auction-service
+service:
+  name: auction-service
 
 plugins:
   - serverless-bundle
+  - serverless-pseudo-parameters
 
 provider:
   name: aws
-  runtime: nodejs16.x
-  httpApi:
-    authorizers:
-      MainAuthorizerGlobalRef:
-        type: request
-        functionName: MainAuthorizer
+  runtime: nodejs12.x
   memorySize: 256
   stage: ${opt:stage, 'dev'}
   region: eu-west-1
-  lambdaHashingVersion: 20201221
   environment:
     AUCTIONS_TABLE_NAME: ${self:custom.AuctionsTable.name}
-    MAIL_QUEUE_URL: ${self:custom.MailQueue.url}
     AUCTIONS_BUCKET_NAME: ${self:custom.AuctionsBucket.name}
+    MAILQUEUE_URL: ${self:custom.mailQueue.url}
   iamRoleStatements:
     - ${file(iam/AuctionsTableIAM.yml):AuctionsTableIAM}
-    - ${file(iam/AuctionsBucketIAM.yml):AuctionsBucketIAM}
+    - ${file(iam/SendMailIAM.yml):SendMailIAM}
     - ${file(iam/MailQueueIAM.yml):MailQueueIAM}
+    - ${file(iam/AuctionsBucketIAM.yml):AuctionsBucketIAM}
 
 resources:
   Resources:
     AuctionsTable: ${file(resources/AuctionsTable.yml):AuctionsTable}
+    MailQueue: ${file(resources/MailQueue.yml):MailQueue}
     AuctionsBucket: ${file(resources/AuctionsBucket.yml):AuctionsBucket}
     AuctionsBucketPolicy: ${file(resources/AuctionsBucket.yml):AuctionsBucketPolicy}
-    MailQueue: ${file(resources/MailQueue.yml):MailQueue}
 
 functions:
-
   createAuction:
     handler: src/handlers/createAuction.handler
     events:
-      - httpApi:
+      - http:
           method: POST
           path: /auction
-          authorizer:
-            name: MainAuthorizerGlobalRef
+          cors: true
+          authorizer: ${self:custom.authorizer}
 
   getAuctions:
     handler: src/handlers/getAuctions.handler
     events:
-      - httpApi:
+      - http:
           method: GET
           path: /auctions
-          authorizer:
-            name: MainAuthorizerGlobalRef
+          cors: true
+          authorizer: ${self:custom.authorizer}
 
   getAuction:
     handler: src/handlers/getAuction.handler
     events:
-      - httpApi:
+      - http:
           method: GET
           path: /auction/{id}
-          authorizer:
-            name: MainAuthorizerGlobalRef
+          cors: true
+          authorizer: ${self:custom.authorizer}
 
   placeBid:
     handler: src/handlers/placeBid.handler
     events:
-      - httpApi:
+      - http:
           method: PATCH
           path: /auction/{id}/bid
-          authorizer:
-            name: MainAuthorizerGlobalRef
+          cors: true
+          authorizer: ${self:custom.authorizer}
 
   uploadAuctionPicture:
     handler: src/handlers/uploadAuctionPicture.handler
     events:
-      - httpApi:
+      - http:
           method: PATCH
-          path: /auction/{id}/picture
-          authorizer:
-            name: MainAuthorizerGlobalRef
+          path: auction/{id}/picture
+          cors: true
+          authorizer: ${self:custom.authorizer}
+
+  sendMail:
+    events:
+      - sqs:
+          arn: ${self:custom.mailQueue.arn}
+          batchSize: 1
+    handler: src/handlers/sendMail.handler
 
   processAuctions:
     handler: src/handlers/processAuctions.handler
     events:
-      - schedule:
-          rate: rate(1 minute)
-  
-
-  MainAuthorizer:
-      handler: src/authorizer/authorizer.handler
+      - schedule: rate(1 minute)
 
 custom:
+  authorizer: arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:serverless-auth0-authorizer-${self:provider.stage}-auth
+  AuctionsBucket:
+    name: auctions-bucket-jf39d3kd0-${self:provider.stage}
   AuctionsTable:
-    name: !Ref ${self:service}-AuctionsTable-${opt:stage, 'dev'}
+    name: !Ref AuctionsTable
     arn: !GetAtt AuctionsTable.Arn
-
-  MailQueue:
-    name: ${self:service}-MailQueue-${opt:stage, 'dev'}
+  mailQueue:
+    name: MailQueue-${self:provider.stage}
     arn: !GetAtt MailQueue.Arn
     url: !Ref MailQueue
-
-  AuctionsBucket:
-    name: ${self:service}-AuctionsBucket-${opt:stage, 'dev'}
-    arn: !GetAtt AuctionsBucket.Arn
-
-  MainAuthorizer:
-    name: ${self:service}-Authorizer-${opt:stage, 'dev'}
-
-  bundle:
-    linting: false
-    sourcemaps: false
-    caching: true
-

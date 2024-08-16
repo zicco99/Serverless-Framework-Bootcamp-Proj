@@ -1,15 +1,14 @@
-import createError from 'http-errors';
-import { getEndedAuctions } from '../lib/getEndedAuctions';
-import { closeAuction } from '../lib/closeAuction';
+import createError from "http-errors";
+import { closeAuction } from "../lib/closeAuction";
+import { getEndedAuctions } from "../lib/getEndedAuctions";
 
-async function processAuctions(event, context) {
+async function processAuctions() {
   try {
-    const auctionsToClose = await getEndedAuctions();
-    const closePromises = auctionsToClose.map(auction => closeAuction(auction));
-    await Promise.all(closePromises);
-    return { closed: closePromises.length };
+    const auctions = await getEndedAuctions();
+    const closedAuctions = await Promise.all(auctions.map(closeAuction));
+
+    return { closed: closedAuctions.length };
   } catch (error) {
-    console.error(error);
     throw new createError.InternalServerError(error);
   }
 }
