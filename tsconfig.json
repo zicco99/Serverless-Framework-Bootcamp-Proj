@@ -4,7 +4,6 @@
     "declaration": true,
     "noImplicitAny": false,
     "removeComments": true,
-    "noLib": false,
     "allowSyntheticDefaultImports": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
@@ -12,7 +11,11 @@
     "sourceMap": true,
     "outDir": "./dist",
     "baseUrl": "./",
-    "types": ["node"]
+    "types": ["node"],
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "rootDir": "./src"
   },
-  "exclude": ["node_modules"]
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
 }
