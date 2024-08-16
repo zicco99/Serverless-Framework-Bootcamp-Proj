@@ -1,87 +1,28 @@
-service:
-  name: auction-zik
+service: serverless-nest-example
+
 plugins:
-  - serverless-bundle
+  - '@hewmen/serverless-plugin-typescript'  
+  - serverless-plugin-optimize
+  - serverless-offline
+  # - serverless-plugin-warmup
+
+# custom:
+#   # Enable warmup on all functions (only for production and staging)
+#   warmup:      
+#       - production
+#       - staging
 
 provider:
   name: aws
-  runtime: nodejs16.x
-  memorySize: 256
-  stage: ${opt:stage, 'dev'}
-  region: eu-west-1
-  environment:
-    AUCTIONS_TABLE_NAME: ${self:custom.AuctionsTable.name}
-    AUCTIONS_BUCKET_NAME: ${self:custom.AuctionsBucket.name}
-    MAILQUEUE_URL: ${self:custom.mailQueue.url}
-  iamRoleStatements:
-    - ${file(iam/AuctionsTableIAM.yml):AuctionsTableIAM}
-    - ${file(iam/SendMailIAM.yml):SendMailIAM}
-    - ${file(iam/MailQueueIAM.yml):MailQueueIAM}
-    - ${file(iam/AuctionsBucketIAM.yml):AuctionsBucketIAM}
+  runtime: nodejs12.x
 
-resources:
-  Resources:
-    AuctionsTable: ${file(resources/AuctionsTable.yml):AuctionsTable}
-    MailQueue: ${file(resources/MailQueue.yml):MailQueue}
-    AuctionsBucket: ${file(resources/AuctionsBucket.yml):AuctionsBucket}
-    AuctionsBucketPolicy: ${file(resources/AuctionsBucket.yml):AuctionsBucketPolicy}
+package:
+  individually: true
 
 functions:
-  createAuction:
-    handler: src/handlers/createAuction.handler
+  main:
+    handler: src/main.handler
     events:
       - http:
-          method: POST
-          path: /auction
-
-  getAuctions:
-    handler: src/handlers/getAuctions.handler
-    events:
-      - http:
-          method: GET
-          path: /auctions
-
-  getAuction:
-    handler: src/handlers/getAuction.handler
-    events:
-      - http:
-          method: GET
-          path: /auction/{id}
-
-  placeBid:
-    handler: src/handlers/placeBid.handler
-    events:
-      - http:
-          method: PATCH
-          path: /auction/{id}/bid
-
-  uploadAuctionPicture:
-    handler: src/handlers/uploadAuctionPicture.handler
-    events:
-      - http:
-          method: PATCH
-          path: auction/{id}/picture
-
-  sendMail:
-    events:
-      - sqs:
-          arn: ${self:custom.mailQueue.arn}
-          batchSize: 1
-    handler: src/handlers/sendMail.handler
-
-  processAuctions:
-    handler: src/handlers/processAuctions.handler
-    events:
-      - schedule: rate(1 minute)
-
-custom:
-  base: ${self:service.name}-${self:provider.stage}
-  AuctionsBucket:
-    name: ${self:custom.base}-auctions-bucket
-  AuctionsTable:
-    name: ${self:custom.base}-auctions-table
-    arn: !GetAtt AuctionsTable.Arn
-  mailQueue:
-    name: ${self:custom.base}-mail-queue
-    arn: !GetAtt MailQueue.Arn
-    url: !Ref MailQueue
+          method: any
+          path: /{proxy+}
