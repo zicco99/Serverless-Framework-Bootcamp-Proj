@@ -109,3 +109,6 @@ custom:
     linting: false
     sourcemaps: false
     caching: true
+
+build:
+  esbuild: false
