@@ -89,7 +89,7 @@ functions:
 custom:
   authorizer: arn:aws:lambda:#{AWS::Region}:#{AWS::AccountId}:function:serverless-auth0-authorizer-${self:provider.stage}-auth
   AuctionsBucket:
-    name: auctions-bucket-jf39d3kd0-${self:provider.stage}
+    name: ${self:service.name}-AuctionsBucket-${self:provider.stage}
   AuctionsTable:
     name: !Ref AuctionsTable
     arn: !GetAtt AuctionsTable.Arn
