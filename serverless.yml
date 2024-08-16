@@ -1,3 +1,5 @@
+org: chilledpanda
+app: prova
 service: auction-service
 
 plugins:
@@ -8,17 +10,17 @@ provider:
   runtime: nodejs16.x
   httpApi:
     authorizers:
-      mainAuthorizerGlobalRef:
+      MainAuthorizerGlobalRef:
         type: request
-        functionName: mainAuthorizer
+        functionName: MainAuthorizer
   memorySize: 256
   stage: ${opt:stage, 'dev'}
   region: eu-west-1
   lambdaHashingVersion: 20201221
   environment:
-    AUCTIONS_TABLE_NAME: ${self:custom.auctionsTable.name}
-    MAIL_QUEUE_URL: ${self:custom.mailQueue.url}
-    AUCTIONS_BUCKET_NAME: ${self:custom.auctionsBucket.name}
+    AUCTIONS_TABLE_NAME: ${self:custom.AuctionsTable.name}
+    MAIL_QUEUE_URL: ${self:custom.MailQueue.url}
+    AUCTIONS_BUCKET_NAME: ${self:custom.AuctionsBucket.name}
   iamRoleStatements:
     - ${file(iam/AuctionsTableIAM.yml):AuctionsTableIAM}
     - ${file(iam/AuctionsBucketIAM.yml):AuctionsBucketIAM}
@@ -40,7 +42,7 @@ functions:
           method: POST
           path: /auction
           authorizer:
-            name: mainAuthorizerGlobalRef
+            name: MainAuthorizerGlobalRef
 
   getAuctions:
     handler: src/handlers/getAuctions.handler
@@ -49,7 +51,7 @@ functions:
           method: GET
           path: /auctions
           authorizer:
-            name: mainAuthorizerGlobalRef
+            name: MainAuthorizerGlobalRef
 
   getAuction:
     handler: src/handlers/getAuction.handler
@@ -58,7 +60,7 @@ functions:
           method: GET
           path: /auction/{id}
           authorizer:
-            name: mainAuthorizerGlobalRef
+            name: MainAuthorizerGlobalRef
 
   placeBid:
     handler: src/handlers/placeBid.handler
@@ -67,7 +69,7 @@ functions:
           method: PATCH
           path: /auction/{id}/bid
           authorizer:
-            name: mainAuthorizerGlobalRef
+            name: MainAuthorizerGlobalRef
 
   uploadAuctionPicture:
     handler: src/handlers/uploadAuctionPicture.handler
@@ -76,7 +78,7 @@ functions:
           method: PATCH
           path: /auction/{id}/picture
           authorizer:
-            name: mainAuthorizerGlobalRef
+            name: MainAuthorizerGlobalRef
 
   processAuctions:
     handler: src/handlers/processAuctions.handler
@@ -85,24 +87,24 @@ functions:
           rate: rate(1 minute)
   
 
-  mainAuthorizer:
+  MainAuthorizer:
       handler: src/authorizer/authorizer.handler
 
 custom:
-  auctionsTable:
+  AuctionsTable:
     name: !Ref ${self:service}-AuctionsTable-${opt:stage, 'dev'}
     arn: !GetAtt AuctionsTable.Arn
 
-  mailQueue:
+  MailQueue:
     name: ${self:service}-MailQueue-${opt:stage, 'dev'}
     arn: !GetAtt MailQueue.Arn
     url: !Ref MailQueue
 
-  auctionsBucket:
+  AuctionsBucket:
     name: ${self:service}-AuctionsBucket-${opt:stage, 'dev'}
     arn: !GetAtt AuctionsBucket.Arn
 
-  mainAuthorizer:
+  MainAuthorizer:
     name: ${self:service}-Authorizer-${opt:stage, 'dev'}
 
   bundle:
@@ -110,5 +112,3 @@ custom:
     sourcemaps: false
     caching: true
 
-build:
-  esbuild: false
