@@ -1,6 +1,5 @@
 service:
-  name: auction-service
-
+  name: auction-zik
 plugins:
   - serverless-bundle
 
