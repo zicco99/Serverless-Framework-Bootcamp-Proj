@@ -7,5 +7,5 @@ AuctionsTableIAM:
     - dynamodb:Scan
     - dynamodb:Query
   Resource:
-    - !GetAtt AuctionsTable.Arn
-    - !Join ['/', [ !GetAtt AuctionsTable.Arn, 'index', 'statusAndEndDate' ]]
+    - !GetAttr AuctionsTable.Arn
+    - !Join ['/', [ !GetAttr AuctionsTable.Arn, 'index', 'statusAndEndDate' ]]
