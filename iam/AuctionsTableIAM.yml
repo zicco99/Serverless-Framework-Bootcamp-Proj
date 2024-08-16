@@ -1,11 +1,11 @@
-iamRoleStatements:
-  - Effect: Allow
-    Action:
-      - dynamodb:PutItem
-      - dynamodb:GetItem
-      - dynamodb:DeleteItem
-      - dynamodb:Scan
-      - dynamodb:Query
-    Resource:
-      - !GetAtt AuctionsTable.Arn
-      - !Join ['/', [ !GetAtt AuctionsTable.Arn, 'index', 'statusAndEndDate' ]]
+AuctionsTableIAM:
+  Effect: Allow
+  Action:
+    - dynamodb:PutItem
+    - dynamodb:GetItem
+    - dynamodb:DeleteItem
+    - dynamodb:Scan
+    - dynamodb:Query
+  Resource:
+    - !GetAtt AuctionsTable.Arn
+    - !Join ['/', [ !GetAtt AuctionsTable.Arn, 'index', 'statusAndEndDate' ]]
