@@ -1,21 +1,47 @@
 {
   "compilerOptions": {
-    "module": "commonjs",
-    "declaration": true,
-    "removeComments": true,
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "allowSyntheticDefaultImports": true,
-    "target": "ES2021",
-    "sourceMap": true,
-    "outDir": "./dist",
-    "baseUrl": "./",
-    "incremental": true,
-    "skipLibCheck": true,
-    "strictNullChecks": false,
-    "noImplicitAny": false,
-    "strictBindCallApply": false,
-    "forceConsistentCasingInFileNames": false,
-    "noFallthroughCasesInSwitch": false
-  }
+    /* Basic Options */
+    "target": "ES2017", /* ECMAScript target version */
+    "module": "commonjs", /* Module code generation */
+    "lib": ["ES2017", "DOM"], /* Library files to include */
+    "allowJs": true, /* Compile JavaScript files */
+    "declaration": true, /* Generate '.d.ts' files */
+    "sourceMap": true, /* Generate '.map' files */
+    "outDir": "./dist", /* Output directory */
+    "rootDir": "./src", /* Root directory of input files */
+    "removeComments": true, /* Remove comments from output */
+
+    /* Strict Type-Checking Options */
+    "strict": true, /* Enable all strict options */
+    "noImplicitAny": true, /* Error on implied 'any' types */
+    "strictPropertyInitialization": false, /* Strict class property checking */
+    "alwaysStrict": true, /* Enable strict mode in output */
+
+    /* Module Resolution Options */
+    "moduleResolution": "node", /* Module resolution strategy */
+    "baseUrl": "./", /* Base directory for module names */
+    "paths": {
+      "@modules/*": ["src/modules/*"],
+      "@core/*": ["src/core/*"]
+    }, /* Module path mappings */
+    "types": ["node"], /* Type declaration files */
+    "allowSyntheticDefaultImports": true, /* Allow default imports */
+    "esModuleInterop": true, /* Interoperability between modules */
+
+    /* Advanced Options */
+    "skipLibCheck": true, /* Skip type checking of declaration files */
+    "forceConsistentCasingInFileNames": true, /* Enforce consistent casing */
+
+    /* Experimental Options */
+    "experimentalDecorators": true, /* Enable decorators */
+    "emitDecoratorMetadata": true /* Emit type metadata for decorators */
+  },
+  "include": [
+    "src/**/*" /* Include all TypeScript files in src */
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "bench.js" 
+  ]
 }
