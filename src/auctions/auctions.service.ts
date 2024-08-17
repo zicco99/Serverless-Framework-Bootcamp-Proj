@@ -14,7 +14,6 @@ export class AuctionsService {
   private readonly tableName = process.env.AUCTIONS_TABLE_NAME;
 
   async findAll(): Promise<Auction[]> {
-    // Query to get all auctions with status 'OPEN'
     const command = new QueryCommand({
       TableName: this.tableName,
       IndexName: 'statusAndEndDate',
