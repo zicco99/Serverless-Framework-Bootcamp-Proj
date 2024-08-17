@@ -32,7 +32,7 @@ functions:
       AUCTIONS_TABLE: ${self:custom.AuctionsTable.arn}
 
 custom:
-  base: ${self:service}-${opt:stage, 'dev'}
+  base: ${self:service}-${opt:stage,'dev'}
   AuctionsTable:
     name: ${self:custom.base}-auctions-table
     arn: !GetAtt AuctionsTable.Arn

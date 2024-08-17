@@ -1,36 +1,51 @@
 import { v4 as uuid } from 'uuid';
 
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { Auction,AuctionStatus } from 'src/auctions/models/auction.model';
-
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { DynamoDBClient, GetItemCommand, PutItemCommand, UpdateItemCommand, DeleteItemCommand, QueryCommand } from '@aws-sdk/client-dynamodb';
+import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
+import { Auction, AuctionStatus } from 'src/auctions/models/auction.model';
 import { CreateAuctionDto } from './dtos/create-auction.dto';
 import { DeleteAuctionDto } from './dtos/delete-auction.dto';
 import { UpdateAuctionDto } from './dtos/update-auction.dto';
 
 @Injectable()
 export class AuctionsService {
-  private readonly auctions: Auction[] = [];
+  private readonly client = new DynamoDBClient({ region: 'eu-west-1' });
+  private readonly tableName = process.env.AUCTIONS_TABLE_NAME;
 
-  findAll(): Auction[] {
-    return this.auctions;
+  async findAll(): Promise<Auction[]> {
+    const command = new QueryCommand({
+      TableName: this.tableName,
+      IndexName: 'statusAndEndDate', // Use this index or scan the whole table
+      KeyConditionExpression: 'status = :status',
+      ExpressionAttributeValues: marshall({ ':status': 'OPEN' }), // or remove this to scan the entire table
+    });
+
+    const result = await this.client.send(command);
+    return result.Items ? result.Items.map(item => unmarshall(item) as Auction) : [];
   }
 
-  findOne(id: string): Auction {
-    const auction = this.auctions.find(auction => auction.id === id);
-    if (!auction) {
+  async findOne(id: string): Promise<Auction> {
+    const command = new GetItemCommand({
+      TableName: this.tableName,
+      Key: marshall({ id }),
+    });
+
+    const result = await this.client.send(command);
+    if (!result.Item) {
       throw new NotFoundException(`Auction with ID ${id} not found`);
     }
-    return auction;
+    return unmarshall(result.Item) as Auction;
   }
 
-  createAuction(createAuctionDto: CreateAuctionDto): Auction {
+  async createAuction(createAuctionDto: CreateAuctionDto): Promise<Auction> {
     const { name, description, startDate, endDate } = createAuctionDto;
 
     if (startDate >= endDate) {
       throw new BadRequestException('Start date must be before end date');
     }
 
-    const new_auction: Auction = {
+    const newAuction: Auction = {
       id: uuid(),
       name,
       description,
@@ -41,35 +56,62 @@ export class AuctionsService {
       updatedDate: new Date(),
     };
 
-    this.auctions.push(new_auction);
-    return new_auction;
+    const command = new PutItemCommand({
+      TableName: this.tableName,
+      Item: marshall(newAuction),
+    });
+
+    await this.client.send(command);
+    return newAuction;
   }
 
-  deleteAuction(deleteAuctionDto: DeleteAuctionDto): Auction {
+  async deleteAuction(deleteAuctionDto: DeleteAuctionDto): Promise<Auction> {
     const { id } = deleteAuctionDto;
-    const index = this.auctions.findIndex(auction => auction.id === id);
-    if (index === -1) {
-      throw new NotFoundException(`Auction with ID ${id} not found`);
-    }
 
-    const [auction] = this.auctions.splice(index, 1);
-    return auction;
+    const existingAuction = await this.findOne(id); // Ensure it exists before deleting
+
+    const command = new DeleteItemCommand({
+      TableName: this.tableName,
+      Key: marshall({ id }),
+    });
+
+    await this.client.send(command);
+    return existingAuction;
   }
 
-  updateAuction(id: string, updateAuctionDto: Partial<UpdateAuctionDto>): Auction {
-    const index = this.auctions.findIndex(auction => auction.id === id);
-
-    if (index === -1) {
-        throw new NotFoundException(`Auction with ID ${id} not found`);
-    }
+  async updateAuction(id: string, updateAuctionDto: Partial<UpdateAuctionDto>): Promise<Auction> {
+    const existingAuction = await this.findOne(id);
 
     const updatedAuction: Auction = {
-      ...this.auctions[index],
+      ...existingAuction,
       ...updateAuctionDto,
       updatedDate: new Date(),
     };
 
-    this.auctions[this.auctions.findIndex(auc => auc.id === id)] = updatedAuction;
-    return updatedAuction;
+    const command = new UpdateItemCommand({
+      TableName: this.tableName,
+      Key: marshall({ id }),
+      UpdateExpression: 'set #name = :name, #description = :description, #status = :status, #startDate = :startDate, #endDate = :endDate, #updatedDate = :updatedDate',
+      ExpressionAttributeNames: {
+        '#name': 'name',
+        '#description': 'description',
+        '#status': 'status',
+        '#startDate': 'startDate',
+        '#endDate': 'endDate',
+        '#updatedDate': 'updatedDate',
+      },
+      ExpressionAttributeValues: marshall({
+        ':name': updatedAuction.name,
+        ':description': updatedAuction.description,
+        ':status': updatedAuction.status,
+        ':startDate': updatedAuction.startDate,
+        ':endDate': updatedAuction.endDate,
+        ':updatedDate': updatedAuction.updatedDate,
+      }),
+      ReturnValues: 'ALL_NEW',
+    });
+
+    const result = await this.client.send(command);
+    return unmarshall(result.Attributes as Record<string, any>) as Auction;
   }
 }

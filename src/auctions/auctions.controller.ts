@@ -1,48 +1,39 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
-
+import { Controller, Get, Post, Body, Param, Delete, Put, Query } from '@nestjs/common';
 import { AuctionsService } from './auctions.service';
-import { Auction } from './models/auction.model';
-
 import { CreateAuctionDto } from './dtos/create-auction.dto';
 import { DeleteAuctionDto } from './dtos/delete-auction.dto';
 import { UpdateAuctionDto } from './dtos/update-auction.dto';
+import { Auction } from 'src/auctions/models/auction.model';
 
 @Controller('auctions')
 export class AuctionsController {
-  constructor(private readonly auctions: AuctionsService) {}
+  constructor(private readonly auctionsService: AuctionsService) {}
 
   @Get()
-  findAll() : Auction[]{
-    return this.auctions.findAll();
+  async findAll(): Promise<Auction[]> {
+    return this.auctionsService.findAll();
   }
 
-  @Get('/:id')
-  getTaskbyId(@Param('id') id: string): Auction{
-    const auction : Auction = this.auctions.findOne(id);
-
-    if (!auction) {
-      throw new Error('Auction not found');
-    }
-    return auction;
+  @Get(':id')
+  async findOne(@Param('id') id: string): Promise<Auction> {
+    return this.auctionsService.findOne(id);
   }
 
   @Post()
-  createAuction(
-    @Body() createAuctionDto: CreateAuctionDto
-    ) : Auction {
-    return this.auctions.createAuction(createAuctionDto);
+  async create(@Body() createAuctionDto: CreateAuctionDto): Promise<Auction> {
+    return this.auctionsService.createAuction(createAuctionDto);
   }
 
-  @Delete('/:id')
-  deleteAuction(@Body() deleteAuctionDto: DeleteAuctionDto): void {
-    this.auctions.deleteAuction(deleteAuctionDto);
-  }
-
-  @Patch('/:id')
-  updateAuction(
+  @Put(':id')
+  async update(
     @Param('id') id: string,
-    @Body() updateAuctionDto: UpdateAuctionDto
-  ): Auction {
-    return this.auctions.updateAuction(id, updateAuctionDto);
+    @Body() updateAuctionDto: Partial<UpdateAuctionDto>,
+  ): Promise<Auction> {
+    return this.auctionsService.updateAuction(id, updateAuctionDto);
+  }
+
+  @Delete()
+  async delete(@Body() deleteAuctionDto: DeleteAuctionDto): Promise<Auction> {
+    return this.auctionsService.deleteAuction(deleteAuctionDto);
   }
 }
