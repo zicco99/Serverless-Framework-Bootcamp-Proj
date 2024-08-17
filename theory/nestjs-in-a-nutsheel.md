@@ -33,15 +33,43 @@ The framework’s architecture promotes scalability and maintainability, making 
 ## Basic Concepts
 
 ### 1. **Modules**
-Modules are the fundamental building blocks of a NestJS application. Each module encapsulates a set of related components (controllers, services, etc.). A module is defined using the `@Module` decorator.
+Modules are the fundamental building blocks of a NestJS application. Here are the main concepts:
+
+- **Root Module**: Each application has at least one module—the root module—which serves as the entry point for the app.
+  
+- **Separation of Concerns**: Modules facilitate the separation of concerns by organizing components around closely related capabilities. This modular approach makes it easier to manage and scale the app.
+
+- **Folder Structure**: It’s good practice to have a folder per module to maintain a clear separation of logic.
+
+- **Singletons**: Modules in NestJS are singletons, meaning that a module is instantiated once and can be imported by multiple other modules. This allows for shared functionality and consistent behavior across different parts of the application.
+
+#### Defining a module
+
+A module in NestJS is defined using the `@Module` decorator. This decorator provides metadata that helps organize the application. Key properties include:
+
+- **providers**: An array of classes (annotated with `@Injectable()`) available for dependency injection, which handle business logic and data access.
+
+- **controllers**: An array of classes responsible for handling incoming HTTP requests and routing.
+
+- **imports**: An array of other modules to integrate their providers and controllers into the current module.
+
+- **exports**: An array of providers that can be used by other modules.
+
+### Example
 
 ```typescript
 import { Module } from '@nestjs/common';
-import { CatsService } from './cats.service';
-import { CatsController } from './cats.controller';
+import { UsersController } from './users.controller';
+import { UsersService } from './users.service';
 
 @Module({
-  controllers: [CatsController],
-  providers: [CatsService],
+  imports: [], // Import other modules here
+  controllers: [UsersController],
+  providers: [UsersService],
+  exports: [UsersService], // Make UsersService available to other modules
 })
-export class CatsModule {}
+export class UsersModule {}
+```
+
+### 1. **Modules**
+
