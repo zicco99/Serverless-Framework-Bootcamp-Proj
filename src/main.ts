@@ -1,44 +1,60 @@
-import { Handler, Context } from 'aws-lambda';
-import { Server } from 'http';
-import { createServer, proxy } from 'aws-serverless-express';
-import { eventContext } from 'aws-serverless-express/middleware';
+import { Handler, Context, APIGatewayProxyEvent } from 'aws-lambda';
+import { createServer, proxy } from '@codegenie/serverless-express';
+import express, { Express } from 'express'; // Explicit import of Express
 
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 
-// NOTE: If you get ERR_CONTENT_DECODING_FAILED in your browser, this is likely
-// due to a compressed response (e.g. gzip) which has not been handled correctly
-// by aws-serverless-express and/or API Gateway. Add the necessary MIME types to
-// binaryMimeTypes below
-const binaryMimeTypes: string[] = [];
+let cachedServer: ReturnType<typeof createServer> | null = null;
 
-let cachedServer: Server;
+/**
+ * Creates and initializes the NestJS application with Express.
+ */
+async function createNestServer(): Promise<Express> {
+  const expressApp = express(); // Create an Express application instance
+  const nestApp = await NestFactory.create(AppModule, expressApp);
+  await nestApp.init(); // Initialize the NestJS application
+  return expressApp;
+}
 
+/**
+ * Bootstraps the Express server and caches it for subsequent invocations.
+ * @returns {Promise<ReturnType<typeof createServer>>}
+ */
+async function bootstrapServer(): Promise<ReturnType<typeof createServer>> {
+  if (!cachedServer) {
+    try {
+      const expressApp = await createNestServer();
+      cachedServer = createServer(expressApp); // Create the server using @codegenie/serverless-express
+    } catch (error) {
+      console.error('Error bootstrapping server:', error);
+      throw error;
+    }
+  }
+  return cachedServer;
+}
+
+/**
+ * AWS Lambda handler function.
+ * Handles incoming events and proxies them to the Express server.
+ * @param event {APIGatewayProxyEvent}
+ * @param context {Context}
+ * @returns {Promise<any>}
+ */
+export const handler: Handler = async (event: APIGatewayProxyEvent, context: Context) => {
+  if (!cachedServer) {
+    cachedServer = await bootstrapServer();
+  }
+  return proxy(cachedServer, event, context);
+};
+
+/**
+ * Global error handling for unhandled promises and exceptions.
+ */
 process.on('unhandledRejection', (reason) => {
-  console.error(reason);
+  console.error('Unhandled Rejection:', reason);
 });
 
 process.on('uncaughtException', (reason) => {
-  console.error(reason);
+  console.error('Uncaught Exception:', reason);
 });
-
-async function bootstrapServer(): Promise<Server> {
-  if (!cachedServer) {
-    try {
-      const expressApp = require('express')();
-      const nestApp = await NestFactory.create(AppModule, expressApp);
-      nestApp.use(eventContext());
-      await nestApp.init();
-      cachedServer = createServer(expressApp, undefined, binaryMimeTypes);
-    }
-    catch (error) {
-      return Promise.reject(error);
-    }
-  }
-  return Promise.resolve(cachedServer);
-}
-
-export const handler: Handler = async (event: any, context: Context) => {
-  cachedServer = await bootstrapServer();
-  return proxy(cachedServer, event, context, 'PROMISE').promise;
-}
