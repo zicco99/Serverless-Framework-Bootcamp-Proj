@@ -18,7 +18,8 @@ export class AuctionsController {
 
   @Get('/:id')
   getTaskbyId(@Param('id') id: string): Auction{
-    const auction : Auction | undefined = this.auctions.findOne(id);
+    const auction : Auction = this.auctions.findOne(id);
+
     if (!auction) {
       throw new Error('Auction not found');
     }
@@ -44,6 +45,4 @@ export class AuctionsController {
   ): Auction {
     return this.auctions.updateAuction(id, updateAuctionDto);
   }
-  
-  
 }

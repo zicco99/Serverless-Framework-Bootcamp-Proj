@@ -15,7 +15,7 @@ export class AuctionsService {
     return this.auctions;
   }
 
-  findOne(id: string): Auction | undefined {
+  findOne(id: string): Auction {
     const auction = this.auctions.find(auction => auction.id === id);
     if (!auction) {
       throw new NotFoundException(`Auction with ID ${id} not found`);
