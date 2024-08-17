@@ -55,7 +55,7 @@ A module in NestJS is defined using the `@Module` decorator. This decorator prov
 
 - **exports**: An array of providers that can be used by other modules.
 
-### Example
+#### Example
 
 ```typescript
 import { Module } from '@nestjs/common';
@@ -71,5 +71,64 @@ import { UsersService } from './users.service';
 export class UsersModule {}
 ```
 
-### 1. **Modules**
+### 2. **Controllers**
+
+
+Controllers in NestJS are responsible for `handling incoming HTTP requests and returning responses` to the client. They are central to routing and managing the application's endpoints.
+
+- **Handle Incoming Requests and Return Responses**: Controllers receive HTTP requests from clients and return the appropriate HTTP responses. They act as the entry point for the client's interaction with the application.
+
+- **Bound to a Specific Path**: Each controller is bound to a specific route path, which is defined using the `@Controller` decorator. This base path can be combined with route-specific handlers to define the full URL for each endpoint.
+
+- **Contain Handlers**: Controllers contain methods, known as `handlers`, that correspond to HTTP request methods (such as GET, POST, PUT, DELETE). These handlers process requests and return responses. Each handler is decorated with an appropriate decorator like `@Get()`, `@Post()`, etc.
+
+Here it is the flux:
+
+![alt text](https://github.com/zicco99/Serverless-Framework-Bootcamp-Proj/blob/main/theory/res/request-flux?raw=true)
+
+#### Example
+
+```typescript
+import { Controller, Get, Post, Body, Param } from '@nestjs/common';
+import { UsersService } from './users.service';
+import { CreateUserDto } from './dto/create-user.dto';
+
+@Controller('users')
+export class UsersController {
+  constructor(private readonly usersService: UsersService) {}
+
+  @Get()
+  async findAll() {
+    return this.usersService.findAll();
+  }
+
+  @Post()
+  async create(@Body() createUserDto: CreateUserDto) {
+    return this.usersService.create(createUserDto);
+  }
+
+  @Get(':id')
+  async findOne(@Param('id') id: string) {
+    return this.usersService.findOne(id);
+  }
+}
+
+```
+
+
+### 3. **Providers**
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
