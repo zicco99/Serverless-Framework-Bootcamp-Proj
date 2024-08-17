@@ -42,6 +42,6 @@ functions:
 custom:
   base: ${self.service}-${opt:stage, 'dev'}
   AuctionsTable:
-    name: ${self.base}-auctions-table
+    name: ${self.custom.base}-auctions-table
     arn: !GetAtt AuctionsTable.Arn
 
