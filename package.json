@@ -44,7 +44,7 @@
     "ts-node": "^7.0.1",
     "tsconfig-paths": "^3.5.0",
     "tslint": "5.11.0",
-    "typescript": "^3.9.10",
+    "typescript": "^4.5.2",
     "serverless": "^3.39.0"
   },
   "jest": {
