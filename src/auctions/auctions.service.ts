@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Auction,AuctionStatus } from 'src/auctions/models/auction.model';
 import { v4 as uuid } from 'uuid';
+import { CreateAuctionDto } from './dtos/create-auction.dto';
 
 @Injectable()
 export class AuctionsService {
@@ -10,7 +11,9 @@ export class AuctionsService {
     return this.auctions;
   }
 
-  createAuction(name: string, description: string, startDate: Date, endDate: Date): Auction {
+  createAuction(createAuctionDto: CreateAuctionDto): Auction {
+    const { name, description, startDate, endDate } = createAuctionDto;
+
     const new_auction : Auction = {
       id: uuid(),
       name,
