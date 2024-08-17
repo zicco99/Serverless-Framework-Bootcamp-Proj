@@ -16,7 +16,7 @@ process.on('uncaughtException', (reason) => {
   console.error(reason);
 });
 
-function bootstrapServer(): Promise<Server> {
+async function bootstrapServer(): Promise<Server> {
   const expressApp = require('express')();
   const adapter = new ExpressAdapter(expressApp);
 
