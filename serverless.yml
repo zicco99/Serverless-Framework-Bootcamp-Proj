@@ -29,7 +29,7 @@ functions:
     iamRoleStatements:
       - ${file(iam/AuctionsTableIAM.yml):AuctionsTableIAM}
     environment:
-      AUCTIONS_TABLE: ${self:custom.AuctionsTable.arn}
+      AUCTIONS_TABLE_NAME: ${self:custom.AuctionsTable.name}
 
 custom:
   base: ${self:service}-${opt:stage,'dev'}

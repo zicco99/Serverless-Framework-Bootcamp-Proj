@@ -16,9 +16,9 @@ export class AuctionsService {
   async findAll(): Promise<Auction[]> {
     const command = new QueryCommand({
       TableName: this.tableName,
-      IndexName: 'statusAndEndDate', // Use this index or scan the whole table
+      IndexName: 'statusAndEndDate',
       KeyConditionExpression: 'status = :status',
-      ExpressionAttributeValues: marshall({ ':status': 'OPEN' }), // or remove this to scan the entire table
+      ExpressionAttributeValues: marshall({ ':status': 'OPEN' }),
     });
 
     const result = await this.client.send(command);
