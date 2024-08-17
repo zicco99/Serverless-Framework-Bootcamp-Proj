@@ -4,17 +4,13 @@ plugins:
   - serverless-plugin-typescript
   - serverless-plugin-optimize
   - serverless-offline
-  # - serverless-plugin-warmup
-
-# custom:
-#   # Enable warmup on all functions (only for production and staging)
-#   warmup:      
-#       - production
-#       - staging
 
 provider:
   name: aws
   runtime: nodejs16.x
+  memorySize: 256
+  stage: ${opt:stage, 'dev'}
+  region: eu-west-1
 
 package:
   individually: true
@@ -26,3 +22,7 @@ functions:
       - http:
           method: any
           path: /{proxy+}
+
+custom:
+  base: ${self.service}-${opt:stage, 'dev'}
+
