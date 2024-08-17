@@ -1,4 +1,4 @@
-service: serverless-nest-example
+service: zik-serverless-nest
 
 plugins:
   - serverless-plugin-typescript
@@ -15,14 +15,33 @@ provider:
 package:
   individually: true
 
+
+resources:
+  Resources:
+    ${file:../resources/AuctionsTable.yml}
+
 functions:
   main:
     handler: src/main.handler
     events:
       - http:
           method: any
-          path: /{proxy+}
+          path: /{proxy+}    
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:PutItem
+          - dynamodb:GetItem
+          - dynamodb:UpdateItem
+          - dynamodb:DeleteItem
+          - dynamodb:Scan
+          - dynamodb:Query
+        Resource:
+          - ${self:custom.AuctionsTable.arn}
 
 custom:
   base: ${self.service}-${opt:stage, 'dev'}
+  AuctionsTable:
+    name: ${self.base}-auctions-table
+    arn: !GetAtt AuctionsTable.Arn
 

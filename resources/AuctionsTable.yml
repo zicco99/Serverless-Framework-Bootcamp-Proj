@@ -5,11 +5,11 @@ AuctionsTable:
     BillingMode: PAY_PER_REQUEST
     AttributeDefinitions:
       - AttributeName: id
-        AttributeType: S
+        AttributeType: S 
       - AttributeName: status
-        AttributeType: S
-      - AttributeName: endingAt
-        AttributeType: S
+        AttributeType: S  
+      - AttributeName: endDate
+        AttributeType: S 
     KeySchema:
       - AttributeName: id
         KeyType: HASH
@@ -18,7 +18,7 @@ AuctionsTable:
         KeySchema:
           - AttributeName: status
             KeyType: HASH
-          - AttributeName: endingAt
+          - AttributeName: endDate
             KeyType: RANGE
         Projection:
           ProjectionType: ALL
