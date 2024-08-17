@@ -11,6 +11,10 @@ export class AuctionsService {
     return this.auctions;
   }
 
+  findOne(id: string): Auction | undefined {
+    return this.auctions.find(auction => auction.id === id);
+  }
+
   createAuction(createAuctionDto: CreateAuctionDto): Auction {
     const { name, description, startDate, endDate } = createAuctionDto;
 
