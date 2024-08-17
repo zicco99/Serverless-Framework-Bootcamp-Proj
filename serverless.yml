@@ -15,7 +15,6 @@ provider:
 package:
   individually: true
 
-
 resources:
   Resources:
     AuctionsTable: ${file(resources/AuctionsTable.yml):AuctionsTable}
@@ -37,11 +36,11 @@ functions:
           - dynamodb:Scan
           - dynamodb:Query
         Resource:
-          - ${self:custom.AuctionsTable.arn}
+          - !GetAtt AuctionsTable.Arn
 
 custom:
-  base: ${self.service}-${opt:stage, 'dev'}
+  base: ${self:service}-${opt:stage, 'dev'}
   AuctionsTable:
-    name: ${self.custom.base}-auctions-table
+    name: ${self:custom.base}-auctions-table
     arn: !GetAtt AuctionsTable.Arn
 
