@@ -18,7 +18,7 @@ package:
 
 resources:
   Resources:
-    ${file:./resources/AuctionsTable.yml})}
+    AuctionsTable: ${file(resources/AuctionsTable.yml):AuctionsTable}
 
 functions:
   main:
