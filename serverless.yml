@@ -27,16 +27,9 @@ functions:
           method: any
           path: /{proxy+}    
     iamRoleStatements:
-      - Effect: Allow
-        Action:
-          - dynamodb:PutItem
-          - dynamodb:GetItem
-          - dynamodb:UpdateItem
-          - dynamodb:DeleteItem
-          - dynamodb:Scan
-          - dynamodb:Query
-        Resource:
-          - !GetAtt AuctionsTable.Arn
+      - ${file(iam/AuctionsTableIAM.yml):AuctionsTableIAM}
+    environment:
+      AUCTIONS_TABLE: ${self:custom.AuctionsTable.arn}
 
 custom:
   base: ${self:service}-${opt:stage, 'dev'}
