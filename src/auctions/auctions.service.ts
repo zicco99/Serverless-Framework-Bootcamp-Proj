@@ -14,15 +14,26 @@ export class AuctionsService {
   private readonly tableName = process.env.AUCTIONS_TABLE_NAME;
 
   async findAll(): Promise<Auction[]> {
+    // Query to get all auctions with status 'OPEN'
     const command = new QueryCommand({
       TableName: this.tableName,
       IndexName: 'statusAndEndDate',
-      KeyConditionExpression: 'status = :status',
-      ExpressionAttributeValues: marshall({ ':status': 'OPEN' }),
+      KeyConditionExpression: '#status = :status',
+      ExpressionAttributeNames: {
+        '#status': 'status',
+      },
+      ExpressionAttributeValues: marshall({
+        ':status': 'OPEN',
+      }),
     });
 
-    const result = await this.client.send(command);
-    return result.Items ? result.Items.map(item => unmarshall(item) as Auction) : [];
+    try {
+      const result = await this.client.send(command);
+      return result.Items ? result.Items.map(item => unmarshall(item) as Auction) : [];
+    } catch (error) {
+      console.error('Error querying auctions:', error);
+      throw new Error('Failed to retrieve auctions');
+    }
   }
 
   async findOne(id: string): Promise<Auction> {
