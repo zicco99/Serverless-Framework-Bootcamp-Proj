@@ -1,12 +1,25 @@
-import { Controller, Get } from '@nestjs/common';
+import { Body, Controller, Get, Post } from '@nestjs/common';
 import { AuctionsService } from './auctions.service';
+import { Auction } from './models/auction.model';
 
-@Controller('users')
+@Controller('auctions')
 export class AuctionsController {
-  constructor(private readonly userService: AuctionsService) {}
+  constructor(private readonly auctions: AuctionsService) {}
 
   @Get()
   findAll() {
-    // Handle GET requests and use UserService to fetch data
+    return this.auctions.findAll();
   }
+
+  @Post()
+  createAuction(
+    @Body("title") title: string, 
+    @Body("description") description: string, 
+    @Body("startDate") startDate: Date, 
+    @Body("endDate") endDate: Date
+    ) : Auction {
+    return this.auctions.createAuction(title, description, startDate, endDate);
+
+  }
+  
 }

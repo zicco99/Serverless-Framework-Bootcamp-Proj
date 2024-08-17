@@ -6,4 +6,4 @@ import { AuctionsService } from './auctions.service';
   controllers: [AuctionsController],
   providers: [AuctionsService],
 })
-export class CatsModule {}
+export class AuctionsModule {}
