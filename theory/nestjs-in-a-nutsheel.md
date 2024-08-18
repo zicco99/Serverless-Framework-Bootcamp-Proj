@@ -275,8 +275,49 @@ In the end, the flow using pipes will take this shape:
 
 ![alt text](https://github.com/zicco99/Serverless-Framework-Bootcamp-Proj/blob/main/theory/res/pipe-flow.png?raw=true)
 
+Among the many useful npm libraries for data validation, the most used is `class-validator` and `class-transformer`.
 
 
+# NESTJS Intercerptors
+
+Interceptors are a powerful feature in NestJS that allow you to perform additional operations on incoming requests or outgoing responses. They are similar to middleware but are more versatile, offering additional capabilities for transforming and extending the request-response cycle.
+
+## Key Characteristics of Interceptors
+
+1. **Request and Response Transformation**: Interceptors can modify the request before it reaches the route handler or modify the response before it is sent to the client. This makes them useful for tasks like logging, transforming data, or handling errors.
+
+2. **Execution Context**: Interceptors are executed in a specific order, which you can control. They can wrap route handlers, modify their behavior, or even prevent them from being executed.
+
+3. **Handling Exceptions**: Interceptors can handle exceptions thrown by route handlers or other interceptors, providing a centralized way to manage errors.
+
+4. **Asynchronous Operations**: Interceptors can be asynchronous, allowing them to perform operations such as making additional HTTP requests or processing data with promises.
+
+Here’s a basic example of a custom interceptor:
+
+```typescript
+import {
+  Injectable,
+  NestInterceptor,
+  ExecutionContext,
+  CallHandler,
+} from '@nestjs/common';
+import { Observable, tap } from 'rxjs';
+
+@Injectable()
+export class LoggingInterceptor implements NestInterceptor {
+  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+    const request = context.switchToHttp().getRequest();
+    const now = Date.now();
+
+    console.log(`Incoming request to ${request.url}`);
+
+    return next.handle().pipe(
+      tap(() => console.log(`Response time: ${Date.now() - now}ms`))
+    );
+  }
+}
+
+```
 
 
 
