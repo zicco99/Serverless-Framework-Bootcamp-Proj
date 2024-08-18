@@ -78,7 +78,7 @@ export class AuctionsService {
   async deleteAuction(deleteAuctionDto: DeleteAuctionDto): Promise<Auction> {
     const { id } = deleteAuctionDto;
 
-    const existingAuction = await this.findOne(id); // Ensure it exists before deleting
+    const existingAuction = await this.findOne(id);
 
     const command = new DeleteItemCommand({
       TableName: this.tableName,
