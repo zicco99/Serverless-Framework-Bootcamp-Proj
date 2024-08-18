@@ -36,4 +36,4 @@ custom:
   AuctionsTable:
     name: ${self:custom.base}-auctions-table
     arn: !GetAtt AuctionsTable.Arn
-    indexArn: !Join ["/", ["${self:custom.AuctionsTable.Arn}", "index/statusAndEndDate"]]
+    indexArn: !Join ["/", ["${self:custom.AuctionsTable.arn}", "index/statusAndEndDate"]]
