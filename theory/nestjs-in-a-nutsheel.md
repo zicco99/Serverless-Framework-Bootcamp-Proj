@@ -1,34 +1,18 @@
 # NestJS in a Nutshell
 
-NestJS is a progressive Node.js framework for building efficient, reliable, and scalable server-side applications. It's built on top of Express (or optionally Fastify) and leverages TypeScript, which provides a robust structure for developing complex applications.
+NestJS is a progressive Node.js framework tailored for building efficient, reliable, and scalable server-side applications. It is built on top of Express (or optionally Fastify) and leverages TypeScript, offering a strong structure for developing complex applications.
 
-## Key Features
+NestJS employs a modular architecture, which allows you to organize your code into discrete modules. This approach makes it easier to manage and scale your application, as each module encapsulates its own functionality and dependencies.
 
-### 1. **Modular Architecture**
-NestJS uses a modular architecture that allows you to organize your code into modules, making it easier to manage and scale your application. Each module can encapsulate its own functionality and dependencies.
+A key feature of NestJS is its use of dependency injection to manage the application's services and components. This practice promotes loose coupling, enhances reusability, and simplifies testing. The framework also makes extensive use of decorators, such as `@Controller`, `@Injectable`, and `@Module`, to define and configure components, contributing to more readable and expressive code.
 
-### 2. **Dependency Injection**
-The framework employs dependency injection to manage your application’s services and components. This makes it easier to develop and test your code by promoting loose coupling and enhancing reusability.
+Built with TypeScript, NestJS benefits from strong typing, modern JavaScript features, and improved tooling support. This not only enhances code quality but also boosts developer productivity by catching errors at compile-time.
 
-### 3. **Decorators**
-NestJS makes extensive use of decorators (e.g., `@Controller`, `@Injectable`, `@Module`) to define and configure components. These decorators make the code more readable and expressive.
+NestJS comes with built-in support for common design patterns and practices, including MVC (Model-View-Controller), Microservices, GraphQL, WebSockets, and RESTful APIs. The framework is highly extensible, allowing developers to customize it with their own providers, interceptors, guards, and middleware to meet specific application needs. It also integrates seamlessly with other libraries and frameworks.
 
-### 4. **TypeScript Support**
-Built with TypeScript, NestJS provides strong typing, modern JavaScript features, and improved tooling support. TypeScript enhances code quality and developer productivity by catching errors at compile-time.
+The architecture of NestJS promotes scalability and maintainability, making it suitable for both small projects and large-scale enterprise applications. Additionally, its design encourages writing unit and integration tests, further supporting the development of reliable and robust applications.
 
-### 5. **Built-in Support for Common Patterns**
-NestJS supports common design patterns and practices out-of-the-box, including:
-- **MVC (Model-View-Controller)**
-- **Microservices**
-- **GraphQL**
-- **WebSockets**
-- **RESTful APIs**
-
-### 6. **Extensible**
-You can extend NestJS with custom providers, interceptors, guards, and middleware to meet your application’s specific needs. It also integrates well with other libraries and frameworks.
-
-### 7. **Scalable and Testable**
-The framework’s architecture promotes scalability and maintainability, making it suitable for both small projects and large-scale enterprise applications. Its design also encourages writing unit and integration tests.
+---
 
 ## Basic Concepts
 
@@ -184,8 +168,112 @@ export class UsersService {
 
 ```
 
-Once we defined the 
+In the end, the flow will take this shape:
 
+![alt text](https://github.com/zicco99/Serverless-Framework-Bootcamp-Proj/blob/main/theory/res/request-flow.png?raw=true)
+
+---------
+
+Once we have defined the building blocks of NestJS, such as Modules, Controllers, and Providers, it's important to understand how **L2_Features** fit into the framework. 
+
+# NestJS Pipes
+
+Pipes are a fundamental feature in NestJS that operate on the arguments of route handlers just before they are processed by the handler. They are used for two main purposes: data transformation and data validation.
+
+When a pipe is applied, it can either transform the incoming data or validate it. The transformed or validated data is then passed to the route handler. If a pipe detects that the data is invalid, it can throw an exception. NestJS will handle this exception and convert it into an appropriate error response. Additionally, pipes can be asynchronous, allowing them to perform operations that involve promises or other asynchronous tasks.
+
+NestJS ships with several built-in pipes in the `@nestjs/common` module, including:
+
+- **ValidationPipe**: Validates an entire object against a class schema, including Data Transfer Objects (DTOs). If any property within the object is malformed, the validation fails.
+
+- **ParseIntPipe**: Converts a string argument into a number, validating that the string can be parsed as an integer.
+
+## Creating Custom Pipes
+
+To create a custom pipe, you need to:
+
+1. **Define a Class**: Your custom pipe should be a class decorated with `@Injectable`, making it a provider that can be injected into other parts of your application.
+
+2. **Implement the PipeTransform Interface**: Your custom pipe class must implement the `PipeTransform` generic interface. This requires defining the `transform()` method, which takes the value to be processed and metadata as parameters. Inside this method, you can implement your own logic for transforming or validating the data.
+
+Here is a basic example of a custom pipe:
+
+```typescript
+import { Injectable, PipeTransform, ArgumentMetadata } from '@nestjs/common';
+
+@Injectable()
+export class CustomPipe implements PipeTransform {
+  transform(value: any, metadata: ArgumentMetadata) {
+    return value;
+  }
+}
+
+```
+
+## Handler-level Pipe
+
+Pipes can also be applied at the handler level using the @UsePipes decorator. This decorator is used to specify which pipes should be applied to a specific route handler or controller. By using `@UsePipes`, you can control the scope of the pipe's effect, applying it only to particular handlers as needed.
+
+
+```typescript
+import { Controller, Get, UsePipes } from '@nestjs/common';
+import { CustomPipe } from './custom.pipe';
+
+@Controller('example')
+export class ExampleController {
+  @Get()
+  @UsePipes(CustomPipe)
+  getExample() {
+    //Stuff here after validation
+  }
+}
+
+```
+
+## Parameter-level Pipe
+
+In addition to applying pipes at the handler or controller level, NestJS allows you to apply pipes at the parameter level. This is useful when you need specific data transformation or validation for individual parameters in a route handler.
+
+To apply a pipe at the parameter level, use the `@UsePipes` decorator directly on the parameter within the route handler. This approach gives you granular control over which parameters are processed by which pipes.
+
+```typescript
+import { Controller, Get, Query, UsePipes } from '@nestjs/common';
+import { ParseIntPipe } from '@nestjs/common';
+
+@Controller('items')
+export class ItemsController {
+  @Get()
+  getItems(@Query('page', ParseIntPipe) page: number) {
+    return `Requested page number: ${page}`;
+  }
+}
+
+```
+
+## Global pipe
+
+In NestJS, you can define global pipes to apply data transformation and validation across the entire application. This approach ensures consistency and reduces the need to apply pipes manually to individual routes or handlers.
+
+```typescript
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
+import { ValidationPipe } from '@nestjs/common';
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+
+  // Apply ValidationPipe globally
+  app.useGlobalPipes(new ValidationPipe());
+
+  await app.listen(3000);
+}
+bootstrap();
+
+```
+
+In the end, the flow using pipes will take this shape:
+
+![alt text](https://github.com/zicco99/Serverless-Framework-Bootcamp-Proj/blob/main/theory/res/pipe-flow.png?raw=true)
 
 
 
