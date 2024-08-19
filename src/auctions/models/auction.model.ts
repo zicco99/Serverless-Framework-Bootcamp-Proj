@@ -5,8 +5,8 @@ export interface Auction {
     status: AuctionStatus;
     startDate: Date;
     endDate: Date;
-    createdDate: Date;
-    updatedDate: Date;
+    createdDate: string;
+    updatedDate: string;
 }
 
 export enum AuctionStatus {

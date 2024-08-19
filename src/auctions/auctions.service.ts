@@ -61,8 +61,8 @@ export class AuctionsService {
       status: AuctionStatus.OPEN,
       startDate,
       endDate,
-      createdDate: new Date(),
-      updatedDate: new Date(),
+      createdDate: new Date().toISOString(),
+      updatedDate: new Date().toISOString(),
     };
 
     const command = new PutItemCommand({
@@ -92,7 +92,7 @@ export class AuctionsService {
     const updatedAuction: Auction = {
       ...existingAuction,
       ...updateAuctionDto,
-      updatedDate: new Date(),
+      updatedDate: new Date().toISOString(),
     };
 
     const command = new UpdateItemCommand({
