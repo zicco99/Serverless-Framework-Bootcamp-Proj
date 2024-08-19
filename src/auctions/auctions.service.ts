@@ -5,7 +5,6 @@ import { DynamoDBClient, GetItemCommand, PutItemCommand, UpdateItemCommand, Dele
 import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
 import { Auction, AuctionStatus } from 'src/auctions/models/auction.model';
 import { CreateAuctionDto } from './dtos/create-auction.dto';
-import { DeleteAuctionDto } from './dtos/delete-auction.dto';
 import { UpdateAuctionDto } from './dtos/update-auction.dto';
 
 @Injectable()
@@ -75,9 +74,7 @@ export class AuctionsService {
     return newAuction;
   }
 
-  async deleteAuction(deleteAuctionDto: DeleteAuctionDto): Promise<Auction> {
-    const { id } = deleteAuctionDto;
-
+  async deleteAuction(id: string): Promise<Auction> {
     const existingAuction = await this.findOne(id);
 
     const command = new DeleteItemCommand({

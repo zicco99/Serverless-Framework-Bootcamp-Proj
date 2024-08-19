@@ -1,7 +1,6 @@
 import { Controller, Get, Post, Body, Param, Delete, Put, Query, Patch } from '@nestjs/common';
 import { AuctionsService } from './auctions.service';
 import { CreateAuctionDto } from './dtos/create-auction.dto';
-import { DeleteAuctionDto } from './dtos/delete-auction.dto';
 import { UpdateAuctionDto } from './dtos/update-auction.dto';
 import { Auction } from 'src/auctions/models/auction.model';
 
@@ -32,8 +31,8 @@ export class AuctionsController {
     return this.auctionsService.updateAuction(id, updateAuctionDto);
   }
 
-  @Delete()
-  async delete(@Body() deleteAuctionDto: DeleteAuctionDto): Promise<Auction> {
-    return this.auctionsService.deleteAuction(deleteAuctionDto);
+  @Delete(':id')
+  async delete(@Param('id') id: string): Promise<Auction> {
+    return this.auctionsService.deleteAuction(id);
   }
 }
