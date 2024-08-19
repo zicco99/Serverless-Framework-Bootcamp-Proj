@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Delete, Put, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, Put, Query, Patch } from '@nestjs/common';
 import { AuctionsService } from './auctions.service';
 import { CreateAuctionDto } from './dtos/create-auction.dto';
 import { DeleteAuctionDto } from './dtos/delete-auction.dto';
@@ -24,7 +24,7 @@ export class AuctionsController {
     return this.auctionsService.createAuction(createAuctionDto);
   }
 
-  @Put(':id')
+  @Patch(':id')
   async update(
     @Param('id') id: string,
     @Body() updateAuctionDto: Partial<UpdateAuctionDto>,
