@@ -68,7 +68,7 @@ export class AuctionsService {
 
     const command = new PutItemCommand({
       TableName: this.tableName,
-      Item: marshall(newAuction),
+      Item: marshall(newAuction, { convertClassInstanceToMap: true }),
     });
 
     await this.client.send(command);
@@ -117,7 +117,7 @@ export class AuctionsService {
         ':startDate': updatedAuction.startDate,
         ':endDate': updatedAuction.endDate,
         ':updatedDate': updatedAuction.updatedDate,
-      }),
+      },{ convertClassInstanceToMap: true }),
       ReturnValues: 'ALL_NEW',
     });
 
