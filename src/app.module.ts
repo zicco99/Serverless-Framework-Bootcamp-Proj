@@ -4,7 +4,7 @@ import { AppService } from './app.service';
 import { AuctionsModule } from './auctions/auctions.module';
 
 @Module({
-  imports: [AuctionsModule],
+  imports: [AuctionsModule, AuctionsModule],
   controllers: [AppController],
   providers: [AppService],
 })

@@ -27,6 +27,7 @@
     
     /* Module path mappings */
     "types": ["node", "jest"], /* Type declaration files */
+    "typeRoots": ["./node_modules/@types", "./src/types"], /* Type root directories */
     "allowSyntheticDefaultImports": true, /* Allow default imports */
     "esModuleInterop": true, /* Interoperability between modules */
 
