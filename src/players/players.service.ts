@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { S3HashRing } from 'src/lib/s3-hash-ring.util';
+import { S3HashRing } from '../lib/s3-hash-ring.util';
 import { Player } from './models/player.model';
 import { CreatePlayerDto } from './dtos/create-player.dto';
 
