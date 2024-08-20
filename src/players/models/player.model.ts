@@ -1,6 +1,6 @@
 export interface Player {
     id: string;
-    name: string;
+    fullname: string;
     score: number;
     createdDate: string;
     updatedDate: string;

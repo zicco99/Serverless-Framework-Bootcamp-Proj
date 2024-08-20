@@ -1,6 +1,7 @@
+
+// I'm using the s3 hash ring, 
 export class CreatePlayerDto {
     name: string;
-    description: string;
-    startDate: Date;
-    endDate: Date;
+    score: number;
+  fullname: string;
 }

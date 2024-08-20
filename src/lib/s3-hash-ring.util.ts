@@ -1,80 +1,160 @@
-/**
- * **S3HashRing**: A class that manages data distribution and querying in Amazon S3 using consistent hashing.
- *
- * **Purpose**:
- * - Distributes data across multiple S3 buckets efficiently.
- * - Uses consistent hashing to determine the appropriate bucket for each piece of data.
- *
- * **Key Components**:
- * 1. **Consistent Hashing**:
- *    - Uses a hash ring to map data to buckets.
- *    - Helps in even data distribution and efficient retrieval.
- * 2. **Hash Ring Configuration**:
- *    - **`range`**: Defines the total number of positions on the hash ring (default: 100003, a large prime number for even distribution).
- *    - **`weight`**: Specifies the number of virtual nodes per bucket (default: 40, balancing between performance and distribution).
- * 3. **Data Operations**:
- *    - **Upload Data**: Computes a hash from the data, determines the bucket, and uploads the data to S3.
- *    - **Retrieve Data**: Computes the hash to locate the bucket and fetches the data from S3.
- *    - **Query Data**: Retrieves data from the primary bucket and optionally from nearby buckets to ensure completeness.
- *
- * **Usage**:
- * - Initialize `S3QueryLib` with S3 configuration and hash ring options.
- * - Use methods like `uploadData`, `retrieveData`, `queryData`, and `listObjects` to manage and access data.
- */
-
-import { Injectable } from '@nestjs/common';
+import ConsistentHash from 'consistent-hash';
+import { BloomFilterManagerService } from './bloom-filter.service'; // Import the service
 import { S3Client, PutObjectCommand, GetObjectCommand, SelectObjectContentCommand } from '@aws-sdk/client-s3';
-import * as crypto from 'crypto'; // For hashing
+import * as crypto from 'crypto';
 import streamToString from 'stream-to-string';
-import { Readable } from 'stream'; // For TypeScript type checking
-import ConsistentHash from 'consistent-hash'; // Adjust import if needed
-import process from 'process';
+import { Readable } from 'stream';
+import { PlayerUniqueAttributes } from '../players/players.controller';
+import { BloomFilter } from 'bloom-filters';
 
-// Define a generic DTO type with attributes used for hashing
-export type EntityDto = {
-  id: string;
-  [key: string]: any;
-};
+export interface Entity {
+  id : string;
+}
 
-@Injectable()
-export class S3HashRing<Entity, EntityDto, UniqueAttributes> {
-  private readonly s3Client = new S3Client({ region: 'eu-west-1' });
-  private readonly PREFIX_BUCKET_NAME = process.env.PREFIX_BUCKET_NAME;
+export class S3HashRing<Entity, CreateEntityDTO extends object, UniqueAttributes extends object> {
+  private readonly s3Client: S3Client;
+  private readonly bloomFilterManager: BloomFilterManagerService;
   private readonly hashRing: ConsistentHash<string>;
-
-  private N_BUCKETS = parseInt(process.env.N_BUCKETS || '100', 10);
 
   constructor(
     private readonly uniqueAttributeKeys: (keyof UniqueAttributes)[],
-    private readonly dtoToEntityMapper: (dto: EntityDto) => Entity,
-    private readonly entityToUniqueAttributes: (entity: Entity) => UniqueAttributes
+    readonly dtoToEntityMapper: (dto: CreateEntityDTO, id: string) => Entity,
+    private readonly entityToUniqueAttributes: (entity: Entity) => UniqueAttributes,
+    bloomFilterManagerService: BloomFilterManagerService // Bloom filter manager service
   ) {
-    this.hashRing = new ConsistentHash<string>(
-      100003, // Hash ring control point modulo range
-      40, // Default number of control points per node
-      'random', // Node arrangement around the ring
-      (nodes: string[]) => nodes
-    );
-
-    // Initialize buckets in hash ring
-    Array.from({ length: this.N_BUCKETS }, (_, i) => `bucket_${i}`).forEach(bucketName =>
-      this.hashRing.add(bucketName)
-    );
+    this.s3Client = new S3Client({ region: 'eu-west-1' });
+    this.bloomFilterManager = bloomFilterManagerService;
+    this.hashRing = new ConsistentHash<string>(100003, 40, 'random', (nodes: string[]) => nodes);
   }
 
-
-  private getBucket(attributes: UniqueAttributes): string {
+  getBucket(attributes: UniqueAttributes): string {
     return this.hashRing.get(this.createHash(attributes)) || 'default-bucket';
   }
+
+  private async getBloomFilter(bucket: string): Promise<BloomFilter> {
+    return this.bloomFilterManager.getBloomFilter(bucket);
+  }
+
+  private async saveBloomFilter(bucket: string, bloomFilter: BloomFilter): Promise<void> {
+    await this.bloomFilterManager.saveBloomFilter(bucket, bloomFilter);
+  }
+
+  createHash(attributes: UniqueAttributes): string {
+    const values = Object.values(attributes as { [key: string]: string | number });
+    const hashInput = values.map(value => String(value)).join(',');
+    return crypto.createHash('sha256').update(hashInput).digest('hex');
+  }
+
+  private buildS3SelectQuery(attributes: UniqueAttributes): string {
+    return this.uniqueAttributeKeys
+      .map(key => `${String(key)} = '${attributes[key]}'`)
+      .join(' AND ');
+  }
+
+  private getBucketKey(bucket: string): string {
+    return `${bucket}/data.json`;
+  }
+
+  async addEntity(dto: CreateEntityDTO): Promise<void> {
+    const uniqueAttributes: UniqueAttributes = this.extractUniqueAttributes(dto);
+    const id = this.createHash(uniqueAttributes);
+    const entity: Entity = this.dtoToEntityMapper(dto, id);
+
+    const bucket = this.getBucket(uniqueAttributes);
+    const bloomFilter = await this.getBloomFilter(bucket);
+    bloomFilter.add(id);
+
+    const data = await this.fetchData(bucket);
+    const entities = JSON.parse(data) as Entity[];
+    entities.push(entity);
+
+    await this.uploadData(bucket, entities);
+    await this.saveBloomFilter(bucket, bloomFilter);
+  }
+
+  async findOne(uniqueAttributes: UniqueAttributes): Promise<Entity | undefined> {
+    const id = this.createHash(uniqueAttributes);
+    const bucket = this.getBucket(uniqueAttributes);
+    const bloomFilter = await this.getBloomFilter(bucket);
+
+    if (!bloomFilter.has(id)) {
+      console.log(`Entity ID ${id} not found in Bloom filter.`);
+      return undefined;
+    }
+
+    try {
+      const response = await this.s3Client.send(new GetObjectCommand({
+        Bucket: bucket,
+        Key: this.getBucketKey(bucket),
+      }));
+      const data = await streamToString(response.Body as Readable);
+      const entities = JSON.parse(data) as Entity[];
+      return entities.find(entity => this.createHash(this.entityToUniqueAttributes(entity)) === id);
+    } catch (err) {
+      console.error(`Error retrieving entity from bucket ${bucket}:`, err);
+      throw new Error('Failed to retrieve entity');
+    }
+  }
+
+  async findWithContinuationToken(
+    uniqueAttributes: UniqueAttributes,
+    limit: number = 10,
+    continuationToken?: string
+  ): Promise<{ entities: Entity[], nextToken?: string }> {
+    const bucket = this.getBucket(uniqueAttributes);
+  
+    let query = `SELECT * FROM s3object WHERE ${this.buildS3SelectQuery(uniqueAttributes)}`;
+    if (continuationToken) {
+      query += ` AND id > '${continuationToken}'`;
+    }
+  
+    try {
+      const response = await this.s3Client.send(new SelectObjectContentCommand({
+        Bucket: bucket,
+        Key: this.getBucketKey(bucket),
+        ExpressionType: 'SQL',
+        Expression: query,
+        InputSerialization: { JSON: { Type: 'DOCUMENT' } },
+        OutputSerialization: { JSON: {} },
+      }));
+  
+      const records = response.Payload;
+      if (!records) return { entities: [], nextToken: undefined };
+  
+      const entities: Entity[] = [];
+      let lastId: string | undefined;
+  
+      for await (const event of records) {
+        if (event.Records && event.Records.Payload) {
+          const payloadString = await streamToString(event.Records.Payload as unknown as Readable);
+          const batch = JSON.parse(payloadString) as Entity[];
+          entities.push(...batch);
+          if (batch.length > 0) {
+            lastId = this.createHash(this.entityToUniqueAttributes(batch[batch.length - 1]));
+          }
+        }
+      }
+  
+      // Determine the next token
+      const nextToken = entities.length > limit ? lastId : undefined;
+      return { entities: entities.slice(0, limit), nextToken };
+    } catch (err) {
+      console.error(`Error retrieving entities from bucket ${bucket}:`, err);
+      throw new Error('Failed to retrieve entities');
+    }
+  }
+  
 
   private async fetchData(bucket: string): Promise<string> {
     try {
       const response = await this.s3Client.send(new GetObjectCommand({ Bucket: bucket, Key: this.getBucketKey(bucket) }));
       return await streamToString(response.Body as Readable);
     } catch (err: any) {
-      if (err.name === 'NoSuchKey') return '[]';
+      if (err.name === 'NoSuchKey') {
+        return JSON.stringify([]);
+      }
       console.error(`Error fetching data from bucket ${bucket}:`, err);
-      throw new Error('Failed to retrieve data');
+      throw new Error('Failed to fetch data');
     }
   }
 
@@ -83,7 +163,7 @@ export class S3HashRing<Entity, EntityDto, UniqueAttributes> {
       await this.s3Client.send(new PutObjectCommand({
         Bucket: bucket,
         Key: this.getBucketKey(bucket),
-        Body: JSON.stringify(data, null, 2),
+        Body: JSON.stringify(data),
         ContentType: 'application/json',
       }));
     } catch (err) {
@@ -92,94 +172,14 @@ export class S3HashRing<Entity, EntityDto, UniqueAttributes> {
     }
   }
 
-  async addEntity(dto: EntityDto): Promise<void> {
-    const entity = this.dtoToEntityMapper(dto);
-    const attributes = this.entityToUniqueAttributes(entity);
-    const bucket = this.getBucket(attributes);
-    const data = await this.fetchData(bucket);
-    const entities = JSON.parse(data) as Entity[];
-    entities.push(entity);
-    await this.uploadData(bucket, entities);
-  }
+  private extractUniqueAttributes(dto: CreateEntityDTO): UniqueAttributes {
+    const uniqueAttributes: Partial<UniqueAttributes> = {};
 
-
-  async getEntity(attributes: UniqueAttributes): Promise<Entity | undefined> {
-    const bucket = this.getBucket(attributes);
-
-
-    const query = `SELECT * FROM s3object WHERE ${this.buildS3SelectQuery(attributes)}`;
-    const response = await this.s3Client.send(new SelectObjectContentCommand({
-      Bucket: bucket,
-      Key: this.getBucketKey(bucket),
-      ExpressionType: 'SQL',
-      Expression: query,
-      InputSerialization: {
-        JSON: { Type: 'DOCUMENT'  },
-      },
-      OutputSerialization: {
-        JSON: {},
-      },
-    }));
-
-    const records = response.Payload as Readable;
-    for await (const event of records) {
-      if (event.Records) {
-        const data = await streamToString(event.Records);
-        console.log(data)
-        const entities = JSON.parse(data) as Entity[];
-        return entities[0];
+    for (const key of this.uniqueAttributeKeys) {
+      if (key in dto) {
+        uniqueAttributes[key as keyof UniqueAttributes] = dto[key as unknown as keyof CreateEntityDTO] as unknown as UniqueAttributes[keyof UniqueAttributes];
       }
     }
-
-    return undefined;
-  }
-
-  
-  async getEntities(attributes: UniqueAttributes): Promise<Entity[]> {
-    const bucket = this.getBucket(attributes);
-    const query = `SELECT * FROM s3object WHERE ${this.buildS3SelectQuery(attributes)}`;
-  
-    const response = await this.s3Client.send(new SelectObjectContentCommand({
-      Bucket: bucket,
-      Key: this.getBucketKey(bucket),
-      ExpressionType: 'SQL',
-      Expression: query,
-      InputSerialization: { JSON: { Type: 'DOCUMENT' } },
-      OutputSerialization: { JSON: {} },
-    }));
-  
-    const records = response.Payload as Readable;
-    console.log(records);
-    const entities: Entity[] = [];
-  
-    for await (const event of records) {
-      if (event.Records) {
-        const data = await streamToString(event.Records);
-        entities.push(...JSON.parse(data));
-      }
-    }
-  
-    return entities;
-  }
-  
-
-
-  //Utility Stuff
-
-  private getBucketKey(bucket: string): string {
-    return `${bucket}.json`;
-  }
-
-  private createHash(attributes: UniqueAttributes): string {
-    const hashInput = this.uniqueAttributeKeys
-      .map(key => `${String(key)}:${attributes[key]}`)
-      .join('|');
-    return crypto.createHash('sha256').update(hashInput).digest('hex');
-  }
-
-  private buildS3SelectQuery(attributes: UniqueAttributes): string {
-    return this.uniqueAttributeKeys
-      .map(key => `(${String(key)} = '${attributes[key]}')`)
-      .join(' AND ');
+    return uniqueAttributes as UniqueAttributes;
   }
 }
