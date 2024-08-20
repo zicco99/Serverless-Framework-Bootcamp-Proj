@@ -3,7 +3,7 @@ import { Player } from 'src/players/models/player.model';
 import { PlayersService } from './players.service';
 
 @Controller('players')
-export class S3HashRingController {
+export class PlayersController{
   constructor(private readonly players: PlayersService) {}
 
   @Get(':id')

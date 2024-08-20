@@ -104,7 +104,6 @@ export class S3HashRing<Entity, EntityDto, UniqueAttributes> {
 
 
   async getEntity(attributes: UniqueAttributes): Promise<Entity | undefined> {
-    // Determine the bucket based on the provided attributes
     const bucket = this.getBucket(attributes);
 
 

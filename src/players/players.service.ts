@@ -1,16 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { S3Client } from '@aws-sdk/client-s3';
-import { S3HashRing } from 'src/lib/s3-hash-ring.util'; // Ensure correct path and import
+import { S3HashRing } from 'src/lib/s3-hash-ring.util';
 import { Player } from './models/player.model';
 import { CreatePlayerDto } from './dtos/create-player.dto';
 
-// Define a generic DTO type with attributes used for hashing
-export type EntityDto = {
-  id: string;
-  [key: string]: any;
-};
-
-// Define UniqueAttributes based on your use case
 type PlayerUniqueAttributes = {
   id: string;
 };
@@ -33,7 +25,7 @@ export class PlayersService {
   }
 
   private entityToUniqueAttributes(entity: Player): PlayerUniqueAttributes {
-    return { id: entity.id }; // Simplified extraction
+    return { id: entity.id };
   }
 
   async addPlayer(dto: CreatePlayerDto): Promise<void> {
