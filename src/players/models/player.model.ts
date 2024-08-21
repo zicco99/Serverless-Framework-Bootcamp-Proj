@@ -5,3 +5,10 @@ export interface Player {
     createdDate: string;
     updatedDate: string;
 }
+
+
+export interface PlayerUniqueAttributes {
+    fullname: string;
+    score: number;
+  }
+  

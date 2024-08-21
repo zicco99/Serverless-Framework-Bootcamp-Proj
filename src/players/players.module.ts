@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { PlayersController } from './players.controller';
 import { PlayersService } from './players.service';
-import { BloomFilterManagerService } from '../lib/bloom-filter.service';  // Adjust the path if needed
+import { BloomFilterManagerService } from '../lib/bloom-filter-manager.service';  // Adjust the path if needed
 import { S3Client } from '@aws-sdk/client-s3';
 
 @Module({

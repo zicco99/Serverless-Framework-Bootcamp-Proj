@@ -1,12 +1,6 @@
 import { Controller, Get, Param, Query, ParseIntPipe } from '@nestjs/common';
 import { PlayersService } from './players.service';
-import { Player } from './models/player.model';
-
-export interface PlayerUniqueAttributes {
-  fullname: string;
-  score: number;
-}
-
+import { Player, PlayerUniqueAttributes } from './models/player.model';
 
 @Controller('players')
 export class PlayersController {

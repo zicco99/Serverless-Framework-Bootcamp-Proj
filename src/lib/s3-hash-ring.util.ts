@@ -1,26 +1,25 @@
 import ConsistentHash from 'consistent-hash';
-import { BloomFilterManagerService } from './bloom-filter.service'; // Import the service
 import { S3Client, PutObjectCommand, GetObjectCommand, SelectObjectContentCommand } from '@aws-sdk/client-s3';
 import * as crypto from 'crypto';
 import streamToString from 'stream-to-string';
 import { Readable } from 'stream';
-import { PlayerUniqueAttributes } from '../players/players.controller';
 import { BloomFilter } from 'bloom-filters';
+import { BloomFilterManagerService } from './bloom-filter-manager.service';
 
 export interface Entity {
-  id : string;
+  id: string;
 }
 
 export class S3HashRing<Entity, CreateEntityDTO extends object, UniqueAttributes extends object> {
   private readonly s3Client: S3Client;
-  private readonly bloomFilterManager: BloomFilterManagerService;
   private readonly hashRing: ConsistentHash<string>;
+  private readonly bloomFilterManager: BloomFilterManagerService;
 
   constructor(
     private readonly uniqueAttributeKeys: (keyof UniqueAttributes)[],
     readonly dtoToEntityMapper: (dto: CreateEntityDTO, id: string) => Entity,
     private readonly entityToUniqueAttributes: (entity: Entity) => UniqueAttributes,
-    bloomFilterManagerService: BloomFilterManagerService // Bloom filter manager service
+    bloomFilterManagerService: BloomFilterManagerService
   ) {
     this.s3Client = new S3Client({ region: 'eu-west-1' });
     this.bloomFilterManager = bloomFilterManagerService;
@@ -29,14 +28,6 @@ export class S3HashRing<Entity, CreateEntityDTO extends object, UniqueAttributes
 
   getBucket(attributes: UniqueAttributes): string {
     return this.hashRing.get(this.createHash(attributes)) || 'default-bucket';
-  }
-
-  private async getBloomFilter(bucket: string): Promise<BloomFilter> {
-    return this.bloomFilterManager.getBloomFilter(bucket);
-  }
-
-  private async saveBloomFilter(bucket: string, bloomFilter: BloomFilter): Promise<void> {
-    await this.bloomFilterManager.saveBloomFilter(bucket, bloomFilter);
   }
 
   createHash(attributes: UniqueAttributes): string {
@@ -59,30 +50,43 @@ export class S3HashRing<Entity, CreateEntityDTO extends object, UniqueAttributes
     const uniqueAttributes: UniqueAttributes = this.extractUniqueAttributes(dto);
     const id = this.createHash(uniqueAttributes);
     const entity: Entity = this.dtoToEntityMapper(dto, id);
-
     const bucket = this.getBucket(uniqueAttributes);
-    const bloomFilter = await this.getBloomFilter(bucket);
-    bloomFilter.add(id);
+  
+    try {
+      const bloomFilter = await this.bloomFilterManager.getBloomFilter(bucket);
 
-    const data = await this.fetchData(bucket);
-    const entities = JSON.parse(data) as Entity[];
-    entities.push(entity);
+      if(bloomFilter.has(id)) {
+        console.log(`Entity ID ${id} already exists in Bloom filter.`);
+        throw new Error('Entity ID already exists in Bloom filter');
+      }
+  
+      const data = await this.fetchData(bucket);
+      const parsedData = JSON.parse(data) as Entity[]; 
+      parsedData.push(entity);
+      await this.uploadData(bucket, parsedData);
 
-    await this.uploadData(bucket, entities);
-    await this.saveBloomFilter(bucket, bloomFilter);
+      bloomFilter.add(id);
+      await this.bloomFilterManager.saveBloomFilter(bucket, bloomFilter);
+  
+    } catch (err) {
+      console.error(`Error adding entity to bucket ${bucket}:`, err);
+      throw new Error('Failed to add entity');
+    }
   }
+  
 
   async findOne(uniqueAttributes: UniqueAttributes): Promise<Entity | undefined> {
     const id = this.createHash(uniqueAttributes);
     const bucket = this.getBucket(uniqueAttributes);
-    const bloomFilter = await this.getBloomFilter(bucket);
-
-    if (!bloomFilter.has(id)) {
-      console.log(`Entity ID ${id} not found in Bloom filter.`);
-      return undefined;
-    }
 
     try {
+      const bloomFilter = await this.bloomFilterManager.getBloomFilter(bucket);
+      
+      if (!bloomFilter.has(id)) {
+        console.log(`Entity ID ${id} not found in Bloom filter.`);
+        return undefined;
+      }
+
       const response = await this.s3Client.send(new GetObjectCommand({
         Bucket: bucket,
         Key: this.getBucketKey(bucket),
@@ -102,12 +106,13 @@ export class S3HashRing<Entity, CreateEntityDTO extends object, UniqueAttributes
     continuationToken?: string
   ): Promise<{ entities: Entity[], nextToken?: string }> {
     const bucket = this.getBucket(uniqueAttributes);
-  
+    
+    // Construct the query for S3 Select
     let query = `SELECT * FROM s3object WHERE ${this.buildS3SelectQuery(uniqueAttributes)}`;
     if (continuationToken) {
       query += ` AND id > '${continuationToken}'`;
     }
-  
+    
     try {
       const response = await this.s3Client.send(new SelectObjectContentCommand({
         Bucket: bucket,
@@ -117,13 +122,13 @@ export class S3HashRing<Entity, CreateEntityDTO extends object, UniqueAttributes
         InputSerialization: { JSON: { Type: 'DOCUMENT' } },
         OutputSerialization: { JSON: {} },
       }));
-  
+      
       const records = response.Payload;
       if (!records) return { entities: [], nextToken: undefined };
-  
+
       const entities: Entity[] = [];
       let lastId: string | undefined;
-  
+
       for await (const event of records) {
         if (event.Records && event.Records.Payload) {
           const payloadString = await streamToString(event.Records.Payload as unknown as Readable);
@@ -134,16 +139,14 @@ export class S3HashRing<Entity, CreateEntityDTO extends object, UniqueAttributes
           }
         }
       }
-  
-      // Determine the next token
+
       const nextToken = entities.length > limit ? lastId : undefined;
       return { entities: entities.slice(0, limit), nextToken };
-    } catch (err) {
+    } catch (err: any) {
       console.error(`Error retrieving entities from bucket ${bucket}:`, err);
       throw new Error('Failed to retrieve entities');
     }
   }
-  
 
   private async fetchData(bucket: string): Promise<string> {
     try {
