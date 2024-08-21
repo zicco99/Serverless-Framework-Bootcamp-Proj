@@ -8,7 +8,13 @@ import { S3Client } from '@aws-sdk/client-s3';
   controllers: [PlayersController],
   providers: [
     PlayersService,
-    BloomFilterManagerService,
+    {
+      provide: BloomFilterManagerService,
+      useFactory: () => {
+        const bucketPrefixes = process.env.BUCKET_PREFIXES?.split(',') || ['default-prefix'];
+        return new BloomFilterManagerService(bucketPrefixes);
+      },
+    },
     {
       provide: S3Client,
       useFactory: () => {
@@ -18,6 +24,5 @@ import { S3Client } from '@aws-sdk/client-s3';
       },
     },
   ],
-  exports: [PlayersService],
 })
 export class PlayersModule {}

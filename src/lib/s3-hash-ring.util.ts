@@ -19,10 +19,9 @@ export class S3HashRing<Entity, CreateEntityDTO extends object, UniqueAttributes
     private readonly uniqueAttributeKeys: (keyof UniqueAttributes)[],
     readonly dtoToEntityMapper: (dto: CreateEntityDTO, id: string) => Entity,
     private readonly entityToUniqueAttributes: (entity: Entity) => UniqueAttributes,
-    bloomFilterManagerService: BloomFilterManagerService
+    bloomFilterManager: BloomFilterManagerService
   ) {
     this.s3Client = new S3Client({ region: 'eu-west-1' });
-    this.bloomFilterManager = bloomFilterManagerService;
     this.hashRing = new ConsistentHash<string>(100003, 40, 'random', (nodes: string[]) => nodes);
   }
 
