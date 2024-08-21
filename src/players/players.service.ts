@@ -1,15 +1,17 @@
 import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
-import { BloomFilter } from 'bloom-filters';
 import streamToString from 'stream-to-string';
 import { Readable } from 'stream';
-import { S3HashRing } from '../lib/s3-hash-ring.util'; // Adjust path if needed
+import { S3HashRing } from '../lib/s3-hash-ring.util';
 import { PlayerUniqueAttributes } from './players.controller';
 import { Player } from './models/player.model';
 import { BloomFilterManagerService } from '../lib/bloom-filter.service';
 import { CreatePlayerDto } from './dtos/create-player.dto';
 import crypto from 'crypto';
 import { serializeAndUploadBloomFilter, downloadAndDeserializeBloomFilter } from '../lib/s3-bloom.util';
+import { Injectable } from '@nestjs/common';
 
+
+@Injectable()
 export class PlayersService {
   private readonly s3Client: S3Client;
   private readonly s3HashRing: S3HashRing<Player, CreatePlayerDto, PlayerUniqueAttributes>;
