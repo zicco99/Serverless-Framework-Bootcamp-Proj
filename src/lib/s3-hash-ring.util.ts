@@ -5,6 +5,7 @@ import streamToString from 'stream-to-string';
 import { Readable } from 'stream';
 import { BloomFilter } from 'bloom-filters';
 import { BloomFilterManagerService } from './bloom-filter-manager.service';
+import { NotFoundException } from '@nestjs/common';
 
 export interface Entity {
   id: string;
@@ -83,7 +84,7 @@ export class S3HashRing<Entity, CreateEntityDTO extends object, UniqueAttributes
       
       if (!bloomFilter.has(id)) {
         console.log(`Entity ID ${id} not found in Bloom filter.`);
-        return undefined;
+        throw new NotFoundException(`Player with ID ${id} not found`);
       }
 
       const response = await this.s3Client.send(new GetObjectCommand({
