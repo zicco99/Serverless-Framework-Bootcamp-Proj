@@ -1,6 +1,7 @@
-import { Controller, Get, Param, Query, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Param, Query, ParseIntPipe, Body, Post } from '@nestjs/common';
 import { PlayersService } from './players.service';
 import { Player, PlayerUniqueAttributes } from './models/player.model';
+import { CreatePlayerDto } from './dtos/create-player.dto';
 
 @Controller('players')
 export class PlayersController {
@@ -27,4 +28,10 @@ export class PlayersController {
     const uniqueAttributes : PlayerUniqueAttributes = { fullname, score };
     return this.playersService.getPlayers(uniqueAttributes, limit, nextToken);
   }
+
+  @Post()
+  async createPlayer(@Body() createPlayerDto: CreatePlayerDto): Promise<void> {
+    return this.playersService.putPlayer(createPlayerDto);
+  }
+    
 }
