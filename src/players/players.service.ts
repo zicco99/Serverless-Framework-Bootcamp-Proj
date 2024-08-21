@@ -9,19 +9,20 @@ import { CreatePlayerDto } from './dtos/create-player.dto';
 import crypto from 'crypto';
 import { serializeAndUploadBloomFilter, downloadAndDeserializeBloomFilter } from '../lib/s3-bloom.util';
 import { Injectable } from '@nestjs/common';
-
+import { BloomFilter } from 'bloom-filters';
 
 @Injectable()
 export class PlayersService {
   private readonly s3Client: S3Client;
   private readonly s3HashRing: S3HashRing<Player, CreatePlayerDto, PlayerUniqueAttributes>;
   private readonly bloomFilterManager: BloomFilterManagerService;
+  private bloomFilter: BloomFilter;
 
   constructor(s3Client: S3Client, bloomFilterManager: BloomFilterManagerService) {
     this.s3Client = s3Client;
     this.bloomFilterManager = bloomFilterManager;
 
-    // Initialize S3HashRing with appropriate configuration
+    // Create the S3 hash ring
     this.s3HashRing = new S3HashRing<Player, CreatePlayerDto, PlayerUniqueAttributes>(
       ['fullname', 'score'],
       (createPlayerDto: CreatePlayerDto): Player => {
@@ -40,8 +41,17 @@ export class PlayersService {
         fullname: entity.fullname,
         score: entity.score
       }),
-      bloomFilterManager // Pass the BloomFilterManagerService instance
+      bloomFilterManager
     );
+  }
+
+  /**
+   * Ensures the Bloom filter is initialized.
+   */
+  private async ensureBloomFilterInitialized(bucket: string): Promise<void> {
+    if (!this.bloomFilter) {
+      this.bloomFilter = await this.bloomFilterManager.getBloomFilter(bucket);
+    }
   }
 
   /**
@@ -50,18 +60,20 @@ export class PlayersService {
    */
   async putPlayer(createPlayerDto: CreatePlayerDto): Promise<void> {
     const bucket = this.s3HashRing.getBucket(createPlayerDto);
+    
+    await this.ensureBloomFilterInitialized(bucket);
+
     const player = this.s3HashRing.dtoToEntityMapper(createPlayerDto, this.createPlayerId(createPlayerDto));
-    const bloomFilter = await downloadAndDeserializeBloomFilter(bucket, "bloom-filter.json");
     
     // Add player ID to the Bloom filter
-    bloomFilter.add(player.id);
+    this.bloomFilter.add(player.id);
 
     // Fetch current data from S3
     let existingPlayers: Player[] = [];
     try {
       const response = await this.s3Client.send(new GetObjectCommand({
         Bucket: bucket,
-        Key: this.getPlayerDataKey(bucket)
+        Key: this.getPlayerDataKey(bucket),
       }));
       const data = await streamToString(response.Body as Readable);
       existingPlayers = JSON.parse(data) as Player[];
@@ -87,11 +99,11 @@ export class PlayersService {
       Bucket: bucket,
       Key: this.getPlayerDataKey(bucket),
       Body: JSON.stringify(existingPlayers),
-      ContentType: 'application/json'
+      ContentType: 'application/json',
     }));
 
     // Save updated Bloom filter to S3
-    await serializeAndUploadBloomFilter(bucket, 'bloomfilter.json', bloomFilter);
+    await serializeAndUploadBloomFilter(bucket, 'bloom-filter.json', this.bloomFilter);
   }
 
   /**
@@ -103,9 +115,10 @@ export class PlayersService {
     const playerId = this.createPlayerId(playerUniqueAttributes);
     const bucket = this.s3HashRing.getBucket(playerUniqueAttributes);
 
+    await this.ensureBloomFilterInitialized(bucket);
+
     // Check if the player ID is in the Bloom filter
-    const bloomFilter = await downloadAndDeserializeBloomFilter(bucket, "bloom-filter.json");
-    if (!bloomFilter.has(playerId)) {
+    if (!this.bloomFilter.has(playerId)) {
       console.log(`Player ID ${playerId} not found in Bloom filter.`);
       return undefined;
     }
@@ -114,7 +127,7 @@ export class PlayersService {
     try {
       const response = await this.s3Client.send(new GetObjectCommand({
         Bucket: bucket,
-        Key: this.getPlayerKey(bucket, playerId)
+        Key: this.getPlayerKey(bucket, playerId),
       }));
       const data = await streamToString(response.Body as Readable);
       return JSON.parse(data) as Player;
@@ -147,7 +160,7 @@ export class PlayersService {
     try {
       const response = await this.s3Client.send(new GetObjectCommand({
         Bucket: bucket,
-        Key: this.getPlayerDataKey(bucket)
+        Key: this.getPlayerDataKey(bucket),
       }));
       const data = await streamToString(response.Body as Readable);
       const players = JSON.parse(data) as Player[];
