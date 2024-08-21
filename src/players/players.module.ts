@@ -18,5 +18,6 @@ import { S3Client } from '@aws-sdk/client-s3';
       },
     },
   ],
+  exports: [PlayersService],
 })
 export class PlayersModule {}
