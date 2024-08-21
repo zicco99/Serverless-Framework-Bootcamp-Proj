@@ -48,26 +48,21 @@ export class PlayersService {
       throw new Error(`Bucket for player ${playerId} not found`);
     }
   
-    try {
-      const bloomFilter = this.bloomFilterManager.getCache().get(bucket);
+    const bloomFilter = this.bloomFilterManager.getCache().get(bucket);
 
-      if (!bloomFilter?.has(playerId)) {
-        console.log(`Player ID ${playerId} not found in Bloom filter.`);
-        throw new NotFoundException('Player ID not found in Bloom filter');
-      }
-
-      // Use the S3HashRing to find the player
-      const player = await this.s3HashRing.findOne(uniqueAttributes);
-      if (!player) {
-        console.log(`Player ID ${playerId} not found in data store.`);
-        throw new NotFoundException('Player not found in data store');
-      }
-
-      return player;
-    } catch (err: any) {
-      console.error(`Failed to get player data: ${err.message}`);
-      throw new Error(`Failed to get player with ID ${playerId}: ${err.message}`);
+    if (!bloomFilter?.has(playerId)) {
+      console.log(`Player ID ${playerId} not found in Bloom filter.`);
+      throw new NotFoundException('Player ID not found in Bloom filter');
     }
+
+    // Use the S3HashRing to find the player
+    const player = await this.s3HashRing.findOne(uniqueAttributes);
+    if (!player) {
+      console.log(`Player ID ${playerId} not found in data store.`);
+      throw new NotFoundException('Player not found in data store');
+    }
+
+    return player;
   }
 
   async getPlayers(
