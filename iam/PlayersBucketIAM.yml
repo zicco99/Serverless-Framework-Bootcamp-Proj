@@ -6,4 +6,4 @@ PlayersBucketIAM:
     - s3:GetBucketPolicy
     - s3:ListBucket
     - s3:GetObject
-  Resource: arn:aws:s3:::${self:custom.AuctionsBucket.name}/*
+  Resource: arn:aws:s3:::${self:custom.PlayersBucket.name}/*
