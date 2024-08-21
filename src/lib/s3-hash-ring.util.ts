@@ -14,13 +14,12 @@ export interface Entity {
 export class S3HashRing<Entity, CreateEntityDTO extends object, UniqueAttributes extends object> {
   private readonly s3Client: S3Client;
   private readonly hashRing: ConsistentHash<string>;
-  private readonly bloomFilterManager: BloomFilterManagerService;
 
   constructor(
     private readonly uniqueAttributeKeys: (keyof UniqueAttributes)[],
     readonly dtoToEntityMapper: (dto: CreateEntityDTO, id: string) => Entity,
     private readonly entityToUniqueAttributes: (entity: Entity) => UniqueAttributes,
-    bloomFilterManager: BloomFilterManagerService
+    private readonly bloomFilterManager: BloomFilterManagerService // Ensure proper dependency injection
   ) {
     this.s3Client = new S3Client({ region: 'eu-west-1' });
     this.hashRing = new ConsistentHash<string>(100003, 40, 'random', (nodes: string[]) => nodes);
@@ -46,34 +45,33 @@ export class S3HashRing<Entity, CreateEntityDTO extends object, UniqueAttributes
     return `${bucket}/data.json`;
   }
 
-  async addEntity(dto: CreateEntityDTO): Promise<void> {  
+  async addEntity(dto: CreateEntityDTO): Promise<void> {
     const uniqueAttributes: UniqueAttributes = this.extractUniqueAttributes(dto);
     const id = this.createHash(uniqueAttributes);
     const entity: Entity = this.dtoToEntityMapper(dto, id);
     const bucket = this.getBucket(uniqueAttributes);
-  
+
     try {
       const bloomFilter = await this.bloomFilterManager.getBloomFilter(bucket);
 
-      if(bloomFilter.has(id)) {
+      if (bloomFilter.has(id)) {
         console.log(`Entity ID ${id} already exists in Bloom filter.`);
         throw new Error('Entity ID already exists in Bloom filter');
       }
-  
+
       const data = await this.fetchData(bucket);
-      const parsedData = JSON.parse(data) as Entity[]; 
+      const parsedData = JSON.parse(data) as Entity[];
       parsedData.push(entity);
       await this.uploadData(bucket, parsedData);
 
       bloomFilter.add(id);
       await this.bloomFilterManager.saveBloomFilter(bucket, bloomFilter);
-  
+
     } catch (err) {
       console.error(`Error adding entity to bucket ${bucket}:`, err);
       throw new Error('Failed to add entity');
     }
   }
-  
 
   async findOne(uniqueAttributes: UniqueAttributes): Promise<Entity | undefined> {
     const id = this.createHash(uniqueAttributes);
@@ -81,10 +79,10 @@ export class S3HashRing<Entity, CreateEntityDTO extends object, UniqueAttributes
 
     try {
       const bloomFilter = await this.bloomFilterManager.getBloomFilter(bucket);
-      
+
       if (!bloomFilter.has(id)) {
         console.log(`Entity ID ${id} not found in Bloom filter.`);
-        throw new NotFoundException(`Player with ID ${id} not found`);
+        throw new NotFoundException(`Entity with ID ${id} not found`);
       }
 
       const response = await this.s3Client.send(new GetObjectCommand({
@@ -106,13 +104,13 @@ export class S3HashRing<Entity, CreateEntityDTO extends object, UniqueAttributes
     continuationToken?: string
   ): Promise<{ entities: Entity[], nextToken?: string }> {
     const bucket = this.getBucket(uniqueAttributes);
-    
+
     // Construct the query for S3 Select
     let query = `SELECT * FROM s3object WHERE ${this.buildS3SelectQuery(uniqueAttributes)}`;
     if (continuationToken) {
       query += ` AND id > '${continuationToken}'`;
     }
-    
+
     try {
       const response = await this.s3Client.send(new SelectObjectContentCommand({
         Bucket: bucket,
@@ -122,7 +120,7 @@ export class S3HashRing<Entity, CreateEntityDTO extends object, UniqueAttributes
         InputSerialization: { JSON: { Type: 'DOCUMENT' } },
         OutputSerialization: { JSON: {} },
       }));
-      
+
       const records = response.Payload;
       if (!records) return { entities: [], nextToken: undefined };
 
@@ -142,7 +140,7 @@ export class S3HashRing<Entity, CreateEntityDTO extends object, UniqueAttributes
 
       const nextToken = entities.length > limit ? lastId : undefined;
       return { entities: entities.slice(0, limit), nextToken };
-    } catch (err: any) {
+    } catch (err) {
       console.error(`Error retrieving entities from bucket ${bucket}:`, err);
       throw new Error('Failed to retrieve entities');
     }
