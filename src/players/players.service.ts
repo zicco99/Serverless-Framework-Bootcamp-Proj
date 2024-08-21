@@ -76,7 +76,6 @@ export class PlayersService {
     nextToken?: string
   ): Promise<{ entities: Player[], nextToken?: string }> {
     try {
-      // Use the S3HashRing to find the players
       const result = await this.s3HashRing.findWithContinuationToken(uniqueAttributes, limit, nextToken);
 
       const { entities, nextToken: nextContToken } = result;
