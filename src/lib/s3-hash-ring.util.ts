@@ -46,7 +46,7 @@ export class S3HashRing<Entity, CreateEntityDTO extends object, UniqueAttributes
     return `${bucket}/data.json`;
   }
 
-  async addEntity(dto: CreateEntityDTO): Promise<void> {
+  async addEntity(dto: CreateEntityDTO): Promise<void> {  
     const uniqueAttributes: UniqueAttributes = this.extractUniqueAttributes(dto);
     const id = this.createHash(uniqueAttributes);
     const entity: Entity = this.dtoToEntityMapper(dto, id);
