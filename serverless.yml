@@ -20,6 +20,7 @@ resources:
   Resources:
     AuctionsTable: ${file(resources/AuctionsTable.yml):AuctionsTable}
     PlayersBucket: ${file(resources/PlayersBucket.yml):PlayersBucket}
+    PlayersBucketPolicy: ${file(resources/PlayersBucketPolicy.yml):PlayersBucketPolicy}
 
 functions:
   main:
