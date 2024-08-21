@@ -22,6 +22,7 @@ resources:
     PlayersBucket: ${file(resources/PlayersBucket.yml):PlayersBucket}
     PlayersBucketPolicy: ${file(resources/PlayersBucket.yml):PlayersBucketPolicy}
 
+
 functions:
   main:
     handler: src/main.handler
