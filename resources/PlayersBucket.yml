@@ -2,11 +2,6 @@ PlayersBucket:
   Type: AWS::S3::Bucket
   Properties:
     BucketName: ${self:custom.PlayersBucket.name}
-    LifecycleConfiguration:
-      Rules:
-        - Id: ExpirePictures
-          Status: Enabled
-          ExpirationInDays: 30
 
 PlayersBucketPolicy:
   Type: "AWS::S3::BucketPolicy"
