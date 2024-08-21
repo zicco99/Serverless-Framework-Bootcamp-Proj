@@ -8,7 +8,6 @@ import { BloomFilterManagerService } from './bloom-filter-manager.service';
 import { NotFoundException } from '@nestjs/common';
 
 export interface Entity {
-  id: string;
 }
 
 export class S3HashRing<Entity, CreateEntityDTO extends object, UniqueAttributes extends object> {
@@ -26,7 +25,8 @@ export class S3HashRing<Entity, CreateEntityDTO extends object, UniqueAttributes
   }
 
   getBucket(attributes: UniqueAttributes): string {
-    return this.hashRing.get(this.createHash(attributes)) || 'default-bucket';
+    const bucketName = this.hashRing.get(this.createHash(attributes));
+    return bucketName ? `${process.env.PLAYERS_BUCKET_NAME_PREFIX}_${bucketName}` : 'default-bucket';
   }
 
   createHash(attributes: UniqueAttributes): string {

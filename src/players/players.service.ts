@@ -1,5 +1,4 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { S3Client, PutObjectCommand, GetObjectCommand, SelectObjectContentCommand } from '@aws-sdk/client-s3';
 import { BloomFilterManagerService } from '../lib/bloom-filter-manager.service';
 import { CreatePlayerDto } from './dtos/create-player.dto';
 import { Player, PlayerUniqueAttributes } from './models/player.model';
@@ -82,3 +81,4 @@ export class PlayersService {
     }
   }
 }
+

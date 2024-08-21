@@ -1,21 +1,21 @@
-AuctionsBucket:
+PlayersBucket:
   Type: AWS::S3::Bucket
   Properties:
-    BucketName: ${self:custom.AuctionsBucket.name}
+    BucketName: ${self:custom.PlayersBucket.name}
     LifecycleConfiguration:
       Rules:
         - Id: ExpirePictures
           Status: Enabled
           ExpirationInDays: 30
 
-AuctionsBucketPolicy:
+PlayersBucketPolicy:
   Type: "AWS::S3::BucketPolicy"
   Properties:
-    Bucket: !Ref AuctionsBucket
+    Bucket: !Ref PlayersBucket
     PolicyDocument:
       Version: "2012-10-17"
       Statement:
         - Effect: "Allow"
           Principal: "*"
           Action: "s3:GetObject"
-          Resource: !Sub "arn:aws:s3:::${self:custom.AuctionsBucket.name}/*"
+          Resource: !Sub "arn:aws:s3:::${self:custom.PlayersBucket.name}/*"

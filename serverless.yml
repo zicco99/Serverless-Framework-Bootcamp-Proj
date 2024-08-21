@@ -19,6 +19,7 @@ package:
 resources:
   Resources:
     AuctionsTable: ${file(resources/AuctionsTable.yml):AuctionsTable}
+    PlayersBucket: ${file(resources/PlayersBucket.yml):PlayersBucket}
 
 functions:
   main:
@@ -29,8 +30,12 @@ functions:
           path: /{proxy+}    
     iamRoleStatements:
       - ${file(iam/AuctionsTableIAM.yml):AuctionsTableIAM}
+      - ${file(iam/PlayersBucketIAM.yml):PlayersBucketIAM}
     environment:
+      REGION: ${self:provider.region}
+      PLAYERS_BUCKET_NAME_PREFIX: ${self:custom.PlayersBucket.prefix}
       AUCTIONS_TABLE_NAME: ${self:custom.AuctionsTable.name}
+
 
 custom:
   base: ${self:service}-${opt:stage,'dev'}
@@ -38,3 +43,6 @@ custom:
     name: ${self:custom.base}-auctions-table
     arn: !GetAtt AuctionsTable.Arn
     indexArn: !Join ["/", ["${self:custom.AuctionsTable.arn}", "index/statusAndEndDate"]]
+  PlayersBucket:
+    prefix: ${self:custom.base}-players
+    name: ${self:custom.base}-players-bucket
