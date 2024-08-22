@@ -2,8 +2,10 @@ PlayersBucketIAM:
   Effect: Allow
   Action:
     - s3:PutObject
+    - s3:GetObject
+    - s3:ListBucket
     - s3:PutBucketPolicy
     - s3:GetBucketPolicy
-    - s3:ListBucket
-    - s3:GetObject
-  Resource: arn:aws:s3:::${self:custom.PlayersBucket.name}/*
+  Resource:
+    - arn:aws:s3:::${self:custom.PlayersBucket.name}
+    - arn:aws:s3:::${self:custom.PlayersBucket.name}/*
