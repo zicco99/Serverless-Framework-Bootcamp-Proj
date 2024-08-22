@@ -42,7 +42,7 @@ export class S3HashRing<Entity, CreateEntityDTO extends object, UniqueAttributes
   }
 
   private getBucketKey(bucket: string): string {
-    return `${bucket}/data.json`;
+    return `${bucket}/bucket.json`;
   }
 
   async addEntity(dto: CreateEntityDTO): Promise<void> {
