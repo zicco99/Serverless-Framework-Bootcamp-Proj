@@ -19,7 +19,7 @@ package:
 resources:
   Resources:
     AuctionsTable: ${file(resources/AuctionsTable.yml):AuctionsTable}
-    PlayersBucket: ${file(resources/PlayersTable.yml):PlayersTable}
+    PlayersTable: ${file(resources/PlayersTable.yml):PlayersTable}
 
 
 functions:
