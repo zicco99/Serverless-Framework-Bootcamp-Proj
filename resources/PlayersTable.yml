@@ -1,0 +1,18 @@
+AuctionsTable:
+  Type: AWS::DynamoDB::Table
+  Properties:
+    TableName: ${self:custom.AuctionsTable.name}
+    BillingMode: PAY_PER_REQUEST
+    AttributeDefinitions:
+      - AttributeName: id
+        AttributeType: S 
+      - AttributeName: name
+        AttributeType: S  
+      - AttributeName: position
+        AttributeType: S
+      - AttributeName: club
+        AttributeType: S
+    KeySchema:
+      - AttributeName: id
+        KeyType: HASH
+          id: string

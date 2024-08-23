@@ -1,37 +1,75 @@
-import { Controller, Get, Param, Query, ParseIntPipe, Body, Post } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, Query, Body, HttpException, HttpStatus } from '@nestjs/common';
 import { PlayersService } from './players.service';
-import { Player, PlayerUniqueAttributes } from './models/player.model';
-import { CreatePlayerDto } from './dtos/create-player.dto';
+import { Player } from './models/player.model';
+
 
 @Controller('players')
 export class PlayersController {
-  constructor(private readonly playersService: PlayersService) {}
+  constructor(private readonly players : PlayersService ) {}
 
-  // Route to get a single player by fullname and score
-  @Get(':fullname/:score')
-  async getPlayer(
-    @Param('fullname') fullname: string,
-    @Param('score', ParseIntPipe) score: number // Use ParseIntPipe to convert and validate score
-  ): Promise<Player | undefined> {
-    const uniqueAttributes : PlayerUniqueAttributes = { fullname, score };
-    return this.playersService.getPlayer(uniqueAttributes);
+  @Get()
+  async getAll(){
+    try {
+      const players = await this.players.findAll();
+      return players;
+    } catch (e: any) {
+      throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
+    }
   }
 
-  // Route to get multiple players with optional pagination
-  @Get()
-  async getPlayers(
-    @Query('fullname') fullname: string,
-    @Query('score', ParseIntPipe) score: number,
-    @Query('limit', ParseIntPipe) limit: number = 10,
-    @Query('nextToken') nextToken?: string
-  ): Promise<{ entities: Player[], nextToken?: string }> {
-    const uniqueAttributes : PlayerUniqueAttributes = { fullname, score };
-    return this.playersService.getPlayers(uniqueAttributes, limit, nextToken);
+  @Get(':id')
+  async findOne(@Param('id') id: string) {
+    try {
+      const player = await this.players.findOne(id);
+      if (!player) {
+        throw new HttpException('No player found', HttpStatus.NOT_FOUND);
+      }
+      return player;
+    } catch (e: any) {
+      throw new HttpException(e.message, HttpStatus.NOT_FOUND);
+    }
   }
 
   @Post()
-  async createPlayer(@Body() createPlayerDto: CreatePlayerDto): Promise<void> {
-    return this.playersService.putPlayer(createPlayerDto);
+  async insert(@Body() createPlayerDto: { name: string; position: string; club: string }) {
+    const { name, position, club } = createPlayerDto;
+    if (!name || !position || !club) {
+      throw new HttpException('Fields name, position, and club are required', HttpStatus.BAD_REQUEST);
+    }
+
+    try {
+      const player = await this.players.create({ name, position, club });
+      return player;
+    } catch (e: any) {
+      throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
+    }
   }
-    
+
+  @Patch(':id')
+  async update(
+    @Param('id') id: string,
+    @Body() updatePlayerDto: { name?: string; position?: string; club?: string },
+  ) {
+    const args: Partial<Player> = {};
+    if (updatePlayerDto.name) args.name = updatePlayerDto.name;
+    if (updatePlayerDto.position) args.position = updatePlayerDto.position;
+    if (updatePlayerDto.club) args.club = updatePlayerDto.club;
+
+    try {
+      const player = await this.players.update(id, args);
+      return player;
+    } catch (e: any) {
+      throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  @Delete(':id')
+  async delete(@Param('id') id: string) {
+    try {
+      await this.players.delete
+      return { statusCode: HttpStatus.OK, message: 'Player deleted successfully' };
+    } catch (e: any) {
+      throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
+    }
+  }
 }

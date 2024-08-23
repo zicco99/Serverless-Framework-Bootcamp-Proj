@@ -1,14 +1,15 @@
-export interface Player {
-    id: string;
-    fullname: string;
-    score: number;
-    createdDate: string;
-    updatedDate: string;
-}
+import { Club } from "../../clubs/models/club.model";
 
+export class Player {
+  id: string;
+  name: string;
+  position: string;
+  club: Club | string; 
 
-export interface PlayerUniqueAttributes {
-    fullname: string;
-    score: number;
+  constructor(id: string, name: string, position: string, club: Club | string) {
+    this.id = id;
+    this.name = name;
+    this.position = position;
+    this.club = club;
   }
-  
+}
