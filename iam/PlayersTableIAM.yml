@@ -9,4 +9,3 @@ PlayersTableIAM:
     - dynamodb:DeleteItem
   Resource:
     - ${self:custom.PlayersTable.arn}
-    - ${self:custom.PlayersTable.indexArn}
