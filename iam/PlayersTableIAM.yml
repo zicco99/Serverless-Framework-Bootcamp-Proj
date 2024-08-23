@@ -1,4 +1,4 @@
-AuctionsTableIAM:
+PlayersTableIAM:
   Effect: Allow
   Action:
     - dynamodb:PutItem
@@ -8,5 +8,5 @@ AuctionsTableIAM:
     - dynamodb:Query
     - dynamodb:DeleteItem
   Resource:
-    - ${self:custom.AuctionsTable.arn}
-    - ${self:custom.AuctionsTable.indexArn}
+    - ${self:custom.PlayersTable.arn}
+    - ${self:custom.PlayersTable.indexArn}
