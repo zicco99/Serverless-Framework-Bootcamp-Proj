@@ -6,12 +6,6 @@ PlayersTable:
     AttributeDefinitions:
       - AttributeName: id
         AttributeType: S
-      - AttributeName: name
-        AttributeType: S
-      - AttributeName: position
-        AttributeType: S
-      - AttributeName: club
-        AttributeType: S
     KeySchema:
       - AttributeName: id
         KeyType: HASH
