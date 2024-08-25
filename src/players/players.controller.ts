@@ -66,12 +66,11 @@ export class PlayersController {
     }
   }
 
-  //Utility methods
-
   @Get('search')
-  async search(@Query('name') name: string) {
+  async search(@Query('name') name?: string) {
     try {
-      const players = await this.players.search(name);
+      if(!name) throw new HttpException('Name is required', HttpStatus.BAD_REQUEST);
+      const players = await this.players.searchByName(name);
       return players;
     } catch (e: any) {
       throw new HttpException(e.message, HttpStatus.BAD_REQUEST);

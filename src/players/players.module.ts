@@ -1,12 +1,13 @@
 import { Module } from '@nestjs/common';
 import { PlayersController } from './players.controller';
 import { PlayersService } from './players.service';
-import { S3Client } from '@aws-sdk/client-s3';
+import { SportmonksService } from 'src/services/sport-monk.service';
 
 @Module({
   controllers: [PlayersController],
   providers: [
-    PlayersService
+    PlayersService,
+    SportmonksService
   ],
 })
 export class PlayersModule {}
