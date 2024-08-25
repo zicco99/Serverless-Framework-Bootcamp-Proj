@@ -8,10 +8,12 @@ import { UpdatePlayerDto } from './dtos/update-player.dto'
 export class PlayersController {
   constructor(private readonly players : PlayersService ) {}
 
+  // Basic CRUD
+
   @Get()
   async getAll(){
     try {
-      const players = await this.players.findAll();
+      const players : Player[] = await this.players.findAll();
       return players;
     } catch (e: any) {
       throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
@@ -21,7 +23,7 @@ export class PlayersController {
   @Get(':id')
   async findOne(@Param('id') id: string) {
     try {
-      const player = await this.players.findOne(id);
+      const player : Player = await this.players.findOne(id);
       if (!player) {
         throw new HttpException('No player found', HttpStatus.NOT_FOUND);
       }
@@ -34,7 +36,7 @@ export class PlayersController {
   @Post()
   async insert(@Body() createPlayerDto: CreatePlayerDto) {
     try {
-      const player = await this.players.create(createPlayerDto);
+      const player : Player = await this.players.create(createPlayerDto);
       return player;
     } catch (e: any) {
       throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
@@ -59,6 +61,18 @@ export class PlayersController {
     try {
       await this.players.delete(id);
       return { statusCode: HttpStatus.OK, message: 'Player deleted successfully' };
+    } catch (e: any) {
+      throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  //Utility methods
+
+  @Get('search')
+  async search(@Query('name') name: string) {
+    try {
+      const players = await this.players.search(name);
+      return players;
     } catch (e: any) {
       throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
     }

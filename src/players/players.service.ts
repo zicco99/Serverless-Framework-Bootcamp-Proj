@@ -121,7 +121,24 @@ export class PlayersService {
     }
   }
 
+  async search(name?: string): Promise<Player[]> {
+    try {
+      const players: ScanCommandOutput = await this.dynamoDbClient.send(
+        new ScanCommand({
+          TableName: this.tableName,
+          FilterExpression: 'Name = :name',
+          ExpressionAttributeValues: marshall({ ':name': name }),
+        }),
+      );
+      return players.Items ? players.Items.map(item => unmarshall(item) as Player) : [];
+    } catch (error: any) {
+      console.error('Error fetching players from DynamoDB:', error.message);
+      throw new InternalServerErrorException('Failed to retrieve player data from DynamoDB');
+    }
+  }
+
   //------------------------------------------------------
+
   private async getPlayerFromDynamoDB(playerId: string): Promise<Player | null> {
     try {
       const { Item } = await this.dynamoDbClient.send(
@@ -169,4 +186,8 @@ export class PlayersService {
       throw new InternalServerErrorException('Failed to save player data to DynamoDB');
     }
   }
+
+    //------------------------------------------------------
+
+
 }
