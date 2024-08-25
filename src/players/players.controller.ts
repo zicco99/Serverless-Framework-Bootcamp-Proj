@@ -1,7 +1,8 @@
 import { Controller, Get, Post, Patch, Delete, Param, Query, Body, HttpException, HttpStatus } from '@nestjs/common';
 import { PlayersService } from './players.service';
 import { Player } from './models/player.model';
-
+import { CreatePlayerDto } from './dtos/create-player.dto';
+import { UpdatePlayerDto } from './dtos/update-player.dto'
 
 @Controller('players')
 export class PlayersController {
@@ -31,14 +32,9 @@ export class PlayersController {
   }
 
   @Post()
-  async insert(@Body() createPlayerDto: { name: string; position: string; club: string }) {
-    const { name, position, club } = createPlayerDto;
-    if (!name || !position || !club) {
-      throw new HttpException('Fields name, position, and club are required', HttpStatus.BAD_REQUEST);
-    }
-
+  async insert(@Body() createPlayerDto: CreatePlayerDto) {
     try {
-      const player = await this.players.create({ name, position, club });
+      const player = await this.players.create(createPlayerDto);
       return player;
     } catch (e: any) {
       throw new HttpException(e.message, HttpStatus.BAD_REQUEST);
@@ -48,15 +44,10 @@ export class PlayersController {
   @Patch(':id')
   async update(
     @Param('id') id: string,
-    @Body() updatePlayerDto: { name?: string; position?: string; club?: string },
+    @Body() updatePlayerDto: UpdatePlayerDto,
   ) {
-    const args: Partial<Player> = {};
-    if (updatePlayerDto.name) args.name = updatePlayerDto.name;
-    if (updatePlayerDto.position) args.position = updatePlayerDto.position;
-    if (updatePlayerDto.club) args.club = updatePlayerDto.club;
-
     try {
-      const player = await this.players.update(id, args);
+      const player = await this.players.update(id, updatePlayerDto);
       return player;
     } catch (e: any) {
       throw new HttpException(e.message, HttpStatus.BAD_REQUEST);

@@ -1,13 +1,16 @@
-import { Injectable, InternalServerErrorException, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, NotFoundException, BadRequestException} from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { DynamoDBClient, GetItemCommand, PutItemCommand, UpdateItemCommand, DeleteItemCommand, ScanCommand, ScanCommandOutput } from '@aws-sdk/client-dynamodb';
 import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
 import { Player } from './models/player.model';
+import { v4 as uuid } from 'uuid';
+import { CreatePlayerDto } from './dtos/create-player.dto';
+import { UpdatePlayerDto } from './dtos/update-player.dto';
 
 @Injectable()
 export class PlayersService {
-  private readonly apiUrl = 'https://v3.football.api-sports.io';
+  private readonly apiUrl = 'https://api.sportmonks.com/v3/football/players';
   private readonly apiKey = process.env.FOOTBALL_API_KEY;
   
   private readonly dynamoDbClient = new DynamoDBClient({ region: 'eu-west-1' });
@@ -22,28 +25,24 @@ export class PlayersService {
     }
   }
 
-  // CREATE: Insert a new player into DynamoDB
-  async create(playerData: Partial<Player>): Promise<Player> {
-    this.validatePlayerData(playerData);
+  async create(createPlayerDto : CreatePlayerDto): Promise<Player> {
 
-    const playerId = playerData.id || new Date().getTime().toString();
-    const item = { id: playerId, ...playerData };
+    const player : Player = { id: uuid(), ...createPlayerDto };
 
     try {
       await this.dynamoDbClient.send(
         new PutItemCommand({
           TableName: this.tableName,
-          Item: marshall(item),
+          Item: marshall(player),
         }),
       );
-      return item as Player;
+      return player;
     } catch (error: any) {
       console.error('Error saving player to DynamoDB:', error.message);
       throw new InternalServerErrorException('Failed to save player data');
     }
   }
 
-  // READ: Get a player by ID
   async findOne(playerId: string): Promise<Player> {
     const playerFromDb = await this.getPlayerFromDynamoDB(playerId);
 
@@ -60,9 +59,7 @@ export class PlayersService {
     throw new NotFoundException(`Player with ID ${playerId} not found`);
   }
 
-  // UPDATE: Update a player's details
-  async update(playerId: string, playerData: Partial<Player>): Promise<Player> {
-    this.validateUpdateData(playerData);
+  async update(playerId: string, playerData: UpdatePlayerDto): Promise<Player> {
 
     const updateExpressions = [];
     const expressionAttributeValues: { [key: string]: any } = {};
@@ -72,14 +69,9 @@ export class PlayersService {
       expressionAttributeValues[':name'] = { S: playerData.name };
     }
 
-    if (playerData.position) {
+    if (playerData.position_id) {
       updateExpressions.push('position = :position');
-      expressionAttributeValues[':position'] = { S: playerData.position };
-    }
-
-    if (playerData.club) {
-      updateExpressions.push('club = :club');
-      expressionAttributeValues[':club'] = { S: playerData.club };
+      expressionAttributeValues[':position_id'] = { S: playerData.position_id };
     }
 
     const updateExpression = `SET ${updateExpressions.join(', ')}`;
@@ -100,7 +92,6 @@ export class PlayersService {
     }
   }
 
-  // DELETE: Remove a player from DynamoDB
   async delete(playerId: string): Promise<{ message: string }> {
     try {
       await this.dynamoDbClient.send(
@@ -116,7 +107,6 @@ export class PlayersService {
     }
   }
 
-  // READ ALL: Get all players from DynamoDB
   async findAll(): Promise<Player[]> {
     try {
       const players: ScanCommandOutput = await this.dynamoDbClient.send(
@@ -148,20 +138,18 @@ export class PlayersService {
   }
 
   private async getPlayerFromAPI(playerId: string): Promise<Player | null> {
-    const url = `${this.apiUrl}/players?id=${playerId}`;
+    const url = `${this.apiUrl}/${playerId}?api_token=${this.apiKey}`;
     try {
       const response = await firstValueFrom(
-        this.httpService.get(url, {
-          headers: { 'x-apisports-key': this.apiKey },
-        }),
+        this.httpService.get(url),
       );
-      const playerData = response.data.response;
+      const playerData = response.data.data;
 
-      if (!playerData || playerData.length === 0) {
+      if (!playerData) {
         throw new NotFoundException('Player not found in the API');
       }
 
-      return playerData[0] as Player;
+      return playerData as Player;
     } catch (error: any) {
       console.error('Error fetching player from API:', error.message);
       throw new InternalServerErrorException('Failed to fetch player data from API');
@@ -182,15 +170,9 @@ export class PlayersService {
     }
   }
 
-  // Validation methods
-  private validatePlayerData(playerData: Partial<Player>): void {
-    if (!playerData.name || !playerData.position || !playerData.club) {
-      throw new BadRequestException('Fields name, position, and club are required');
-    }
-  }
 
   private validateUpdateData(playerData: Partial<Player>): void {
-    if (!playerData.name && !playerData.position && !playerData.club) {
+    if (!playerData.name && !playerData.position_id) {
       throw new BadRequestException('No fields provided to update');
     }
   }

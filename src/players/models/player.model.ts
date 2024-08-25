@@ -1,15 +1,15 @@
-import { Club } from "../../clubs/models/club.model";
-
 export class Player {
-  id: string;
-  name: string;
-  position: string;
-  club: Club | string; 
-
-  constructor(id: string, name: string, position: string, club: Club | string) {
-    this.id = id;
-    this.name = name;
-    this.position = position;
-    this.club = club;
+    id: string;  
+    nationality_id: number; 
+    city_id?: string;  
+    position_id?: number; 
+    detailed_position_id?: number;  
+    type_id?: number; 
+    common_name?: string; 
+    firstname?: string;  
+    lastname?: string;  
+    name?: string;  
+    display_name?: string;  
+    image_path?: string;   
   }
-}
+  
