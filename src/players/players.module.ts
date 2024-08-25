@@ -5,11 +5,11 @@ import { SportmonksService } from 'src/services/sport-monk.service';
 import { HttpService } from '@nestjs/axios';
 
 @Module({
+  imports: [HttpService],
   controllers: [PlayersController],
   providers: [
     PlayersService,
-    SportmonksService,
-    HttpService
+    SportmonksService
   ],
 })
 export class PlayersModule {}
