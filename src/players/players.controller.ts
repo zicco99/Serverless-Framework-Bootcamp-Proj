@@ -57,7 +57,7 @@ export class PlayersController {
   @Delete(':id')
   async delete(@Param('id') id: string) {
     try {
-      await this.players.delete
+      await this.players.delete(id);
       return { statusCode: HttpStatus.OK, message: 'Player deleted successfully' };
     } catch (e: any) {
       throw new HttpException(e.message, HttpStatus.BAD_REQUEST);

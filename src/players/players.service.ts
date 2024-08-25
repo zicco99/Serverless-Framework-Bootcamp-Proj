@@ -26,7 +26,6 @@ export class PlayersService {
   }
 
   async create(createPlayerDto : CreatePlayerDto): Promise<Player> {
-
     const player : Player = { id: uuid(), ...createPlayerDto };
 
     try {
@@ -64,14 +63,15 @@ export class PlayersService {
     const updateExpressions = [];
     const expressionAttributeValues: { [key: string]: any } = {};
 
-    if (playerData.name) {
-      updateExpressions.push('name = :name');
-      expressionAttributeValues[':name'] = { S: playerData.name };
-    }
-
-    if (playerData.position_id) {
-      updateExpressions.push('position = :position');
-      expressionAttributeValues[':position_id'] = { S: playerData.position_id };
+    for (const [key, value] of Object.entries(playerData)) {
+      if (value) {
+        updateExpressions.push(`${key} = :${key}`);
+        if(typeof value === 'string') {
+          expressionAttributeValues[`:${key}`] = { S: value };
+        } else if(typeof value === 'number') {
+          expressionAttributeValues[`:${key}`] = { N: value.toString() };
+        }
+      }
     }
 
     const updateExpression = `SET ${updateExpressions.join(', ')}`;
@@ -167,13 +167,6 @@ export class PlayersService {
     } catch (error: any) {
       console.error('Error saving player to DynamoDB:', error.message);
       throw new InternalServerErrorException('Failed to save player data to DynamoDB');
-    }
-  }
-
-
-  private validateUpdateData(playerData: Partial<Player>): void {
-    if (!playerData.name && !playerData.position_id) {
-      throw new BadRequestException('No fields provided to update');
     }
   }
 }
