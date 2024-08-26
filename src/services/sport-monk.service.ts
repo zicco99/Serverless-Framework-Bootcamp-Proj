@@ -34,14 +34,17 @@ export class SportmonksService {
   async searchPlayersByName(name: string): Promise<Player[]> {
     const url = `${this.apiUrl}/search?api_token=${this.apiKey}&search=${name}`;
     try {
-      const response = await firstValueFrom(this.httpService.get(url));
-      const playersData = response.data.data;
+        console.log("Looking for player: " + name);
+        const response = await firstValueFrom(this.httpService.get(url));
+        console.log("Response from API: " + response.data.data);
+        const playersData = response.data.data;
 
-      if (!playersData || playersData.length === 0) {
-        return [];
-      }
+        if (!playersData || playersData.length === 0) {
+            return [];
+        }
 
-      return playersData.map((playerData: Player) => playerData);
+
+        return playersData.map((playerData: Player) => playerData);
     } catch (error: any) {
       console.error('Error searching players in API:', error.message);
       throw new InternalServerErrorException('Failed to fetch player data from API');
