@@ -32,7 +32,7 @@ export class SportmonksService {
   }
 
   async searchPlayersByName(name: string): Promise<Player[]> {
-    const url = `${this.apiUrl}/search?api_token=${this.apiKey}&search=${name}`;
+    const url = `${this.apiUrl}/search/${name}?api_token=${this.apiKey}`;
     try {
         console.log("Looking for player: " + name);
         const response = await firstValueFrom(this.httpService.get(url));
