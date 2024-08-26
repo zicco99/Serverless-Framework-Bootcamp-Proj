@@ -1,15 +1,12 @@
-import { Module } from '@nestjs/common';
-import { PlayersController } from './players.controller';
-import { PlayersService } from './players.service';
-import { SportmonksService } from 'src/services/sport-monk.service';
-import { HttpService } from '@nestjs/axios';
+import { Module, Global } from '@nestjs/common';
+import { HttpModule, HttpService } from '@nestjs/axios';
+import { AxiosInstance } from 'axios';
 
+export const AXIOS_INSTANCE_TOKEN = 'AXIOS_INSTANCE';
+
+@Global()
 @Module({
-  imports: [HttpService],
-  controllers: [PlayersController],
-  providers: [
-    PlayersService,
-    SportmonksService
-  ],
+  imports: [HttpModule],
+  exports: [AXIOS_INSTANCE_TOKEN],
 })
-export class PlayersModule {}
+export class CustomAxiosModule {}
