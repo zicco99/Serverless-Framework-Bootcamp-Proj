@@ -34,7 +34,7 @@ functions:
       - ${file(iam/PlayersTableIAM.yml):PlayersTableIAM}
     environment:
       REGION: ${self:provider.region}
-      PLAYERS_BUCKET_NAME: ${self:custom.PlayersTable.name}
+      PLAYERS_TABLE_NAME: ${self:custom.PlayersTable.name}
       AUCTIONS_TABLE_NAME: ${self:custom.AuctionsTable.name}
       FOOTBALL_API_KEY: ${ssm:/${self:custom.base}/football-api-key}
 
