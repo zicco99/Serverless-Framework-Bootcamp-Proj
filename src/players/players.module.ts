@@ -9,3 +9,4 @@ export const AXIOS_INSTANCE_TOKEN = 'AXIOS_INSTANCE';
   exports: [AXIOS_INSTANCE_TOKEN],
 })
 export class PlayersModule {}
+
