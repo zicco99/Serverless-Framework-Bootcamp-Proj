@@ -1,8 +1,8 @@
 import { Module, Global } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
-import { PlayersService } from './players.service';
-import { SportmonksService } from 'src/services/sport-monk.service';
-import { PlayersController } from './players.controller';
+import { TeamsService } from './teams.service';
+import { FootbalApiService } from 'src/services/football-api/football-api.service';
+import { TeamsController } from './teams.controller';
 
 /*
 Cross-Cutting Concerns: If you have services that are commonly used throughout the application, 
@@ -11,9 +11,9 @@ such as services like authentication, database connections, or HTTP clients, it 
 @Global()
 @Module({
   imports: [HttpModule],
-  controllers: [PlayersController],
-  providers: [PlayersService, SportmonksService],
-  exports: [PlayersService],
+  controllers: [TeamsController],
+  providers: [TeamsService, FootbalApiService],
+  exports: [TeamsService],
 })
-export class PlayersModule {}
+export class TeamsModule {}
 
