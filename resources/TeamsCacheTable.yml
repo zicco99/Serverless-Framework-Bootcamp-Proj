@@ -11,10 +11,3 @@ TeamsCacheTable:
     KeySchema:
       - AttributeName: id
         KeyType: HASH
-    GlobalSecondaryIndexes:
-      - IndexName: TeamNameIndex
-        KeySchema:
-          - AttributeName: teamName
-            KeyType: RANGE  # Range sort key (prefix search)
-        Projection:
-          ProjectionType: ALL
