@@ -15,6 +15,6 @@ TeamsCacheTable:
       - IndexName: TeamNameIndex
         KeySchema:
           - AttributeName: teamName
-            KeyType: RANGE  # Range sort key (prefix search)
+            KeyType: RANGE 
         Projection:
           ProjectionType: ALL
