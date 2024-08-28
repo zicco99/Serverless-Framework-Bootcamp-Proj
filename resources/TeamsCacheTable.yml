@@ -8,12 +8,16 @@ TeamsCacheTable:
         AttributeType: S
       - AttributeName: teamName
         AttributeType: S
+      - AttributeName: teamPrefix
+        AttributeType: S
     KeySchema:
       - AttributeName: id
         KeyType: HASH
     GlobalSecondaryIndexes:
       - IndexName: TeamNameIndex
         KeySchema:
+          - AttributeName: teamPrefix
+            KeyType: HASH
           - AttributeName: teamName
             KeyType: RANGE 
         Projection:
