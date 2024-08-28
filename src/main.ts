@@ -1,4 +1,4 @@
-import { Handler, Context } from 'aws-lambda';
+import { Handler, Context, APIGatewayProxyEvent } from 'aws-lambda';
 import { Server } from 'http';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
@@ -25,7 +25,11 @@ async function bootstrapServer(): Promise<Server> {
     .then(() => serverless.createServer(expressApp));
 }
 
-export const handler: Handler = async (event: any, context: Context) => {
+export const handler: Handler = async (event: APIGatewayProxyEvent, context: Context) => {
+  process.env.WEBHOOK_URL = `https://${event.requestContext.domainName}/${event.requestContext.stage}`;
+  console.log('WEBHOOK_URL: ', process.env.WEBHOOK_URL);
+
+  if (!cachedServer)
   cachedServer = await bootstrapServer();
   return proxy(cachedServer, event, context, 'PROMISE').promise;
 };

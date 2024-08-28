@@ -7,11 +7,17 @@ import { TelegrafModule } from 'nestjs-telegraf';
 
 @Module({
   imports: [
-    AuctionsModule, 
+    AuctionsModule,
     TeamsModule,
     TelegrafModule.forRoot({
-    token: process.env.BOT_TELEGRAM_KEY || '', 
-    })
+      token: process.env.BOT_TELEGRAM_KEY || '',
+      launchOptions: {
+        webhook: {
+          domain: process.env.WEBHOOK_URL || '',
+          path: '/',
+        },
+      },
+    }),
   ],
   controllers: [AppController],
   providers: [AppService],
