@@ -26,6 +26,8 @@ async function bootstrapServer(): Promise<Server> {
 }
 
 export const handler: Handler = async (event: APIGatewayProxyEvent, context: Context) => {
+
+  //Set it using https://api.telegram.org/<TOKEN>/setWebhook?url=
   process.env.WEBHOOK_URL = `https://${event.requestContext.domainName}/${event.requestContext.stage}`;
   console.log('WEBHOOK_URL: ', process.env.WEBHOOK_URL);
 

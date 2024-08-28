@@ -14,7 +14,7 @@ import { TelegrafModule } from 'nestjs-telegraf';
       launchOptions: {
         webhook: {
           domain: process.env.WEBHOOK_URL || '',
-          path: '/',
+          path: '/webhook',
         },
       },
     }),
