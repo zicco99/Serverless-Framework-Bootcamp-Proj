@@ -1,10 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { Hears, Help, On, Start, Update } from 'nestjs-telegraf';
-import { Context } from 'telegraf';
+import { Hears, Help, InjectBot, On, Start, Update } from 'nestjs-telegraf';
+import { Context, Telegraf } from 'telegraf';
 
-@Update()
 @Injectable()
 export class AppService {
+  constructor(@InjectBot() private readonly bot: Telegraf<Context>) {
+    bot.launch();
+  }
+
   getData(): { message: string } {
     return { message: 'Welcome to server!' };
   }

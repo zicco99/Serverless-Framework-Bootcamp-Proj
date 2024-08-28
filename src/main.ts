@@ -5,6 +5,7 @@ import { AppModule } from './app.module';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import * as serverless from 'aws-serverless-express';
 import { proxy } from 'aws-serverless-express';
+import { getBotToken } from 'nestjs-telegraf';
 
 let cachedServer: Server;
 
@@ -18,11 +19,17 @@ process.on('uncaughtException', (reason) => {
 
 async function bootstrapServer(): Promise<Server> {
   const expressApp = require('express')();
-  const adapter = new ExpressAdapter(expressApp);
 
-  return NestFactory.create(AppModule, adapter, { logger: ['debug', 'log', 'error', 'warn'] })
-    .then((app) => app.init())
-    .then(() => serverless.createServer(expressApp));
+  const app = await NestFactory.create(AppModule, new ExpressAdapter(expressApp), {
+    logger: ['debug', 'log', 'error', 'warn'],
+  });
+
+  const bot = app.get(getBotToken());
+  app.use(bot.webhookCallback('/webhook')); 
+
+  await app.init();
+
+  return serverless.createServer(expressApp);
 }
 
 export const handler: Handler = async (event: APIGatewayProxyEvent, context: Context) => {
