@@ -6,6 +6,15 @@ TeamsCacheTable:
     AttributeDefinitions:
       - AttributeName: id
         AttributeType: S
+      - AttributeName: teamName
+        AttributeType: S
     KeySchema:
       - AttributeName: id
         KeyType: HASH
+    GlobalSecondaryIndexes:
+      - IndexName: TeamNameIndex
+        KeySchema:
+          - AttributeName: teamName
+            KeyType: RANGE  # Range sort key (prefix search)
+        Projection:
+          ProjectionType: ALL
