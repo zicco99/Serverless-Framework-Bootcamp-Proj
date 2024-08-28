@@ -22,28 +22,30 @@ export class FootballApiService {
   }
 
   // Method to search teams by prefix
- async searchTeamsByPrefix(prefix: string): Promise<Team[]> {
-  try {
-    const command = new QueryCommand({
-      TableName: this.tableName,
-      IndexName: this.gsiName, // Ensure this matches your GSI name
-      KeyConditionExpression: 'begins_with(teamName, :prefix)',
-      ExpressionAttributeValues: marshall({
-        ':prefix': prefix,
-      }),
-      ProjectionExpression: 'teamId, teamName, otherAttributes', // Ensure these attributes are part of your GSI projection
-    });
-
-    const { Items } = await this.dynamoDbClient.send(command);
-    if (Items && Items.length > 0) {
-      return Items.map(item => unmarshall(item) as Team);
+  async searchTeamsByPrefix(prefix: string): Promise<Team[]> {
+    try {
+      const command = new QueryCommand({
+        TableName: this.tableName,
+        IndexName: this.gsiName, 
+        KeyConditionExpression: 'teamPrefix = :prefix and begins_with(teamName, :namePrefix)',
+        ExpressionAttributeValues: marshall({
+          ':prefix': prefix, 
+          ':namePrefix': prefix,
+        }),
+        ProjectionExpression: 'teamId, teamName, otherAttributes',
+      });
+  
+      const { Items } = await this.dynamoDbClient.send(command);
+      if (Items && Items.length > 0) {
+        return Items.map(item => unmarshall(item) as Team);
+      }
+      return [];
+    } catch (error) {
+      console.error('Error fetching from cache', error);
+      throw new InternalServerErrorException('An unexpected error occurred');
     }
-    return [];
-  } catch (error) {
-    console.error('Error fetching from cache', error);
-    throw new InternalServerErrorException('An unexpected error occurred');
   }
-}
+  
 
   // Fetches teams, returns the first result set, and continues fetching in the background
   async getTeams(): Promise<Team[]> {
