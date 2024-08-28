@@ -4,6 +4,7 @@ import { firstValueFrom } from 'rxjs';
 import { DynamoDBClient, QueryCommand, PutItemCommand, BatchWriteItemCommand, BatchWriteItemCommandOutput, AttributeValue, WriteRequest } from '@aws-sdk/client-dynamodb';
 import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
 import { Team } from './models/team.model';
+import { maxLength } from 'class-validator';
 
 @Injectable()
 export class FootballApiService {
@@ -179,7 +180,7 @@ export class FootballApiService {
       const requests: WriteRequest[] = [];
   
       for (const team of teams) {
-        const prefixes = this.generateDistinctPrefixes(team.name);
+        const prefixes = await this.getNewPrefixes(team.name, 5);
   
         for (const prefix of prefixes) {
           requests.push({
