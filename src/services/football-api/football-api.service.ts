@@ -58,9 +58,9 @@ export class FootballApiService {
           TableName: this.tableName,
           IndexName: this.gsiName,
           KeyConditionExpression: 'teamPrefix = :prefix',
-          ExpressionAttributeValues: marshall({
+          ExpressionAttributeValues: {
             ':prefix': { S: 'EXISTING_PREFIX' } // Placeholder value
-          }),
+          },
           ProjectionExpression: 'teamPrefix',
           ExclusiveStartKey: lastEvaluatedKey,
         });
