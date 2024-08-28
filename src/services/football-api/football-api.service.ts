@@ -98,10 +98,10 @@ export class FootballApiService {
         TableName: this.tableName,
         IndexName: this.gsiName,
         KeyConditionExpression: 'teamPrefix = :prefix AND begins_with(teamName, :namePrefix)',
-        ExpressionAttributeValues: marshall({
+        ExpressionAttributeValues: {
           ':prefix': { S: prefix },
           ':namePrefix': { S: prefix }
-        }),
+        },
         ProjectionExpression: 'teamId, teamName, otherAttributes',
       });
 
