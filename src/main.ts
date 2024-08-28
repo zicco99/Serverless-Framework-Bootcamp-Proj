@@ -20,7 +20,7 @@ async function bootstrapServer(): Promise<Server> {
   const expressApp = require('express')();
   const adapter = new ExpressAdapter(expressApp);
 
-  return NestFactory.create(AppModule, adapter, { logger: ['debug', 'log'] })
+  return NestFactory.create(AppModule, adapter, { logger: ['debug', 'log', 'error', 'warn'] })
     .then((app) => app.init())
     .then(() => serverless.createServer(expressApp));
 }
