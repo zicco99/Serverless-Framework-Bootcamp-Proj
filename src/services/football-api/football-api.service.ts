@@ -101,8 +101,7 @@ export class FootballApiService {
         ExpressionAttributeValues: {
           ':prefix': { S: prefix },
           ':namePrefix': { S: prefix }
-        },
-        ProjectionExpression: 'teamId, teamName, otherAttributes',
+        }
       });
 
       const { Items }: QueryCommandOutput = await this.dynamoDbClient.send(command);
