@@ -16,6 +16,7 @@ import {
 } from '@aws-sdk/client-dynamodb';
 import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
 import { Team } from './models/team.model';
+import { omit } from 'lodash'; 
 
 @Injectable()
 export class FootballApiService {
@@ -200,9 +201,10 @@ export class FootballApiService {
           requests.push({
             PutRequest: {
               Item: marshall({
+                id: `${prefix}#${team.id}`,
                 teamPrefix: prefix,
                 teamName: team.name,
-                ...team,
+                ...omit(team, ['id', 'name']),
               }) as Record<string, AttributeValue>,
             },
           });
@@ -226,7 +228,14 @@ export class FootballApiService {
         const unprocessedItems = response.UnprocessedItems?.[this.tableName] || [];
         if (unprocessedItems.length > 0) {
           console.warn(`Retrying ${unprocessedItems.length} unprocessed items...`);
-          requests.unshift(...unprocessedItems);
+          // Convert unprocessed items back to WriteRequest format
+          requests.unshift(
+            ...unprocessedItems.map(item => ({
+              PutRequest: {
+                Item: item.PutRequest?.Item as Record<string, AttributeValue>,
+              },
+            }))
+          );
         }
       }
     } catch (error) {
