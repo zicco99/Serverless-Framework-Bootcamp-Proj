@@ -38,6 +38,7 @@ functions:
       TEAMS_CACHE_TABLE_INDEX_NAME: ${self:custom.TeamsCacheTable.indexName}
       AUCTIONS_TABLE_NAME: ${self:custom.AuctionsTable.name}
       FOOTBALL_API_KEY: ${ssm:/${self:custom.base}/football-api-key}
+      BOT_TELEGRAM_KEY: ${ssm:/${self:custom.base}/bot-telegram-key}
 
 
 custom:
