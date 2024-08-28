@@ -94,6 +94,7 @@ export class FootballApiService {
       });
 
       const { Items } = await this.dynamoDbClient.send(command);
+      console.log(Items);
       if (Items && Items.length > 0) {
         return Items.map(item => unmarshall(item) as Team);
       }

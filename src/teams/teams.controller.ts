@@ -1,4 +1,4 @@
-import { Controller, Get, Query, Param, NotFoundException, InternalServerErrorException, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Query, NotFoundException, InternalServerErrorException, BadRequestException } from '@nestjs/common';
 import { TeamsService } from './teams.service'; 
 import { Team } from '../services/football-api/models/team.model';
 
