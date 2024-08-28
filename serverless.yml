@@ -46,5 +46,5 @@ custom:
     arn: !GetAtt AuctionsTable.Arn
     indexArn: !Join ["/", ["${self:custom.AuctionsTable.arn}", "index/statusAndEndDate"]]
   TeamsCacheTable:
-    name: ${self:custom.base}-players-table
+    name: ${self:custom.base}-teams-cache-table
     arn: !GetAtt TeamsCacheTable.Arn
