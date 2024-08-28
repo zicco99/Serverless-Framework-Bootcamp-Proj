@@ -11,7 +11,7 @@ export class FootballApiService {
   private readonly apiKey = process.env.FOOTBALL_API_KEY;
   private readonly dynamoDbClient: DynamoDBClient;
   private readonly tableName = process.env.TEAMS_CACHE_TABLE_NAME;
-  private readonly gsiName = 'TeamNameIndex';
+  private readonly gsiName = process.env.TEAMS_CACHE_TABLE_INDEX_NAME;
   private readonly pageSize = 100;
 
   constructor(private readonly httpService: HttpService) {
@@ -22,28 +22,28 @@ export class FootballApiService {
   }
 
   // Method to search teams by prefix
-  async searchTeamsByPrefix(prefix: string): Promise<Team[]> {
-    try {
-      const command = new QueryCommand({
-        TableName: this.tableName,
-        IndexName: this.gsiName,
-        KeyConditionExpression: 'begins_with(teamName, :prefix)',
-        ExpressionAttributeValues: marshall({
-          ':prefix': prefix,
-        }),
-        ProjectionExpression: 'teamId, teamName, otherAttributes',
-      });
+ async searchTeamsByPrefix(prefix: string): Promise<Team[]> {
+  try {
+    const command = new QueryCommand({
+      TableName: this.tableName,
+      IndexName: this.gsiName, // Ensure this matches your GSI name
+      KeyConditionExpression: 'begins_with(teamName, :prefix)',
+      ExpressionAttributeValues: marshall({
+        ':prefix': prefix,
+      }),
+      ProjectionExpression: 'teamId, teamName, otherAttributes', // Ensure these attributes are part of your GSI projection
+    });
 
-      const { Items } = await this.dynamoDbClient.send(command);
-      if (Items && Items.length > 0) {
-        return Items.map(item => unmarshall(item) as Team);
-      }
-      return [];
-    } catch (error) {
-      console.error('Error fetching from cache', error);
-      throw new InternalServerErrorException('An unexpected error occurred');
+    const { Items } = await this.dynamoDbClient.send(command);
+    if (Items && Items.length > 0) {
+      return Items.map(item => unmarshall(item) as Team);
     }
+    return [];
+  } catch (error) {
+    console.error('Error fetching from cache', error);
+    throw new InternalServerErrorException('An unexpected error occurred');
   }
+}
 
   // Fetches teams, returns the first result set, and continues fetching in the background
   async getTeams(): Promise<Team[]> {

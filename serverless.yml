@@ -35,6 +35,7 @@ functions:
     environment:
       REGION: ${self:provider.region}
       TEAMS_CACHE_TABLE_NAME: ${self:custom.TeamsCacheTable.name}
+      TEAMS_CACHE_TABLE_INDEX_NAME: ${self:custom.TeamsCacheTable.indexName}
       AUCTIONS_TABLE_NAME: ${self:custom.AuctionsTable.name}
       FOOTBALL_API_KEY: ${ssm:/${self:custom.base}/football-api-key}
 
@@ -48,4 +49,5 @@ custom:
   TeamsCacheTable:
     name: ${self:custom.base}-teams-cache-table
     arn: !GetAtt TeamsCacheTable.Arn
-    indexArn: !Join ["/", ["${self:custom.TeamsCacheTable.arn}", "index/TeamNameIndex"]]
+    indexName: TeamNameIndex
+    indexArn: !Join ["/", ["${self:custom.TeamsCacheTable.arn}", "${self:custom.TeamsCacheTable.indexName"]]

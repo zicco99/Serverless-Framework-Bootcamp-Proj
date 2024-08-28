@@ -14,7 +14,7 @@ TeamsCacheTable:
       - AttributeName: id
         KeyType: HASH
     GlobalSecondaryIndexes:
-      - IndexName: TeamNameIndex
+      - IndexName: ${self:custom.TeamsCacheTable.indexName}
         KeySchema:
           - AttributeName: teamPrefix
             KeyType: HASH
