@@ -37,7 +37,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Install Node.js dependencies
-        run: npm ci
+        run: npm ci --legacy-peer-deps
         
       - name: Deploy to AWS using Serverless
         uses: serverless/github-action@master
