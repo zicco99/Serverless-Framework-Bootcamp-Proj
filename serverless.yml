@@ -50,4 +50,4 @@ custom:
     name: ${self:custom.base}-teams-cache-table
     arn: !GetAtt TeamsCacheTable.Arn
     indexName: TeamNameIndex
-    indexArn: !Join ["/", ["${self:custom.TeamsCacheTable.arn}", "${self:custom.TeamsCacheTable.indexName"]]
+    indexArn: !Join ["/", ["${self:custom.TeamsCacheTable.arn}", "${self:custom.TeamsCacheTable.indexName}"]]
