@@ -21,15 +21,10 @@ export class TeamsController {
       throw new BadRequestException('Prefix query parameter is required');
     }
 
-    try {
-      const teams = await this.teamsService.searchTeamsByPrefix(prefix);
-      if (teams.length === 0) {
-        throw new NotFoundException('No teams found matching the given prefix');
-      }
-      return teams;
-    } catch (error) {
-      console.error('Error searching teams', error);
-      throw new InternalServerErrorException('Failed to search teams');
+    const teams = await this.teamsService.searchTeamsByPrefix(prefix);
+    if (teams.length === 0) {
+      throw new NotFoundException('No teams found matching the given prefix');
     }
+    return teams;
   }
 }
