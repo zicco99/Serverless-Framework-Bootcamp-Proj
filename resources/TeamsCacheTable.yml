@@ -1,20 +1,21 @@
-TeamsCacheTable:
-  Type: AWS::DynamoDB::Table
-  Properties:
-    TableName: ${self:custom.TeamsCacheTable.name}
-    BillingMode: PAY_PER_REQUEST
-    AttributeDefinitions:
-      - AttributeName: id
-        AttributeType: S
-      - AttributeName: teamName
-        AttributeType: S
-    KeySchema:
-      - AttributeName: id
-        KeyType: HASH
-    GlobalSecondaryIndexes:
-      - IndexName: TeamNameIndex
-        KeySchema:
-          - AttributeName: teamName
-            KeyType: HASH
-        Projection:
-          ProjectionType: ALL
+Resources:
+  TeamsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: TeamsTable
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+        - AttributeName: teamName
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: TeamNameIndex
+          KeySchema:
+            - AttributeName: teamName
+              KeyType: RANGE  # Range sort key (prefix search)
+          Projection:
+            ProjectionType: ALL
