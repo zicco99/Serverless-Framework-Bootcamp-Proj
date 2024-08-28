@@ -201,7 +201,6 @@ export class FootballApiService {
             PutRequest: {
               Item: marshall({
                 teamPrefix: prefix,
-                teamId: team.id,
                 teamName: team.name,
                 ...team,
               }) as Record<string, AttributeValue>,
