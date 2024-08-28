@@ -21,11 +21,6 @@ export class FootballApiService {
     this.dynamoDbClient = new DynamoDBClient({ region: process.env.AWS_REGION || 'eu-west-1' });
   }
 
-  // Calculate teamPrefix
-  private calculateTeamPrefix(teamName: string): string {
-    return teamName.substring(0, 3).toUpperCase();
-  }
-
   // Generate distinct prefixes for a given team name
   private generateDistinctPrefixes(name: string, maxLength: number = 5): string[] {
     const prefixes: Set<string> = new Set();
