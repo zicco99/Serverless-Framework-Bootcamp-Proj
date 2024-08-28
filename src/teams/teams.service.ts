@@ -1,10 +1,10 @@
 import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
-import { FootbalApiService } from '../services/football-api/football-api.service'; // Adjust the import path as necessary
+import { FootballApiService } from '../services/football-api/football-api.service'; // Adjust the import path as necessary
 import { Team } from '../services/football-api/models/team.model'; // Adjust the import path as necessary
 
 @Injectable()
 export class TeamsService {
-  constructor(private readonly footballApiService: FootbalApiService) {}
+  constructor(private readonly footballApiService: FootballApiService) {}
 
   async getTeams(): Promise<Team[]> {
     try {

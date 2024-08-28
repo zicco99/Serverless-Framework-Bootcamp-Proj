@@ -1,7 +1,7 @@
 import { Module, Global } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
 import { TeamsService } from './teams.service';
-import { FootbalApiService } from 'src/services/football-api/football-api.service';
+import { FootballApiService } from 'src/services/football-api/football-api.service';
 import { TeamsController } from './teams.controller';
 
 /*
@@ -12,7 +12,7 @@ such as services like authentication, database connections, or HTTP clients, it 
 @Module({
   imports: [HttpModule],
   controllers: [TeamsController],
-  providers: [TeamsService, FootbalApiService],
+  providers: [TeamsService, FootballApiService],
   exports: [TeamsService],
 })
 export class TeamsModule {}

@@ -3,15 +3,16 @@ import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { DynamoDBClient, QueryCommand, PutItemCommand } from '@aws-sdk/client-dynamodb';
 import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
-import { Team } from './models/team.model'; // Ensure the Team model is properly defined
+import { Team } from './models/team.model';
 
 @Injectable()
-export class FootbalApiService {
+export class FootballApiService {
   private readonly apiUrl = 'https://api.football-data.org/v4/teams';
   private readonly apiKey = process.env.FOOTBALL_API_KEY;
   private readonly dynamoDbClient: DynamoDBClient;
   private readonly tableName = 'TeamsCache';
-  private readonly gsiName = 'TeamNameIndex'; 
+  private readonly gsiName = 'TeamNameIndex';
+  private readonly pageSize = 100;
 
   constructor(private readonly httpService: HttpService) {
     if (!this.apiKey) {
@@ -20,15 +21,15 @@ export class FootbalApiService {
     this.dynamoDbClient = new DynamoDBClient({ region: process.env.AWS_REGION || 'eu-west-1' });
   }
 
-  // Method to get teams by prefix search
+  // Method to search teams by prefix
   async searchTeamsByPrefix(prefix: string): Promise<Team[]> {
     try {
       const command = new QueryCommand({
         TableName: this.tableName,
         IndexName: this.gsiName,
-        KeyConditionExpression: 'teamName = :prefix',
+        KeyConditionExpression: 'begins_with(teamName, :prefix)',
         ExpressionAttributeValues: marshall({
-          ':prefix': prefix + '\u{FFFF}', 
+          ':prefix': prefix,
         }),
         ProjectionExpression: 'teamId, teamName, otherAttributes',
       });
@@ -44,23 +45,26 @@ export class FootbalApiService {
     }
   }
 
+  // Fetches teams, returns the first result set, and continues fetching in the background
   async getTeams(): Promise<Team[]> {
-    try {
-      const response = await firstValueFrom(this.httpService.get(this.apiUrl, {
-        headers: {
-          'X-Auth-Token': this.apiKey,
-        },
-      }));
+    let allTeams: Team[] = [];
+    let offset = 0;
 
-      const teams = response.data.teams;
-      if (!teams || teams.length === 0) {
-        throw new NotFoundException('No teams found');
+    try {
+      // Fetch the first page of teams
+      const initialResponse = await this.fetchTeams(offset);
+      allTeams = initialResponse.teams;
+
+      // Return the first page of results immediately
+      if (allTeams.length === 0) {
+        throw new NotFoundException('Seems like there are no teams in the database');
       }
 
-      await this.saveToCache(teams);
+      // Continue fetching in the background
+      this.fetchRemainingTeams(offset + this.pageSize);
 
-      return teams;
-    } catch (error: any ) {
+      return allTeams;
+    } catch (error: any) {
       if (error.response) {
         throw new InternalServerErrorException(`API Error: ${error.response.statusText}`);
       } else {
@@ -69,6 +73,45 @@ export class FootbalApiService {
     }
   }
 
+  // Method to fetch a single page of teams
+  private async fetchTeams(offset: number): Promise<{ teams: Team[] }> {
+    const response = await firstValueFrom(
+      this.httpService.get(this.apiUrl, {
+        headers: {
+          'X-Auth-Token': this.apiKey,
+        },
+        params: {
+          limit: this.pageSize,
+          offset: offset,
+        },
+      })
+    );
+
+    return response.data;
+  }
+
+  // Method to fetch remaining teams asynchronously
+  private async fetchRemainingTeams(offset: number): Promise<void> {
+    try {
+      let moreTeamsExist = true;
+
+      while (moreTeamsExist) {
+        const response = await this.fetchTeams(offset);
+        const teams = response.teams;
+
+        if (teams && teams.length > 0) {
+          await this.saveToCache(teams);
+          offset += this.pageSize;
+        } else {
+          moreTeamsExist = false;
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching additional teams', error);
+    }
+  }
+
+  // Save teams to the DynamoDB cache
   private async saveToCache(teams: Team[]): Promise<void> {
     try {
       for (const team of teams) {
