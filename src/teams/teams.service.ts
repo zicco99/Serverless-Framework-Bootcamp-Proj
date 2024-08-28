@@ -7,18 +7,10 @@ export class TeamsService {
   constructor(private readonly footballApiService: FootballApiService) {}
 
   async getTeams(): Promise<Team[]> {
-    try {
-      return await this.footballApiService.getTeams();
-    } catch (error) {
-      throw new InternalServerErrorException('Failed to get teams');
-    }
+    return await this.footballApiService.getTeams();
   }
 
   async searchTeamsByPrefix(prefix: string): Promise<Team[]> {
-    try {
-      return await this.footballApiService.searchTeamsByPrefix(prefix);
-    } catch (error) {
-      throw new InternalServerErrorException('Failed to search teams');
-    }
+    return await this.footballApiService.searchTeamsByPrefix(prefix);
   }
 }
