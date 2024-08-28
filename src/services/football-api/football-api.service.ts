@@ -1,7 +1,7 @@
 import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
-import { DynamoDBClient, QueryCommand, PutItemCommand, BatchWriteItemCommand, BatchWriteItemCommandOutput, AttributeValue, WriteRequest } from '@aws-sdk/client-dynamodb';
+import { DynamoDBClient, QueryCommand, PutItemCommand, BatchWriteItemCommand, BatchWriteItemCommandOutput, AttributeValue, WriteRequest, QueryCommandOutput } from '@aws-sdk/client-dynamodb';
 import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
 import { Team } from './models/team.model';
 import { maxLength } from 'class-validator';
@@ -82,22 +82,25 @@ export class FootballApiService {
   // Method to search teams by prefix
   async searchTeamsByPrefix(prefix: string): Promise<Team[]> {
     try {
+      const expressionAttributeValues = {
+        ':prefix': { S: prefix },
+        ':namePrefix': { S: prefix },
+      };
+  
       const command = new QueryCommand({
         TableName: this.tableName,
-        IndexName: this.gsiName,
+        IndexName: this.gsiName, 
         KeyConditionExpression: 'teamPrefix = :prefix AND begins_with(teamName, :namePrefix)',
-        ExpressionAttributeValues: marshall({
-          ':prefix': prefix,
-          ':namePrefix': prefix,
-        }),
-        ProjectionExpression: 'teamId, teamName, otherAttributes',
+        ExpressionAttributeValues: expressionAttributeValues,
+        ProjectionExpression: 'teamId, teamName, otherAttributes', 
       });
-
-      const { Items } = await this.dynamoDbClient.send(command);
-      console.log(Items);
-      if (Items && Items.length > 0) {
+  
+      const { Items }: QueryCommandOutput = await this.dynamoDbClient.send(command);
+  
+      if (Items) {
         return Items.map(item => unmarshall(item) as Team);
       }
+  
       return [];
     } catch (error) {
       console.error('Error fetching from cache', error);
