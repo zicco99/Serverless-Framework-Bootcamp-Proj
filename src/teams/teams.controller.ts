@@ -28,6 +28,7 @@ export class TeamsController {
       }
       return teams;
     } catch (error) {
+      console.error('Error searching teams', error);
       throw new InternalServerErrorException('Failed to search teams');
     }
   }
