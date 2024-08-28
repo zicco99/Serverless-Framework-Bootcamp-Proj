@@ -121,6 +121,7 @@ export class FootballApiService {
         throw new NotFoundException('No teams found in the API response');
       }
 
+      this.saveToCache(allTeams);
       this.fetchRemainingTeams(offset + this.pageSize);
 
       return allTeams;
