@@ -1,10 +1,21 @@
-import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException
+} from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
-import { DynamoDBClient, QueryCommand, PutItemCommand, BatchWriteItemCommand, BatchWriteItemCommandOutput, AttributeValue, WriteRequest, QueryCommandOutput } from '@aws-sdk/client-dynamodb';
+import {
+  DynamoDBClient,
+  QueryCommand,
+  BatchWriteItemCommand,
+  BatchWriteItemCommandOutput,
+  AttributeValue,
+  WriteRequest,
+  QueryCommandOutput
+} from '@aws-sdk/client-dynamodb';
 import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
 import { Team } from './models/team.model';
-import { maxLength } from 'class-validator';
 
 @Injectable()
 export class FootballApiService {
@@ -39,7 +50,7 @@ export class FootballApiService {
   private async getExistingPrefixes(): Promise<Set<string>> {
     try {
       const existingPrefixes: Set<string> = new Set();
-      let lastEvaluatedKey: Record<string, any> | undefined;
+      let lastEvaluatedKey: Record<string, AttributeValue> | undefined;
 
       do {
         const command = new QueryCommand({
@@ -47,7 +58,7 @@ export class FootballApiService {
           IndexName: this.gsiName,
           KeyConditionExpression: 'teamPrefix = :prefix',
           ExpressionAttributeValues: marshall({
-            ':prefix': 'EXISTING_PREFIX', // Placeholder for query, modify as needed
+            ':prefix': { S: 'EXISTING_PREFIX' } // Placeholder value
           }),
           ProjectionExpression: 'teamPrefix',
           ExclusiveStartKey: lastEvaluatedKey,
@@ -58,7 +69,7 @@ export class FootballApiService {
 
         if (Items) {
           for (const item of Items) {
-            const unmarshalledItem = unmarshall(item);
+            const unmarshalledItem = unmarshall(item) as { teamPrefix: string };
             existingPrefixes.add(unmarshalledItem.teamPrefix);
           }
         }
@@ -82,25 +93,23 @@ export class FootballApiService {
   // Method to search teams by prefix
   async searchTeamsByPrefix(prefix: string): Promise<Team[]> {
     try {
-      const expressionAttributeValues = {
-        ':prefix': { S: prefix },
-        ':namePrefix': { S: prefix },
-      };
-  
       const command = new QueryCommand({
         TableName: this.tableName,
-        IndexName: this.gsiName, 
+        IndexName: this.gsiName,
         KeyConditionExpression: 'teamPrefix = :prefix AND begins_with(teamName, :namePrefix)',
-        ExpressionAttributeValues: expressionAttributeValues,
-        ProjectionExpression: 'teamId, teamName, otherAttributes', 
+        ExpressionAttributeValues: marshall({
+          ':prefix': { S: prefix },
+          ':namePrefix': { S: prefix }
+        }),
+        ProjectionExpression: 'teamId, teamName, otherAttributes',
       });
-  
+
       const { Items }: QueryCommandOutput = await this.dynamoDbClient.send(command);
-  
+
       if (Items) {
         return Items.map(item => unmarshall(item) as Team);
       }
-  
+
       return [];
     } catch (error) {
       console.error('Error fetching from cache', error);
@@ -183,10 +192,10 @@ export class FootballApiService {
   private async saveToCache(teams: Team[]): Promise<void> {
     try {
       const requests: WriteRequest[] = [];
-  
+
       for (const team of teams) {
         const prefixes = await this.getNewPrefixes(team.name, 5);
-  
+
         for (const prefix of prefixes) {
           requests.push({
             PutRequest: {
@@ -200,20 +209,20 @@ export class FootballApiService {
           });
         }
       }
-  
+
       // Batch write items to DynamoDB
       while (requests.length > 0) {
         const batch = requests.splice(0, 25);
-  
+
         const command = new BatchWriteItemCommand({
           RequestItems: {
             [this.tableName]: batch,
           },
         });
-  
+
         // Execute the batch write command
         const response: BatchWriteItemCommandOutput = await this.dynamoDbClient.send(command);
-  
+
         // Retry any unprocessed items
         const unprocessedItems = response.UnprocessedItems?.[this.tableName] || [];
         if (unprocessedItems.length > 0) {
@@ -226,5 +235,4 @@ export class FootballApiService {
       throw new InternalServerErrorException('Error saving to cache');
     }
   }
-
 }
