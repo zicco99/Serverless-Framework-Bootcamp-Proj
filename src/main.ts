@@ -29,7 +29,6 @@ export const handler: Handler = async (event: APIGatewayProxyEvent, context: Con
 
   //Set it using https://api.telegram.org/<TOKEN>/setWebhook?url=
   process.env.WEBHOOK_URL = `https://${event.requestContext.domainName}/${event.requestContext.stage}`;
-  console.log('WEBHOOK_URL: ', process.env.WEBHOOK_URL);
 
   if (!cachedServer)
   cachedServer = await bootstrapServer();

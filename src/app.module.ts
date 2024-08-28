@@ -5,6 +5,8 @@ import { AuctionsModule } from './auctions/auctions.module';
 import { TeamsModule } from './teams/teams.module';
 import { TelegrafModule } from 'nestjs-telegraf';
 
+console.log('WEBHOOK_URL: ', process.env.WEBHOOK_URL);
+
 @Module({
   imports: [
     AuctionsModule,
@@ -22,4 +24,5 @@ import { TelegrafModule } from 'nestjs-telegraf';
   controllers: [AppController],
   providers: [AppService],
 })
+
 export class AppModule {}
