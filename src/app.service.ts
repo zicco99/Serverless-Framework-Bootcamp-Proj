@@ -1,34 +1,33 @@
-import { Injectable } from '@nestjs/common';
-import { Hears, Help, InjectBot, On, Start, Update } from 'nestjs-telegraf';
-import { Context, Telegraf } from 'telegraf';
+import {
+  Update,
+  Ctx,
+  Start,
+  Help,
+  On,
+  Hears,
+} from 'nestjs-telegraf';
+import { Context } from 'telegraf';
 
-@Injectable()
+
+@Update()
 export class AppService {
-  constructor(@InjectBot() private readonly bot: Telegraf<Context>) {
-    bot.launch();
-  }
-
-  getData(): { message: string } {
-    return { message: 'Welcome to server!' };
-  }
-
   @Start()
-  async startCommand(ctx: Context) {
+  async start(@Ctx() ctx: Context ) {
     await ctx.reply('Welcome');
   }
 
   @Help()
-  async helpCommand(ctx: Context) {
+async help(@Ctx() ctx: Context) {
     await ctx.reply('Send me a sticker');
   }
 
   @On('sticker')
-  async onSticker(ctx: Context) {
+  async on(@Ctx() ctx: Context) {
     await ctx.reply('👍');
   }
 
   @Hears('hi')
-  async hearsHi(ctx: Context) {
+  async hears(@Ctx() ctx: Context) {
     await ctx.reply('Hey there');
   }
 }
