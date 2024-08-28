@@ -10,7 +10,7 @@ export class FootballApiService {
   private readonly apiUrl = 'https://api.football-data.org/v4/teams';
   private readonly apiKey = process.env.FOOTBALL_API_KEY;
   private readonly dynamoDbClient: DynamoDBClient;
-  private readonly tableName = 'TeamsCache';
+  private readonly tableName = process.env.TEAMS_CACHE_TABLE_NAME;
   private readonly gsiName = 'TeamNameIndex';
   private readonly pageSize = 100;
 
@@ -96,6 +96,8 @@ export class FootballApiService {
       let moreTeamsExist = true;
 
       while (moreTeamsExist) {
+        await new Promise(resolve => setTimeout(resolve, 5000));
+
         const response = await this.fetchTeams(offset);
         const teams = response.teams;
 

@@ -1,4 +1,4 @@
-PlayersTableIAM:
+TeamsCacheTableIAM:
   Effect: Allow
   Action:
     - dynamodb:PutItem
@@ -8,4 +8,5 @@ PlayersTableIAM:
     - dynamodb:Query
     - dynamodb:DeleteItem
   Resource:
-    - ${self:custom.PlayersTable.arn}
+    - ${self:custom.TeamsCacheTable.arn}
+    - ${self:custom.TeamsCacheTable.arn}/index/TeamNameIndex

@@ -19,7 +19,7 @@ package:
 resources:
   Resources:
     AuctionsTable: ${file(resources/AuctionsTable.yml):AuctionsTable}
-    PlayersTable: ${file(resources/PlayersTable.yml):PlayersTable}
+    TeamsCacheTable: ${file(resources/TeamsCacheTable.yml):TeamsCacheTable}
 
 
 functions:
@@ -31,10 +31,10 @@ functions:
           path: /{proxy+}    
     iamRoleStatements:
       - ${file(iam/AuctionsTableIAM.yml):AuctionsTableIAM}
-      - ${file(iam/PlayersTableIAM.yml):PlayersTableIAM}
+      - ${file(iam/TeamsCacheTableIAM.yml):TeamsCacheTableIAM}
     environment:
       REGION: ${self:provider.region}
-      PLAYERS_TABLE_NAME: ${self:custom.PlayersTable.name}
+      TEAMS_CACHE_TABLE_NAME: ${self:custom.TeamsCacheTable.name}
       AUCTIONS_TABLE_NAME: ${self:custom.AuctionsTable.name}
       FOOTBALL_API_KEY: ${ssm:/${self:custom.base}/football-api-key}
 
@@ -45,6 +45,6 @@ custom:
     name: ${self:custom.base}-auctions-table
     arn: !GetAtt AuctionsTable.Arn
     indexArn: !Join ["/", ["${self:custom.AuctionsTable.arn}", "index/statusAndEndDate"]]
-  PlayersTable:
+  TeamsCacheTable:
     name: ${self:custom.base}-players-table
-    arn: !GetAtt PlayersTable.Arn
+    arn: !GetAtt TeamsCacheTable.Arn
