@@ -97,9 +97,11 @@ async function bootstrapServer(webhookCallbackBaseUrl: string): Promise<Server> 
 }
 
 export const handler: Handler = async (event: APIGatewayProxyEvent, context: Context) => {
+  console.log("-- Event:", event);
   if (!cachedServer) {
     const webhookCallbackBaseUrl = `https://${event.requestContext.domainName}/${event.requestContext.stage}`;
     cachedServer = await bootstrapServer(webhookCallbackBaseUrl);
   }
+  console.log("-- Cached Server:", cachedServer);
   return proxy(cachedServer, event, context, 'PROMISE').promise;
 };
