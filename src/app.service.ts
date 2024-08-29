@@ -29,6 +29,12 @@ export class AppService {
     await ctx.reply('Wow, nice sticker! Here’s a virtual high-five! ✋');
   }
 
+  @Hears('lezzo')
+  async hearsLezzo(ctx: Context) {
+    console.log("Context: ", ctx);
+    await ctx.reply('Maonna cara, muzunna! 😂');
+  }
+
   @On('text')
   async onText(ctx: Context) {
     console.log("Context: ", ctx);
@@ -45,9 +51,4 @@ export class AppService {
     await ctx.reply(randomReply);
   }
 
-  @Hears('lezzo')
-  async hearsLezzo(ctx: Context) {
-    console.log("Context: ", ctx);
-    await ctx.reply('Maonna cara, muzunna! 😂 You got me there!');
-  }
 }
