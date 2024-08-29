@@ -6,7 +6,7 @@ import { AppModule } from './app.module';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import * as serverless from 'aws-serverless-express';
 import { proxy } from 'aws-serverless-express';
-import { Telegraf } from 'telegraf';
+import { getBotToken } from 'nestjs-telegraf';
 
 let cachedServer: Server;
 
@@ -26,12 +26,11 @@ async function bootstrapServer(webhookCallbackBaseUrl: string): Promise<Server> 
     logger: ['debug', 'log', 'error', 'warn'],
   });
 
-  const bot = app.get(Telegraf);
+  const bot = app.get(getBotToken());
   if (!bot) {
     throw new Error('Telegraf instance is not available');
   }
 
-  // Use webhookCallback middleware
   app.use(bot.webhookCallback('/webhook'));
 
   try {
