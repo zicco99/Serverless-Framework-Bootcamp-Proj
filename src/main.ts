@@ -40,12 +40,16 @@ async function bootstrapServer(webhookCallbacBasekUrl: string): Promise<Server> 
   const webhookInfo = await bot.telegram.getWebhookInfo();
   console.log('Webhook Info:', webhookInfo);
 
-  if(webhookInfo.url !== webhookCallbacBasekUrl + '/webhook') {
-    await bot.telegram.setWebhook(webhookCallbacBasekUrl + '/webhook'),{
-      drop_pending_updates: true,  
-      webhook_reply: true,         
-      webhook_reply_timeout: 3000 
-    };
+  if(webhookInfo.url === "") {
+    if(webhookInfo.url !== webhookCallbacBasekUrl + '/webhook') {
+      await bot.telegram.setWebhook(webhookCallbacBasekUrl + '/webhook'),{
+        drop_pending_updates: true,  
+        webhook_reply: true,         
+        webhook_reply_timeout: 3000 
+      };
+    }else{
+      console.log('Webhook already set');
+    }
   }
 
   await app.init();
