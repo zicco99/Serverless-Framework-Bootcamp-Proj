@@ -55,14 +55,16 @@ custom:
     indexArn: !Join ["/", ["${self:custom.TeamsCacheTable.arn}", "index/${self:custom.TeamsCacheTable.indexName}"]]
   warmup:
     enabled: true
-    events:
-      - schedule: rate(5 minutes)
-    clientContext:
-      source: warmup-trigger
-      environment: ${self:provider.stage}
-    payload:
-      requestType: warmup
-      timestamp: ${opt:timestamp, 'now'}
-    concurrency: 1
     functions:
-      - main
+      main:
+        enabled: true
+        events:
+          - schedule: rate(5 minutes)
+        clientContext:
+          environment:
+            source: warmup-trigger
+            stage: ${self:provider.stage}
+        payload:
+          requestType: warmup
+          timestamp: ${opt:timestamp, 'now'}
+        concurrency: 1
