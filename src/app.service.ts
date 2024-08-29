@@ -1,27 +1,31 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { Start, On, Ctx, Message } from 'nestjs-telegraf';
+import { Injectable } from '@nestjs/common';
+import { Hears, Help, On, Start, Update } from 'nestjs-telegraf';
 import { Context } from 'telegraf';
 
+@Update()
 @Injectable()
 export class AppService {
-  private readonly logger = new Logger(AppService.name);
+  getData(): { message: string } {
+    return { message: 'Welcome to server!' };
+  }
 
   @Start()
-  async handleStart(
-    @Ctx() ctx: Context,
-    @Message('text') msg: string,
-  ) {
-    this.logger.log('Received /start command:', msg);
-    await ctx.reply('Welcome to the bot!');
+  async startCommand(ctx: Context) {
+    await ctx.reply('Welcome');
   }
 
-  @On('text')
-  async handleText(
-    @Ctx() ctx: Context,
-    @Message('text') msg: string,
-  ) {
-    this.logger.log('Received text message:', msg);
-    await ctx.reply('Received text message');
+  @Help()
+  async helpCommand(ctx: Context) {
+    await ctx.reply('Send me a sticker');
   }
 
+  @On('sticker')
+  async onSticker(ctx: Context) {
+    await ctx.reply('👍');
+  }
+
+  @Hears('hi')
+  async hearsHi(ctx: Context) {
+    await ctx.reply('Hey there');
+  }
 }

@@ -9,7 +9,11 @@ import { TelegrafModule } from 'nestjs-telegraf';
   imports: [
     AuctionsModule,
     TeamsModule,
-    TelegrafModule,
+    TelegrafModule.forRoot(
+      {
+        token: process.env.BOT_TELEGRAM_KEY || "",
+      }
+    ),
   ],
   controllers: [],
   providers: [AppService],
