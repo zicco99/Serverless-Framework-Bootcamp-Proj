@@ -25,13 +25,19 @@ async function bootstrapServer(webhookCallbackBaseUrl: string): Promise<Server> 
 
   process.env.WEBHOOK_DOMAIN = webhookCallbackBaseUrl;
   process.env.WEBHOOK_PATH = '/webhook';
-  
 
   const app = await NestFactory.create(AppModule, new ExpressAdapter(expressApp), {
     logger: ['debug', 'log', 'error', 'warn'],
   });
 
   await app.init();
+
+  const bot = app.get(getBotToken());
+  if (!bot) {
+    throw new Error('Bot Istance is not available');
+  }
+
+  app.use(bot.webhookCallback('/webhook'));
 
   cachedServer = serverless.createServer(expressApp);
   return cachedServer;

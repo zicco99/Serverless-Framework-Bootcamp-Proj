@@ -9,7 +9,6 @@ const telegrafOptions: TelegrafModuleOptions = {
       domain: process.env.WEBHOOK_DOMAIN || "", 
       path: process.env.WEBHOOK_PATH || "/webhook", 
       maxConnections: 40,
-      
     },
     dropPendingUpdates: true,
     allowedUpdates: [
