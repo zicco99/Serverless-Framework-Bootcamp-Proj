@@ -35,7 +35,7 @@ async function bootstrapServer(webhookCallbackBaseUrl: string): Promise<Server> 
 
   const webhookInfo = await bot.telegram.getWebhookInfo();
   console.log("Webhook info:", webhookInfo);
-  console.log("Setup manually webhook using telegram api: ",`http:// ${webhookCallbackBaseUrl}/webhook`);
+  console.log("Setup manually webhook using telegram api: ",`https://api.telegram.org/bot${process.env.BOT_TELEGRAM_KEY}/setWebhook?url=${webhookCallbackBaseUrl}/webhook`);
 
   await app.init();
   return serverless.createServer(expressApp);
