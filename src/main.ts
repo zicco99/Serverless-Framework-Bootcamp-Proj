@@ -5,8 +5,7 @@ import { AppModule } from './app.module';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import * as serverless from 'aws-serverless-express';
 import { proxy } from 'aws-serverless-express';
-import { Telegraf } from 'telegraf';
-import { getBotToken } from 'nestjs-telegraf';
+import { getBotToken,  } from 'nestjs-telegraf';
 
 let cachedServer: Server;
 
@@ -18,10 +17,9 @@ process.on('uncaughtException', (err) => {
   console.error('Uncaught Exception thrown:', err);
 });
 
-async function bootstrapServer(webhookCallbacBasekUrl: string): Promise<Server> {
+async function bootstrapServer(webhookCallbackBaseUrl: string): Promise<Server> {
+  console.log("webhookCallbackBaseUrl", webhookCallbackBaseUrl);
 
-  console.log("webhookCallbacBasekUrl",webhookCallbacBasekUrl)
-  
   const expressApp = require('express')();
 
   const botToken = process.env.BOT_TELEGRAM_KEY; 
@@ -33,26 +31,25 @@ async function bootstrapServer(webhookCallbacBasekUrl: string): Promise<Server> 
     logger: ['debug', 'log', 'error', 'warn'],
   });
 
-  const bot = app.get(getBotToken());
+  const bot = app.get(getBotToken()); 
   app.use(bot.webhookCallback('/webhook'));
-  
-  await bot.telegram.setWebhook(webhookCallbacBasekUrl + '/webhook'),{
-    drop_pending_updates: true,  
-    webhook_reply: true,         
-    webhook_reply_timeout: 3000 
-  };
+
+  try {
+    await bot.telegram.setWebhook(`${webhookCallbackBaseUrl}/webhook`, {
+      drop_pending_updates: true,
+    });
+  } catch (error) {
+    console.error('Error setting webhook:', error);
+  }
 
   await app.init();
-
   return serverless.createServer(expressApp);
 }
 
 export const handler: Handler = async (event: APIGatewayProxyEvent, context: Context) => {
-
-  //Set it using https://api.telegram.org/<TOKEN>/setWebhook?url=<YOUR-HOSTED-SERVER>/webhook
   if (!cachedServer) {
-    const webhookCallbacBasekUrl = `https://${event.requestContext.domainName}/${event.requestContext.stage}`;
-    cachedServer = await bootstrapServer(webhookCallbacBasekUrl);
+    const webhookCallbackBaseUrl = `https://${event.requestContext.domainName}/${event.requestContext.stage}`;
+    cachedServer = await bootstrapServer(webhookCallbackBaseUrl);
   }
   return proxy(cachedServer, event, context, 'PROMISE').promise;
 };
