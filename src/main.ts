@@ -11,12 +11,12 @@ import { getBotToken } from 'nestjs-telegraf';
 let cachedServer: Server;
 let webhookSet = false;
 
-process.on('unhandledRejection', (reason: any) => {
-  console.error('Unhandled Rejection at:', reason);
+process.on('uncaughtException', function (error) {
+	console.log("\x1b[31m", "Exception: ", error, "\x1b[0m");
 });
 
-process.on('uncaughtException', (err) => {
-  console.error('Uncaught Exception thrown:', err);
+process.on('unhandledRejection', function (error, p) {
+	console.log("\x1b[31m","Error: ", error, "\x1b[0m");
 });
 
 async function bootstrapServer(webhookCallbackBaseUrl: string): Promise<Server> {
