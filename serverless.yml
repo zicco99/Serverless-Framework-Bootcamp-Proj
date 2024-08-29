@@ -39,6 +39,7 @@ functions:
       AUCTIONS_TABLE_NAME: ${self:custom.AuctionsTable.name}
       FOOTBALL_API_KEY: ${ssm:/${self:custom.base}/football-api-key}
       BOT_TELEGRAM_KEY: ${ssm:/${self:custom.base}/bot-telegram-key}
+      DEFAULT_BOT_NAME: ${self:custom.base}-bot
 
 
 custom:
