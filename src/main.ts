@@ -17,7 +17,7 @@ process.on('unhandledRejection', function (reason, promise) {
   console.error("Unhandled Rejection at:", promise, "reason:", reason);
 });
 
-async function bootstrapServer(webhookCallbackBaseUrl: string): Promise<Server> {
+async function bootstrapServer(): Promise<Server> {
   if (cachedServer) return cachedServer;
   const expressApp = require('express')();
   
@@ -43,9 +43,8 @@ export const handler: Handler = async (event: APIGatewayProxyEvent, context: Con
 
   if (!cachedServer) {
     try {
-      const webhookCallbackBaseUrl = `https://${event.requestContext.domainName}/${event.requestContext.stage}`;
-      console.log("Set manually : https://api.telegram.org/bot" + process.env.BOT_TELEGRAM_KEY + "/setWebhook?url=" + webhookCallbackBaseUrl);
-      cachedServer = await bootstrapServer(webhookCallbackBaseUrl);
+      console.log("Set manually : https://api.telegram.org/bot" + process.env.BOT_TELEGRAM_KEY + "/setWebhook?url=" + process.env.GATEWAY_URL + "/webhook");
+      cachedServer = await bootstrapServer();
     } catch (error) {
       console.error('Error bootstrapping server:', error);
       return {

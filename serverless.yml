@@ -42,6 +42,7 @@ functions:
       FOOTBALL_API_KEY: ${ssm:/${self:custom.base}/football-api-key}
       BOT_TELEGRAM_KEY: ${ssm:/${self:custom.base}/bot-telegram-key}
       DEFAULT_BOT_NAME: ${self:custom.base}-bot
+      GATEWAY_URL: ${self:custom.APIGateway.Url}
 
     warmup:
       enabled: true
@@ -57,6 +58,16 @@ custom:
     arn: !GetAtt TeamsCacheTable.Arn
     indexName: TeamNameIndex
     indexArn: !Join ["/", ["${self:custom.TeamsCacheTable.arn}", "index/${self:custom.TeamsCacheTable.indexName}"]]
+  APIGateway:
+    Url:
+      Fn::Join:
+      - ""
+      - - "https://"
+        - Ref: "ApiGatewayRestApi"
+        - ".execute-api."
+        - ${self:provider.region}.
+        - Ref: "AWS::URLSuffix"
+        - ${self:provider.stage}
   
   warmup:
     enabled: true
