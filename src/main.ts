@@ -20,6 +20,7 @@ process.on('unhandledRejection', function (reason, promise) {
 async function bootstrapServer(): Promise<Server> {
 
   if (cachedServer) return cachedServer;
+
   const expressApp = require('express')();
 
   const app = await NestFactory.create(AppModule, new ExpressAdapter(expressApp), {
@@ -45,6 +46,7 @@ export const handler: Handler = async (event: APIGatewayProxyEvent, context: Con
   const webhookCallbackBaseUrl = `https://${event.requestContext.domainName}/${event.requestContext.stage}`;
   process.env.WEBHOOK_DOMAIN = webhookCallbackBaseUrl;
   process.env.WEBHOOK_PATH = '/webhook';
+  console.log("Webhook set");
 
   if (!cachedServer) {
     try {
