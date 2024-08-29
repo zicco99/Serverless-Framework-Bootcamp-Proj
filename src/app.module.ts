@@ -5,7 +5,7 @@ import { TelegrafModule } from 'nestjs-telegraf';
 @Module({
   imports: [
     TelegrafModule.forRoot({
-      token: process.env.BOT_TELEGRAM_KEY || ""
+      token: process.env.BOT_TELEGRAM_KEY || "",
     }),
   ],
   controllers: [],
