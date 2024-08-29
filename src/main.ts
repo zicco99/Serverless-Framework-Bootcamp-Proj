@@ -32,7 +32,6 @@ async function bootstrapServer(webhookCallbacBasekUrl: string): Promise<Server> 
 
   // Configuring a webhook middleware
   const bot = app.get(getBotToken());
-  bot.telegram.botName
   app.use(bot.webhookCallback('/webhook'));
 
   const webhookInfo = await bot.telegram.getWebhookInfo();
