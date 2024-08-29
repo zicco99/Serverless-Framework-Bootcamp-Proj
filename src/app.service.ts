@@ -1,39 +1,21 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { Start, On } from 'nestjs-telegraf';
 import { Context } from 'telegraf';
-import { Update } from 'telegraf/typings/core/types/typegram';
 
 @Injectable()
 export class AppService {
-  async processUpdate(update: Update): Promise<void> {;
-    const ctx = new Context(update);
-    if (ctx.message) {
-      if (ctx.message.text) {
-        if (ctx.message.text.toLowerCase() === '/start') {
-          await this.start(ctx);
-        } else if (ctx.message.text.toLowerCase() === '/help') {
-          await this.help(ctx);
-        } else if (ctx.message.text.toLowerCase() === 'hi') {
-          await this.hearsHi(ctx);
-        }
-      } else if (ctx.message.sticker) {
-        await this.onSticker(ctx);
-      }
-    }
+  private readonly logger = new Logger(AppService.name);
+
+  @Start()
+  async handleStart(ctx: Context) {
+    this.logger.log('Received /start command:', ctx.update);
+    await ctx.reply('Welcome to the bot!');
   }
 
-  async start(ctx: Context): Promise<void> {
-    await ctx.reply('Welcome');
+  @On('text')
+  async handleText(ctx: Context) {
+    this.logger.log('Received text message:', ctx.update);
+    await ctx.reply('Received text message');
   }
 
-  async help(ctx: Context): Promise<void> {
-    await ctx.reply('Send me a sticker');
-  }
-
-  async onSticker(ctx: Context): Promise<void> {
-    await ctx.reply('👍');
-  }
-
-  async hearsHi(ctx: Context): Promise<void> {
-    await ctx.reply('Hey there');
-  }
 }

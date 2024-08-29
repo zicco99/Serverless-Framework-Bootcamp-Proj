@@ -6,6 +6,7 @@ import { ExpressAdapter } from '@nestjs/platform-express';
 import * as serverless from 'aws-serverless-express';
 import { proxy } from 'aws-serverless-express';
 import { Telegraf } from 'telegraf';
+import { getBotToken } from 'nestjs-telegraf';
 
 let cachedServer: Server;
 
@@ -20,24 +21,31 @@ process.on('uncaughtException', (err) => {
 async function bootstrapServer(webhookCallbacBasekUrl: string): Promise<Server> {
   const expressApp = require('express')();
 
-  const app = await NestFactory.create(AppModule, new ExpressAdapter(expressApp), {
-    logger: ['debug', 'log', 'error', 'warn'],
-  });
-  
   const botToken = process.env.BOT_TELEGRAM_KEY; 
   if (!botToken) {
     throw new Error('BOT_TELEGRAM_KEY is not defined');
   }
 
-  const bot = new Telegraf(botToken);
+  const app = await NestFactory.create(AppModule, new ExpressAdapter(expressApp), {
+    logger: ['debug', 'log', 'error', 'warn'],
+  });
 
-  await bot.telegram.setWebhook(webhookCallbacBasekUrl + '/webhook');
-  
+  // Configuring a webhook middleware
+  const bot = app.get(getBotToken());
+  app.use(bot.webhookCallback('/webhook'));
+
+  // Setting webhook using https://api.telegram.org/<TOKEN>/setWebhook?url=<YOUR-HOSTED-SERVER>/webhook
   const webhookInfo = await bot.telegram.getWebhookInfo();
   console.log('Webhook Info:', webhookInfo);
 
-  expressApp.use(bot.webhookCallback('/webhook'));
-
+  if(webhookInfo.url !== webhookCallbacBasekUrl + '/webhook') {
+    await bot.telegram.setWebhook(webhookCallbacBasekUrl + '/webhook'),{
+      drop_pending_updates: true,  
+      webhook_reply: true,         
+      webhook_reply_timeout: 3000 
+    };
+  }
+  
   await app.init();
 
   return serverless.createServer(expressApp);
