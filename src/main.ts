@@ -8,6 +8,7 @@ import { proxy } from 'aws-serverless-express';
 import { Telegraf } from 'telegraf';
 
 let cachedServer: Server;
+let webhookSet = false;
 
 process.on('unhandledRejection', (reason: any) => {
   console.error('Unhandled Rejection at:', reason);
@@ -30,38 +31,45 @@ async function bootstrapServer(webhookCallbackBaseUrl: string): Promise<Server> 
     throw new Error('Telegraf instance is not available');
   }
 
+  // Middleware for webhook
   app.use(bot.webhookCallback('/webhook'));
 
-  try {
-    const webhookInfo = await bot.telegram.getWebhookInfo();
-    console.log("Current Webhook Info:", webhookInfo);
+  if (!webhookSet) {
+    const desiredWebhookUrl = `${webhookCallbackBaseUrl}/webhook`;
 
-    if (webhookInfo.url && webhookInfo.url !== `${webhookCallbackBaseUrl}/webhook`) {
-      console.log('Conflicting webhook detected. Deleting existing webhook.');
-      await bot.telegram.deleteWebhook();
+    try {
+      // Check current webhook info
+      const webhookInfo = await bot.telegram.getWebhookInfo();
+      console.log("Current Webhook Info:", webhookInfo);
+
+      // Only set the webhook if it's not already set correctly
+      if (webhookInfo.url !== desiredWebhookUrl) {
+        console.log('Setting new webhook to:', desiredWebhookUrl);
+        await bot.telegram.setWebhook(desiredWebhookUrl, {
+          drop_pending_updates: true,
+          allowed_updates: [
+            'message',
+            'edited_message',
+            'channel_post',
+            'edited_channel_post',
+            'callback_query',
+            'inline_query',
+            'chosen_inline_result',
+            'shipping_query',
+            'pre_checkout_query',
+            'poll',
+            'poll_answer'
+          ],
+        });
+        console.log('Webhook set successfully');
+        webhookSet = true;  // Mark that the webhook has been set
+      } else {
+        console.log('Webhook is already set correctly.');
+        webhookSet = true;  // Mark that the webhook has been checked and is correct
+      }
+    } catch (error) {
+      console.error('Error setting or fetching webhook info:', error);
     }
-
-    console.log("Setting new webhook to:", `${webhookCallbackBaseUrl}/webhook`);
-    await bot.telegram.setWebhook(`${webhookCallbackBaseUrl}/webhook`, {
-      drop_pending_updates: true,
-      allowed_updates: [
-        'message',
-        'edited_message',
-        'channel_post',
-        'edited_channel_post',
-        'callback_query',
-        'inline_query',
-        'chosen_inline_result',
-        'shipping_query',
-        'pre_checkout_query',
-        'poll',
-        'poll_answer'
-      ],
-    });
-
-    console.log('Webhook set successfully');
-  } catch (error) {
-    console.error('Error setting or fetching webhook info:', error);
   }
 
   await app.init();
