@@ -6,38 +6,48 @@ import { Context } from 'telegraf';
 @Injectable()
 export class AppService {
   getData(): { message: string } {
-    return { message: 'Welcome to server!' };
+    return { message: 'Welcome to the party, pal!' };
   }
 
   @Start()
   async startCommand(ctx: Context) {
-    console.log("Message from user: ",ctx.message);
-    console.log("Context: ",ctx);
+    console.log("Message from user: ", ctx.message);
+    console.log("Context: ", ctx);
     
-    await ctx.reply('Welcome');
+    await ctx.reply('Hello there! 🖖 Ready to have some fun? Type /help if you get lost!');
   }
-  
+
   @Help()
   async helpCommand(ctx: Context) {
-    console.log("Context: ",ctx);
-    await ctx.reply('Send me a sticker');
+    console.log("Context: ", ctx);
+    await ctx.reply('Need help? Just send me a sticker, a text, or type "lezzo" for a surprise! 😜');
   }
 
   @On('sticker')
   async onSticker(ctx: Context) {
-    console.log("Context: ",ctx);
-    await ctx.reply('👍');
+    console.log("Context: ", ctx);
+    await ctx.reply('Wow, nice sticker! Here’s a virtual high-five! ✋');
   }
 
   @On('text')
-  async onText(ctx: Context, msg: string) {
-    console.log("Context: ",ctx);
-    await ctx.reply(msg + '👍');
+  async onText(ctx: Context) {
+    console.log("Context: ", ctx);
+    
+    const funnyReplies = [
+      'That’s interesting! Tell me more... 🤔',
+      'You’re on fire today! 🔥',
+      'Haha, good one! 😂',
+      'I totally agree! 👍',
+      'You just made my day! 🌞'
+    ];
+    
+    const randomReply = funnyReplies[Math.floor(Math.random() * funnyReplies.length)];
+    await ctx.reply(randomReply);
   }
 
   @Hears('lezzo')
-  async hearsHi(ctx: Context) {
-    console.log("Context: ",ctx);
-    await ctx.reply('Maonna cara, muzunna!');
+  async hearsLezzo(ctx: Context) {
+    console.log("Context: ", ctx);
+    await ctx.reply('Maonna cara, muzunna! 😂 You got me there!');
   }
 }
