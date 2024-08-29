@@ -5,23 +5,24 @@ import { AppModule } from './app.module';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import * as serverless from 'aws-serverless-express';
 import { proxy } from 'aws-serverless-express';
-import { Telegraf } from 'telegraf';
 import { getBotToken } from 'nestjs-telegraf';
+import * as express from 'express';
 
 let cachedServer: Server;
-let webhookSet = false;
 
 process.on('uncaughtException', function (error) {
-	console.log("\x1b[31m", "Exception: ", error, "\x1b[0m");
+  console.error("Uncaught Exception:", error);
 });
 
-process.on('unhandledRejection', function (error, p) {
-	console.log("\x1b[31m","Error: ", error, "\x1b[0m");
+process.on('unhandledRejection', function (reason, promise) {
+  console.error("Unhandled Rejection at:", promise, "reason:", reason);
 });
 
 async function bootstrapServer(webhookCallbackBaseUrl: string): Promise<Server> {
-  
+  if (cachedServer) return cachedServer;
+
   const expressApp = require('express')();
+  
   const app = await NestFactory.create(AppModule, new ExpressAdapter(expressApp), {
     logger: ['debug', 'log', 'error', 'warn'],
   });
@@ -60,22 +61,37 @@ async function bootstrapServer(webhookCallbackBaseUrl: string): Promise<Server> 
     } else {
       console.log('Webhook is already set correctly.');
     }
-
-    webhookSet = true;
   } catch (error) {
     console.error('Error setting or fetching webhook info:', error);
   }
 
-  return serverless.createServer(expressApp);
+  cachedServer = serverless.createServer(expressApp);
+  return cachedServer;
 }
-
 
 export const handler: Handler = async (event: APIGatewayProxyEvent, context: Context) => {
   console.log("-- Event:", event);
+
   if (!cachedServer) {
-    const webhookCallbackBaseUrl = `https://${event.requestContext.domainName}/${event.requestContext.stage}`;
-    cachedServer = await bootstrapServer(webhookCallbackBaseUrl);
+    try {
+      const webhookCallbackBaseUrl = `https://${event.requestContext.domainName}/${event.requestContext.stage}`;
+      cachedServer = await bootstrapServer(webhookCallbackBaseUrl);
+    } catch (error) {
+      console.error('Error bootstrapping server:', error);
+      return {
+        statusCode: 500,
+        body: JSON.stringify({ message: 'Internal Server Error' }),
+      };
+    }
   }
-  console.log("-- Cached Server:", cachedServer);
-  return proxy(cachedServer, event, context, 'PROMISE').promise;
+
+  try {
+    return await proxy(cachedServer, event, context, 'PROMISE').promise;
+  } catch (error) {
+    console.error('Error handling request:', error);
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ message: 'Internal Server Error' }),
+    };
+  }
 };
