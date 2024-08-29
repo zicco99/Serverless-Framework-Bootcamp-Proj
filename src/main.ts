@@ -44,6 +44,7 @@ export const handler: Handler = async (event: APIGatewayProxyEvent, context: Con
   if (!cachedServer) {
     try {
       const webhookCallbackBaseUrl = `https://${event.requestContext.domainName}/${event.requestContext.stage}`;
+      console.log("Set manually : https://api.telegram.org/bot" + process.env.BOT_TELEGRAM_KEY + "/setWebhook?url=" + webhookCallbackBaseUrl);
       cachedServer = await bootstrapServer(webhookCallbackBaseUrl);
     } catch (error) {
       console.error('Error bootstrapping server:', error);
