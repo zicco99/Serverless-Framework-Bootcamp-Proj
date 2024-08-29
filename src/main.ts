@@ -34,6 +34,7 @@ async function bootstrapServer(webhookCallbacBasekUrl: string): Promise<Server> 
   const bot = new Telegraf(botToken);
 
   bot.telegram.setWebhook(webhookCallbacBasekUrl + '/webhook');
+  console.log(`Telegram webhook URL: ${webhookCallbacBasekUrl}/webhook`);
   expressApp.use(bot.webhookCallback('/webhook'));
 
   await app.init();
@@ -42,7 +43,7 @@ async function bootstrapServer(webhookCallbacBasekUrl: string): Promise<Server> 
 }
 
 export const handler: Handler = async (event: APIGatewayProxyEvent, context: Context) => {
-  
+
   //Set it using https://api.telegram.org/<TOKEN>/setWebhook?url=<YOUR-HOSTED-SERVER>/webhook
   if (!cachedServer) {
     const webhookCallbacBasekUrl = `https://${event.requestContext.domainName}/${event.requestContext.stage}`;
