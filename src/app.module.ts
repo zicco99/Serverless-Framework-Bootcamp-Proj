@@ -9,7 +9,7 @@ import { TelegrafModule, TelegrafModuleOptions } from 'nestjs-telegraf';
       launchOptions: {
         webhook: {
           domain: process.env.GATEWAY_URL || "", 
-          path: "/webhook", 
+          path: "/dev/webhook", 
           maxConnections: 40,
         },
         dropPendingUpdates: true,
