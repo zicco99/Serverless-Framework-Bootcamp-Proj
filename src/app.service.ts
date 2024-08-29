@@ -1,3 +1,4 @@
+import { Injectable } from '@nestjs/common';
 import {
   Update,
   Ctx,
@@ -10,6 +11,7 @@ import { Context } from 'telegraf';
 
 
 @Update()
+@Injectable()
 export class AppService {
 
   @Start()

@@ -3,11 +3,9 @@ import { Server } from 'http';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ExpressAdapter } from '@nestjs/platform-express';
-import * as express from 'express'; // Ensure correct import for express
 import * as serverless from 'aws-serverless-express';
 import { proxy } from 'aws-serverless-express';
-import { Telegraf } from 'telegraf'; // Import Telegraf directly
-import { ValidationPipe } from '@nestjs/common';
+import { Telegraf } from 'telegraf';
 
 let cachedServer: Server;
 
@@ -33,8 +31,9 @@ async function bootstrapServer(webhookCallbacBasekUrl: string): Promise<Server> 
 
   const bot = new Telegraf(botToken);
 
-  bot.telegram.setWebhook(webhookCallbacBasekUrl + '/webhook');
-  console.log(`Telegram webhook URL: ${webhookCallbacBasekUrl}/webhook`);
+  await bot.telegram.setWebhook(webhookCallbacBasekUrl + '/webhook');
+  console.log(`Telegram webhook URL set to: ${webhookCallbacBasekUrl}/webhook`);
+
   expressApp.use(bot.webhookCallback('/webhook'));
 
   await app.init();
