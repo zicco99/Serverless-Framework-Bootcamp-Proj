@@ -33,7 +33,6 @@ async function bootstrapServer(webhookCallbacBasekUrl: string): Promise<Server> 
     logger: ['debug', 'log', 'error', 'warn'],
   });
 
-  // Configuring a webhook middleware
   const bot = app.get(getBotToken());
   app.use(bot.webhookCallback('/webhook'));
 
