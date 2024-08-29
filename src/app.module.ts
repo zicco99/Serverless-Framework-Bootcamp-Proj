@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { AppService } from './app.service';
 import { TelegrafModule, TelegrafModuleOptions } from 'nestjs-telegraf';
 
-console.log("GATEWAY_URL: " + process.env.GATEWAY_URL);
 @Module({
   imports: [
     TelegrafModule.forRoot({
