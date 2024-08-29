@@ -6,7 +6,6 @@ import { ExpressAdapter } from '@nestjs/platform-express';
 import * as serverless from 'aws-serverless-express';
 import { proxy } from 'aws-serverless-express';
 import { getBotToken } from 'nestjs-telegraf';
-import * as express from 'express';
 
 let cachedServer: Server;
 
@@ -20,7 +19,6 @@ process.on('unhandledRejection', function (reason, promise) {
 
 async function bootstrapServer(webhookCallbackBaseUrl: string): Promise<Server> {
   if (cachedServer) return cachedServer;
-
   const expressApp = require('express')();
 
   process.env.WEBHOOK_DOMAIN = webhookCallbackBaseUrl;
@@ -38,7 +36,7 @@ async function bootstrapServer(webhookCallbackBaseUrl: string): Promise<Server> 
   app.use(bot.webhookCallback('/webhook'));
 
   await app.init();
-  
+
   cachedServer = serverless.createServer(expressApp);
   return cachedServer;
 }
@@ -69,3 +67,4 @@ export const handler: Handler = async (event: APIGatewayProxyEvent, context: Con
     };
   }
 };
+

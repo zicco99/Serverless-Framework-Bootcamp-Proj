@@ -2,6 +2,10 @@ import { Module } from '@nestjs/common';
 import { AppService } from './app.service';
 import { TelegrafModule, TelegrafModuleOptions } from 'nestjs-telegraf';
 
+console.log("BOT_TELEGRAM_KEY: ",process.env.BOT_TELEGRAM_KEY);
+console.log("WEBHOOK_DOMAIN: ",process.env.WEBHOOK_DOMAIN);
+console.log("WEBHOOK_PATH: ",process.env.WEBHOOK_PATH);
+
 const telegrafOptions: TelegrafModuleOptions = {
   token: process.env.BOT_TELEGRAM_KEY || "",
   launchOptions: {
