@@ -20,7 +20,28 @@ process.on('unhandledRejection', function (error, p) {
 });
 
 async function bootstrapServer(webhookCallbackBaseUrl: string): Promise<Server> {
-  console.log("Webhook Callback Base URL:", webhookCallbackBaseUrl);
+  
+  const curlCommand = `curl -X POST https://api.telegram.org/bot${process.env.BOT_TELEGRAM_KEY}/setWebhook \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "${webhookCallbackBaseUrl}",
+    "drop_pending_updates": true,
+    "allowed_updates": [
+      "message",
+      "edited_message",
+      "channel_post",
+      "edited_channel_post",
+      "callback_query",
+      "inline_query",
+      "chosen_inline_result",
+      "shipping_query",
+      "pre_checkout_query",
+      "poll",
+      "poll_answer"
+    ]
+  }'`;
+
+  console.log('Manually setting webhook with curl command:', curlCommand);
 
   const expressApp = require('express')();
   const app = await NestFactory.create(AppModule, new ExpressAdapter(expressApp), {
