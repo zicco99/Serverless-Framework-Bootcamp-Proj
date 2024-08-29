@@ -32,9 +32,9 @@ async function bootstrapServer(webhookCallbacBasekUrl: string): Promise<Server> 
 
   // Configuring a webhook middleware
   const bot = app.get(getBotToken());
+  bot.telegram.botName
   app.use(bot.webhookCallback('/webhook'));
 
-  // Setting webhook using https://api.telegram.org/<TOKEN>/setWebhook?url=<YOUR-HOSTED-SERVER>/webhook
   const webhookInfo = await bot.telegram.getWebhookInfo();
   console.log('Webhook Info:', webhookInfo);
 
@@ -45,7 +45,7 @@ async function bootstrapServer(webhookCallbacBasekUrl: string): Promise<Server> 
       webhook_reply_timeout: 3000 
     };
   }
-  
+
   await app.init();
 
   return serverless.createServer(expressApp);
