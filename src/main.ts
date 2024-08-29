@@ -30,8 +30,6 @@ async function bootstrapServer(webhookCallbackBaseUrl: string): Promise<Server> 
     logger: ['debug', 'log', 'error', 'warn'],
   });
 
-  await app.init();
-
   const bot = app.get(getBotToken());
   if (!bot) {
     throw new Error('Bot Istance is not available');
@@ -39,6 +37,8 @@ async function bootstrapServer(webhookCallbackBaseUrl: string): Promise<Server> 
 
   app.use(bot.webhookCallback('/webhook'));
 
+  await app.init();
+  
   cachedServer = serverless.createServer(expressApp);
   return cachedServer;
 }
