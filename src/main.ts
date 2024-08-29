@@ -19,6 +19,9 @@ process.on('uncaughtException', (err) => {
 });
 
 async function bootstrapServer(webhookCallbacBasekUrl: string): Promise<Server> {
+
+  console.log("webhookCallbacBasekUrl",webhookCallbacBasekUrl)
+  
   const expressApp = require('express')();
 
   const botToken = process.env.BOT_TELEGRAM_KEY; 
