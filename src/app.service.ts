@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { Hears, Help, On, Start, Update } from 'nestjs-telegraf';
 import { Context } from 'telegraf';
 
-@Update()
 @Injectable()
 export class AppService {
   getData(): { message: string } {
@@ -13,7 +12,7 @@ export class AppService {
   async startCommand(ctx: Context) {
     console.log("Message from user: ",ctx.message);
     console.log("Context: ",ctx);
-    
+
     await ctx.reply('Welcome');
   }
 
