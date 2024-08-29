@@ -42,6 +42,8 @@ async function bootstrapServer(webhookCallbacBasekUrl: string): Promise<Server> 
 }
 
 export const handler: Handler = async (event: APIGatewayProxyEvent, context: Context) => {
+  
+  //Set it using https://api.telegram.org/<TOKEN>/setWebhook?url=<YOUR-HOSTED-SERVER>/webhook
   if (!cachedServer) {
     const webhookCallbacBasekUrl = `https://${event.requestContext.domainName}/${event.requestContext.stage}`;
     cachedServer = await bootstrapServer(webhookCallbacBasekUrl);
