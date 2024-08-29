@@ -41,6 +41,13 @@ functions:
       FOOTBALL_API_KEY: ${ssm:/${self:custom.base}/football-api-key}
       BOT_TELEGRAM_KEY: ${ssm:/${self:custom.base}/bot-telegram-key}
       DEFAULT_BOT_NAME: ${self:custom.base}-bot
+    warmup:
+      default:
+        clientContext:
+          source: different-source-only-for-this-lambda
+        payload:
+          source: different-source-only-for-this-lambda
+        concurrency: 1
 
 
 custom:
@@ -54,10 +61,3 @@ custom:
     arn: !GetAtt TeamsCacheTable.Arn
     indexName: TeamNameIndex
     indexArn: !Join ["/", ["${self:custom.TeamsCacheTable.arn}", "index/${self:custom.TeamsCacheTable.indexName}"]]
-  warmup:
-    default:
-      enabled: true
-      events:
-        - schedule: rate(5 minutes)
-      functions:
-        - main
