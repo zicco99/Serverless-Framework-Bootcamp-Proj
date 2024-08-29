@@ -11,21 +11,25 @@ export class AppService {
 
   @Start()
   async startCommand(ctx: Context) {
+    console.log("Context: ",ctx);
     await ctx.reply('Welcome');
   }
 
   @Help()
   async helpCommand(ctx: Context) {
+    console.log("Context: ",ctx);
     await ctx.reply('Send me a sticker');
   }
 
   @On('sticker')
   async onSticker(ctx: Context) {
+    console.log("Context: ",ctx);
     await ctx.reply('👍');
   }
 
   @Hears('hi')
   async hearsHi(ctx: Context) {
+    console.log("Context: ",ctx);
     await ctx.reply('Hey there');
   }
 }
