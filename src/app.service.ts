@@ -11,15 +11,16 @@ import { Context } from 'telegraf';
 
 @Update()
 export class AppService {
+
   @Start()
   async start(@Ctx() ctx: Context ) {
     await ctx.reply('Welcome');
   }
 
   @Help()
-async help(@Ctx() ctx: Context) {
-    await ctx.reply('Send me a sticker');
-  }
+  async help(@Ctx() ctx: Context) {
+      await ctx.reply('Send me a sticker');
+    }
 
   @On('sticker')
   async on(@Ctx() ctx: Context) {
