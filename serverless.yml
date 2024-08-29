@@ -59,7 +59,16 @@ custom:
     indexName: TeamNameIndex
     indexArn: !Join ["/", ["${self:custom.TeamsCacheTable.arn}", "index/${self:custom.TeamsCacheTable.indexName}"]]
   APIGateway:
-    Url: { "Fn::Join" : ["", ["https://", { "Ref" : "ApiGatewayRestApi" }, ".execute-api.${self:provider.region}.amazonaws.com/${self:provider.stage}/path/to/resource" ] ]  }
+    Url:
+      Fn::Join:
+      - ""
+      - - "https://"
+        - Ref: "ApiGatewayRestApi"
+        - ".execute-api."
+        - ${self:provider.region}.
+        - Ref: "AWS::URLSuffix"
+        - ${self:provider.stage}
+  
   warmup:
     enabled: true
     functions:
