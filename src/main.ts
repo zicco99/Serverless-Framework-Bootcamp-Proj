@@ -32,7 +32,9 @@ async function bootstrapServer(webhookCallbacBasekUrl: string): Promise<Server> 
   const bot = new Telegraf(botToken);
 
   await bot.telegram.setWebhook(webhookCallbacBasekUrl + '/webhook');
-  console.log(`Telegram webhook URL set to: ${webhookCallbacBasekUrl}/webhook`);
+  
+  const webhookInfo = await bot.telegram.getWebhookInfo();
+  console.log('Webhook Info:', webhookInfo);
 
   expressApp.use(bot.webhookCallback('/webhook'));
 

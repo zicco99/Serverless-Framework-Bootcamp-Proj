@@ -4,9 +4,8 @@ import { Update } from 'telegraf/typings/core/types/typegram';
 
 @Injectable()
 export class AppService {
-  async processUpdate(update: Update): Promise<void> {
-    const ctx = this.createContextFromUpdate(update);
-    
+  async processUpdate(update: Update): Promise<void> {;
+    const ctx = new Context(update);
     if (ctx.message) {
       if (ctx.message.text) {
         if (ctx.message.text.toLowerCase() === '/start') {
@@ -20,10 +19,6 @@ export class AppService {
         await this.onSticker(ctx);
       }
     }
-  }
-
-  private createContextFromUpdate(update: Update): Context {
-    throw new Error('createContextFromUpdate is not implemented');
   }
 
   async start(ctx: Context): Promise<void> {
