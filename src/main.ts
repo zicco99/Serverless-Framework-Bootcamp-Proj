@@ -54,15 +54,6 @@ export const handler: Handler = async (event: APIGatewayProxyEvent, context: Con
       };
     }
   }
-
-  try {
-    return await proxy(cachedServer, event, context, 'PROMISE').promise;
-  } catch (error) {
-    console.error('Error handling request:', error);
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ message: 'Internal Server Error' }),
-    };
-  }
+  return await proxy(cachedServer, event, context, 'PROMISE').promise;
 };
 
