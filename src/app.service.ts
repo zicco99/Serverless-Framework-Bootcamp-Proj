@@ -13,6 +13,7 @@ export class AppService {
   async startCommand(ctx: Context) {
     console.log("Message from user: ",ctx.message);
     console.log("Context: ",ctx);
+    
     await ctx.reply('Welcome');
   }
 
