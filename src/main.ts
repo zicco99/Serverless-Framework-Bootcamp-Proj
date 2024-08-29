@@ -33,36 +33,9 @@ async function bootstrapServer(webhookCallbackBaseUrl: string): Promise<Server> 
 
   app.use(bot.webhookCallback('/webhook'));
 
-  try {
-    const webhookInfo = await bot.telegram.getWebhookInfo();
-    if (webhookInfo.url && webhookInfo.url !== `${webhookCallbackBaseUrl}/webhook`) {
-      console.log('Existing webhook URL detected. Deleting existing webhook.');
-      await bot.telegram.deleteWebhook();
-    }
-  } catch (error) {
-    console.error('Error getting or deleting existing webhook:', error);
-  }
-  try {
-    await bot.telegram.setWebhook(`${webhookCallbackBaseUrl}/webhook`, {
-      drop_pending_updates: true,
-      allowed_updates: [
-        'message',
-        'edited_message',
-        'channel_post',
-        'edited_channel_post',
-        'callback_query',
-        'inline_query',
-        'chosen_inline_result',
-        'shipping_query',
-        'pre_checkout_query',
-        'poll',
-        'poll_answer'
-      ],
-    });
-    console.log('Webhook set successfully');
-  } catch (error) {
-    console.error('Error setting webhook:', error);
-  }
+  const webhookInfo = await bot.telegram.getWebhookInfo();
+  console.log("Webhook info:", webhookInfo);
+  console.log("Setup manually webhook using telegram api: ",`http:// ${webhookCallbackBaseUrl}/webhook`);
 
   await app.init();
   return serverless.createServer(expressApp);
