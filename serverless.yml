@@ -42,11 +42,13 @@ functions:
       FOOTBALL_API_KEY: ${ssm:/${self:custom.base}/football-api-key}
       BOT_TELEGRAM_KEY: ${ssm:/${self:custom.base}/bot-telegram-key}
       DEFAULT_BOT_NAME: ${self:custom.base}-bot
+      GATEWAY_URL: ${self:APIGateway.Url}
+
     warmup:
       enabled: true
 
 custom:
-  base: ${self:service}-${opt:stage,'dev'}
+  base: ${self:service}-${opt:stage, 'dev'}
   AuctionsTable:
     name: ${self:custom.base}-auctions-table
     arn: !GetAtt AuctionsTable.Arn
@@ -56,6 +58,8 @@ custom:
     arn: !GetAtt TeamsCacheTable.Arn
     indexName: TeamNameIndex
     indexArn: !Join ["/", ["${self:custom.TeamsCacheTable.arn}", "index/${self:custom.TeamsCacheTable.indexName}"]]
+  APIGateway:
+    Url: { "Fn::Join" : ["", [" https://", { "Ref" : "ApiGatewayRestApi" }, ".execute-api.${self:custom.region}.amazonaws.com/${self:custom.stage}/path/to/resource" ] ]  }
   warmup:
     enabled: true
     functions:

@@ -8,8 +8,8 @@ import { TelegrafModule, TelegrafModuleOptions } from 'nestjs-telegraf';
       token: process.env.BOT_TELEGRAM_KEY || "",
       launchOptions: {
         webhook: {
-          domain: process.env.WEBHOOK_DOMAIN || "", 
-          path: process.env.WEBHOOK_PATH || "/webhook", 
+          domain: process.env.GATEWAY_URL || "", 
+          path: "/webhook", 
           maxConnections: 40,
         },
         dropPendingUpdates: true,
