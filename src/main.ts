@@ -37,6 +37,7 @@ async function bootstrapServer(webhookCallbackBaseUrl: string): Promise<Server> 
   try {
     await bot.telegram.setWebhook(`${webhookCallbackBaseUrl}/webhook`, {
       drop_pending_updates: true,
+      allowed_updates: ['message', 'edited_message', 'channel_post', 'edited_channel_post'],
     });
   } catch (error) {
     console.error('Error setting webhook:', error);
