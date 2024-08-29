@@ -9,10 +9,9 @@ const telegrafOptions: TelegrafModuleOptions = {
       domain: process.env.WEBHOOK_DOMAIN || "", 
       path: process.env.WEBHOOK_PATH || "/webhook", 
       maxConnections: 40,
-      secretToken: process.env.WEBHOOK_SECRET_TOKEN,
       
     },
-    dropPendingUpdates: true, // Ensure that any pending updates are dropped
+    dropPendingUpdates: true,
     allowedUpdates: [
       'message',
       'edited_message',
