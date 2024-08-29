@@ -29,9 +29,15 @@ export class AppService {
     await ctx.reply('👍');
   }
 
-  @Hears('hi')
+  @On('text')
+  async onText(ctx: Context, msg: string) {
+    console.log("Context: ",ctx);
+    await ctx.reply(msg + '👍');
+  }
+
+  @Hears('lezzo')
   async hearsHi(ctx: Context) {
     console.log("Context: ",ctx);
-    await ctx.reply('Hey there');
+    await ctx.reply('Maonna cara, muzunna!');
   }
 }
