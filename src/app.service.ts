@@ -16,7 +16,7 @@ export class AppService {
     
     await ctx.reply('Welcome');
   }
-
+  
   @Help()
   async helpCommand(ctx: Context) {
     console.log("Context: ",ctx);
