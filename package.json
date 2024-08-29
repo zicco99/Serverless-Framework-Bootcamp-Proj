@@ -55,6 +55,7 @@
     "serverless-offline": "12.0.0",
     "serverless-plugin-optimize": "^4.0.2-rc.1",
     "serverless-plugin-typescript": "^2.1.2",
+    "serverless-plugin-warmup": "^8.3.0",
     "ts-loader": "^9.5.1",
     "ts-node": "^7.0.1",
     "tsconfig-paths": "^3.5.0",
