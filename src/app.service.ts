@@ -21,7 +21,6 @@ class AppService {
       await ctx.reply('Unable to identify you. Please try again.');
       return;
     }
-
     // Initialize session if not present
     ctx.session.auctionCreation = ctx.session.auctionCreation || {};
 

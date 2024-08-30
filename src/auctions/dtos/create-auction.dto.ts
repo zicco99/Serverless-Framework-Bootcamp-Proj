@@ -8,12 +8,12 @@ export class CreateAuctionDto {
     @IsString()
     @IsNotEmpty()
     description: string;
-
-    @IsDate()
+    
+    @IsString()
     @IsDefined()
-    startDate: Date;
+    startDate: string;
 
-    @IsDate()
+    @IsString()
     @IsDefined()
-    endDate: Date;
+    endDate: string;
 }

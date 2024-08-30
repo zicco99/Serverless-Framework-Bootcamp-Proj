@@ -1,7 +1,6 @@
 import { AuctionsService } from 'src/auctions/auctions.service';
 import { CreateAuctionDto } from 'src/auctions/dtos/create-auction.dto';
 import { BotContext, SessionSpace } from 'src/app.module';
-import Calendar from 'telegram-inline-calendar';
 
 export class CreateAuctionWizard {
   private readonly steps = [
@@ -12,13 +11,8 @@ export class CreateAuctionWizard {
   ];
 
   private currentStepIndex = 0;
-  private calendar: Calendar;
 
   constructor(private readonly auctions: AuctionsService) {
-    this.calendar = new Calendar({
-      locale: 'en',
-      firstDayOfWeek: 1,
-    });
   }
 
   async handleMessage(ctx: BotContext, messageText: string, userId: string): Promise<void> {
@@ -71,16 +65,18 @@ export class CreateAuctionWizard {
   }
 
   private async askForStartDate(ctx: BotContext, messageText: string, userId: string, session: Partial<CreateAuctionDto>): Promise<void> {
-    console.log(messageText);
     if (!session.startDate) {
-        await this.calendar.startNavCalendar(ctx);
+      console.log("startDate: ", messageText);
+      session.startDate = new Date(messageText).toDateString();
+      await ctx.reply('Got it! Now, provide the end date (YYYY-MM-DD format).');
     }
   }
 
   private async askForEndDate(ctx: BotContext, messageText: string, userId: string, session: Partial<CreateAuctionDto>): Promise<void> {
-    console.log(messageText);
     if (!session.endDate) {
-        await this.calendar.startNavCalendar(ctx);
+      console.log("endDate: ", messageText);
+      session.endDate = new Date(messageText).toDateString();
+      await this.finalizeAuctionCreation(ctx, userId);
     }
   }
 
