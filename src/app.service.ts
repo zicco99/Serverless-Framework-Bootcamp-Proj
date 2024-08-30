@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Hears, Help, Start, Update, Action } from 'nestjs-telegraf';
+import { Hears, Help, Start, Update, Action, Message, Context } from 'nestjs-telegraf';
 import { Markup } from 'telegraf';
 import { AuctionsService } from './auctions/auctions.service';
 import { CreateAuctionWizard } from './telegram/wizards/create-auction.wizard';
@@ -83,7 +83,7 @@ class AppService {
   }
 
   @Hears(/.*/) // Any input
-  async onText(ctx: BotContext, message: string) {
+  async onText(@Context() ctx: BotContext,@Message('text') message: string) {
     const userId = ctx.from?.id.toString();
     if (!userId) {
       await ctx.reply('Unable to identify you. Please try again.');

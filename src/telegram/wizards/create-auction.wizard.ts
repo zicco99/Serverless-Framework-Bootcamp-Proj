@@ -41,7 +41,7 @@ export class CreateAuctionWizard {
       } else {
         await this.finalizeAuctionCreation(ctx, userId);
         delete ctx.session.auctionCreation;
-        this.currentStepIndex = 0; // Reset for next use
+        this.currentStepIndex = 0;
       }
 
       ctx.session.auctionCreation = session.auctionCreation;
