@@ -68,6 +68,9 @@ class AppService {
       return;
     }
 
+    //Create a new session space if it doesn't exist
+    ctx.session = ctx.session ?? {};
+    //Splitting session by intent 
     ctx.session.auctionCreation = ctx.session.auctionCreation ?? {};
     //Create a new session for this user
     ctx.session.auctionCreation[userId] = {};
