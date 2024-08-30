@@ -4,8 +4,16 @@ import { CreateAuctionDto } from 'src/auctions/dtos/create-auction.dto';
 import { BotContext } from 'src/app.module';
 import { parseISO, isValid } from 'date-fns';
 
+interface AuctionWizardState {
+  stepIndex: number;
+  data: Partial<CreateAuctionDto>;
+}
+
 @Injectable()
 export class CreateAuctionWizardManager {
+  
+  private readonly userWizards = new Map<string, AuctionWizardState>();
+
   private readonly steps = [
     this.askForName.bind(this),
     this.askForDescription.bind(this),
@@ -16,112 +24,91 @@ export class CreateAuctionWizardManager {
   constructor(private readonly auctions: AuctionsService) {}
 
   async handleMessage(ctx: BotContext, messageText: string, userId: string): Promise<void> {
+    console.log('Handling message:', { messageText, userId });
+
     if (messageText === '/cancel') {
-      const botMessage = await ctx.reply('❌ Auction creation has been cancelled.');
-      await this.clearConversation(ctx,  ctx.msg.message_id, botMessage.message_id);
+      this.userWizards.delete(userId);
+      await ctx.reply('❌ Auction creation has been cancelled.');
       return;
+    }
+
+    let wizardState = this.userWizards.get(userId);
+
+    if (!wizardState) {
+      wizardState = { stepIndex: 0, data: {} };
+      this.userWizards.set(userId, wizardState);
     }
 
     if (!messageText) {
-      const botMessage = await ctx.reply("🤔 I didn't receive any input. Please try again.");
-      await this.clearConversation(ctx,  ctx.msg.message_id, botMessage.message_id);
+      await ctx.reply("🤔 I didn't receive any input. Please try again.");
       return;
     }
 
-    let stepIndex = 0;
-    const session: Partial<CreateAuctionDto> = {};
-
     try {
-      while (stepIndex < this.steps.length) {
-        const botMessage = await this.steps[stepIndex](ctx, messageText, session);
-        await this.clearConversation(ctx, ctx.msg.message_id, botMessage.message_id);
-        stepIndex++;
-        if (stepIndex < this.steps.length) {
-          break;
-        }
-      }
+      const currentStep = this.steps[wizardState.stepIndex];
+      await currentStep(ctx, messageText, wizardState.data);
 
-      if (stepIndex >= this.steps.length) {
-        // Ensure all required properties are defined
-        if (this.isCompleteAuctionDto(session)) {
-          const createAuctionDto: CreateAuctionDto = session as CreateAuctionDto;
-
-          try {
-            const auction = await this.auctions.createAuction(createAuctionDto);
-            await ctx.reply(`🎉 Auction created successfully! 🆔 ID: ${auction.id}`);
-          } catch (error) {
-            console.error('Error creating auction:', error);
-            await ctx.reply('🚨 Failed to create auction. Please try again later.');
-          }
-        } else {
-          await ctx.reply('⚠️ Incomplete auction details. Please start the process again.');
-        }
+      if (wizardState.stepIndex < this.steps.length - 1) {
+        wizardState.stepIndex++;
+      } else {
+        await this.finalizeAuctionCreation(ctx, userId);
+        this.userWizards.delete(userId);
       }
     } catch (error) {
-      const botMessage = await ctx.reply('⚠️ An unexpected error occurred. Please try again later.');
-      await this.clearConversation(ctx, ctx.msg.message_id, botMessage.message_id);
+      console.error('Error during auction creation:', error);
+      await ctx.reply('⚠️ An unexpected error occurred. Please try again later.');
     }
   }
 
-  private async askForName(ctx: BotContext, messageText: string, session: Partial<CreateAuctionDto>): Promise<any> {
+  private async askForName(ctx: BotContext, messageText: string, session: Partial<CreateAuctionDto>): Promise<void> {
     session.name = messageText;
-    return ctx.reply('📝 Auction name recorded. Please provide a description for the auction.');
+    await ctx.reply('📝 Auction name recorded. Please provide a description for the auction.');
   }
 
-  private async askForDescription(ctx: BotContext, messageText: string, session: Partial<CreateAuctionDto>): Promise<any> {
+  private async askForDescription(ctx: BotContext, messageText: string, session: Partial<CreateAuctionDto>): Promise<void> {
     session.description = messageText;
-    return ctx.reply('✏️ Description noted. What is the start date of the auction? Please use YYYY-MM-DD format.');
+    await ctx.reply('✏️ Description noted. What is the start date of the auction? Please use YYYY-MM-DD format.');
   }
 
-  private async askForStartDate(ctx: BotContext, messageText: string, session: Partial<CreateAuctionDto>): Promise<any> {
+  private async askForStartDate(ctx: BotContext, messageText: string, session: Partial<CreateAuctionDto>): Promise<void> {
     const parsedDate = parseISO(messageText);
     if (isValid(parsedDate)) {
       session.startDate = parsedDate.toISOString();
-      return ctx.reply('📅 Start date set. Now, please provide the end date (YYYY-MM-DD format).');
+      await ctx.reply('📅 Start date set. Now, please provide the end date (YYYY-MM-DD format).');
     } else {
-      return ctx.reply('❗ Invalid date format. Please enter the start date in YYYY-MM-DD format.');
+      await ctx.reply('❗ Invalid date format. Please enter the start date in YYYY-MM-DD format.');
     }
   }
 
-  private async askForEndDate(ctx: BotContext, messageText: string, session: Partial<CreateAuctionDto>): Promise<any> {
+  private async askForEndDate(ctx: BotContext, messageText: string, session: Partial<CreateAuctionDto>): Promise<void> {
     const parsedDate = parseISO(messageText);
     if (isValid(parsedDate)) {
       session.endDate = parsedDate.toISOString();
-      return ctx.reply('✅ End date recorded.');
+      await ctx.reply('✅ End date recorded.');
     } else {
-      return ctx.reply('❗ Invalid date format. Please enter the end date in YYYY-MM-DD format.');
+      await ctx.reply('❗ Invalid date format. Please enter the end date in YYYY-MM-DD format.');
     }
   }
 
-  private async finalizeAuctionCreation(ctx: BotContext, session: Partial<CreateAuctionDto>): Promise<any> {
-    if (session.name && session.description && session.startDate && session.endDate) {
-      const createAuctionDto: CreateAuctionDto = session as CreateAuctionDto;
+  private async finalizeAuctionCreation(ctx: BotContext, userId: string): Promise<void> {
+    const wizardState = this.userWizards.get(userId);
 
-      try {
-        const auction = await this.auctions.createAuction(createAuctionDto);
-        return ctx.reply(`🎉 Auction created successfully! 🆔 ID: ${auction.id}`);
-      } catch (error) {
-        console.error('Error creating auction:', error);
-        return ctx.reply('🚨 Failed to create auction. Please try again later.');
+    if (wizardState) {
+      const session = wizardState.data as CreateAuctionDto;
+
+      if (session.name && session.description && session.startDate && session.endDate) {
+        const createAuctionDto: CreateAuctionDto = { ...session };
+
+        try {
+          const auction = await this.auctions.createAuction(createAuctionDto);
+          await ctx.reply(`🎉 Auction created successfully! 🆔 ID: ${auction.id}`);
+        } catch (error) {
+          console.error('Error creating auction:', error);
+          await ctx.reply('🚨 Failed to create auction. Please try again later.');
+        }
+      } else {
+        await ctx.reply('⚠️ Incomplete auction details. Please start the process again.');
       }
-    } else {
-      return ctx.reply('⚠️ Incomplete auction details. Please start the process again.');
-    }
-  }
-
-  private isCompleteAuctionDto(dto: Partial<CreateAuctionDto>): dto is CreateAuctionDto {
-    return !!(dto.name && dto.description && dto.startDate && dto.endDate);
-  }
-
-  private async clearConversation(ctx: BotContext, userMessageId: number, botMessageId: number): Promise<void> {
-    try {
-      await new Promise<void>(resolve => setTimeout(resolve, 1000));
-      await ctx.deleteMessage(botMessageId);
-
-      await new Promise<void>(resolve => setTimeout(resolve, 1000));
-      await ctx.deleteMessage(userMessageId);
-    } catch (error) {
-      console.error('Error deleting messages:', error);
     }
   }
 }
