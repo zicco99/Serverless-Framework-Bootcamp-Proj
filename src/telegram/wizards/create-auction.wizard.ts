@@ -1,6 +1,7 @@
 import { AuctionsService } from 'src/auctions/auctions.service';
 import { CreateAuctionDto } from 'src/auctions/dtos/create-auction.dto';
 import { BotContext, SessionSpace } from 'src/app.module';
+import { parseISO, isValid } from 'date-fns';
 
 export class CreateAuctionWizard {
   private readonly steps = [
@@ -66,17 +67,31 @@ export class CreateAuctionWizard {
 
   private async askForStartDate(ctx: BotContext, messageText: string, userId: string, session: Partial<CreateAuctionDto>): Promise<void> {
     if (!session.startDate) {
-      console.log("startDate: ", messageText);
-      session.startDate = new Date(messageText).toDateString();
-      await ctx.reply('Got it! Now, provide the end date (YYYY-MM-DD format).');
+      console.log("Received start date input:", messageText);
+      // Try to parse the date
+      const parsedDate = parseISO(messageText);
+      
+      if (isValid(parsedDate)) {
+        session.startDate = parsedDate.toISOString(); // Save as ISO string or any preferred format
+        await ctx.reply('Got it! Now, provide the end date (YYYY-MM-DD format).');
+      } else {
+        await ctx.reply('Invalid date format. Please provide the start date in YYYY-MM-DD format.');
+      }
     }
   }
 
   private async askForEndDate(ctx: BotContext, messageText: string, userId: string, session: Partial<CreateAuctionDto>): Promise<void> {
     if (!session.endDate) {
-      console.log("endDate: ", messageText);
-      session.endDate = new Date(messageText).toDateString();
-      await this.finalizeAuctionCreation(ctx, userId);
+      console.log("Received end date input:", messageText);
+      // Try to parse the date
+      const parsedDate = parseISO(messageText);
+      
+      if (isValid(parsedDate)) {
+        session.endDate = parsedDate.toISOString(); // Save as ISO string or any preferred format
+        await this.finalizeAuctionCreation(ctx, userId);
+      } else {
+        await ctx.reply('Invalid date format. Please provide the end date in YYYY-MM-DD format.');
+      }
     }
   }
 
