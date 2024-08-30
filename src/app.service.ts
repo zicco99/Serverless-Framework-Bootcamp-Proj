@@ -22,6 +22,12 @@ class AppService {
     this.createAuctionWizard = new CreateAuctionWizard(auctions);
   }
 
+  private ensureSession(ctx: BotContext) {
+    if (!ctx.session.auctionCreation) {
+      ctx.session.auctionCreation = {};
+    }
+  }
+
   @Start()
   async startCommand(ctx: BotContext) {
     const userId = ctx.from?.id.toString();
@@ -30,7 +36,7 @@ class AppService {
       return;
     }
 
-    ctx.session.auctionCreation = ctx.session.auctionCreation ?? {};
+    this.ensureSession(ctx);
 
     const buttons = Markup.inlineKeyboard([
       Markup.button.callback('Create Auction', 'CREATE_AUCTION'),
@@ -45,15 +51,20 @@ class AppService {
   async helpCommand(ctx: BotContext) {
     const userId = ctx.from?.id.toString();
     if (!userId) {
-      return 'Unable to identify you. Please try again.';
+      await ctx.reply('Unable to identify you. Please try again.');
+      return;
     }
 
-    if(ctx.session.auctionCreation?.[userId]) {
-      return 'You are already creating an auction. '
+    this.ensureSession(ctx);
+
+    if (ctx.session.auctionCreation && ctx.session.auctionCreation[userId]) {
+      await ctx.reply('You are already creating an auction. Please continue with the auction creation process.');
+      return;
     }
 
     if (!ctx.message) {
       console.warn('No message object found in context');
+      await ctx.reply('No message found in context.');
       return;
     }
 
@@ -68,11 +79,13 @@ class AppService {
       return;
     }
 
-    //Create a new session space if it doesn't exist
-    ctx.session = ctx.session ?? {};
-    //Splitting session by intent 
-    ctx.session.auctionCreation = ctx.session.auctionCreation ?? {};
-    //Create a new session for this user
+    this.ensureSession(ctx);
+
+    // Ensure the session for this user is initialized
+    if (!ctx.session.auctionCreation) {
+      ctx.session.auctionCreation = {};
+    }
+
     ctx.session.auctionCreation[userId] = {};
 
     await ctx.reply('Let’s create a new auction! Please provide the name of the auction.');
@@ -95,7 +108,7 @@ class AppService {
     }
   }
 
-  @Hears(/.*/) //Any input
+  @Hears(/.*/) // Any input
   async onText(ctx: BotContext, message: string) {
     const userId = ctx.from?.id.toString();
     if (!userId) {
@@ -103,19 +116,21 @@ class AppService {
       return;
     }
 
+    this.ensureSession(ctx);
+
     if (!message) {
       console.warn('No text found in message');
       await ctx.reply("I didn't receive any text. Please try again.");
       return;
     }
 
-    //Route if and only session exists
-    if (ctx.session.auctionCreation?.[userId]) {
+    if (ctx.session.auctionCreation && ctx.session.auctionCreation[userId]) {
       await this.createAuctionWizard.handleMessage(ctx, message, userId);
+      return;
+    }
 
     await ctx.reply("I'm not sure what to do with that. Use the buttons to manage auctions.");
   }
-}
 }
 
 export { AppService, BotContext };
