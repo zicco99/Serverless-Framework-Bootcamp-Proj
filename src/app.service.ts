@@ -51,6 +51,7 @@ class AppService {
       return;
     }
 
+    //Create intent space for auction creation
     ctx.session.auctionCreation = ctx.session.auctionCreation || {};
 
     await ctx.reply('Let’s create a new auction! Please provide the name of the auction.');
@@ -73,7 +74,7 @@ class AppService {
     }
   }
 
-  @Hears(/.*/) // Any input
+  @Hears(/.*/)
   async onText(@Context() ctx: BotContext,@Message('text') message: string) {
     const userId = ctx.from?.id.toString();
     if (!userId) {
@@ -81,10 +82,6 @@ class AppService {
       return;
     }
 
-    // Initialize session if not present
-    ctx.session.auctionCreation = ctx.session.auctionCreation || {};
-
-    // If the there is a intent in the session -> continue with the intent
     if (ctx.session.auctionCreation) {
       await this.auctionWizardManager.handleMessage(ctx, message, userId);
       return;
