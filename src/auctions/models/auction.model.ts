@@ -3,8 +3,8 @@ export interface Auction {
     name: string;
     description: string;
     status: AuctionStatus;
-    startDate: Date;
-    endDate: Date;
+    startDate: string;
+    endDate: string;
     createdDate: string;
     updatedDate: string;
 }
