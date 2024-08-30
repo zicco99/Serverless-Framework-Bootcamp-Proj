@@ -4,11 +4,12 @@ import { AppService } from './app.service';
 import { AuctionsModule } from './auctions/auctions.module';
 import { AuctionsService } from './auctions/auctions.service';
 import { Context } from 'telegraf';
+import { CreateAuctionDto } from './auctions/dtos/create-auction.dto';
 
 
 interface SessionSpace {
-  // Intent (ex. create-auction) -> space for data
-  [key: string]: any;
+  // Intent (ex. create-auction) -> data
+  auctionCreation? : Partial<CreateAuctionDto>;
 }
 
 interface BotContext extends Context {

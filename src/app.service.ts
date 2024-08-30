@@ -44,7 +44,7 @@ class AppService {
 
     ctx.session.auctionCreation = ctx.session.auctionCreation || {};
 
-    if (ctx.session.auctionCreation[userId]) {
+    if (ctx.session.auctionCreation) {
       await ctx.reply('You are already creating an auction. Please continue with the auction creation process.');
       return;
     }
@@ -62,7 +62,6 @@ class AppService {
 
     // Initialize session if not present
     ctx.session.auctionCreation = ctx.session.auctionCreation || {};
-    ctx.session.auctionCreation[userId] = {};
 
     await ctx.reply('Let’s create a new auction! Please provide the name of the auction.');
   }
@@ -95,7 +94,7 @@ class AppService {
     // Initialize session if not present
     ctx.session.auctionCreation = ctx.session.auctionCreation || {};
 
-    if (ctx.session.auctionCreation[userId]) {
+    if (ctx.session.auctionCreation) {
       await this.createAuctionWizard.handleMessage(ctx, message, userId);
       return;
     }

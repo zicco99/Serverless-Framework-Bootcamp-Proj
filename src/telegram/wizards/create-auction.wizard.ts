@@ -1,24 +1,29 @@
 import { AuctionsService } from 'src/auctions/auctions.service';
 import { CreateAuctionDto } from 'src/auctions/dtos/create-auction.dto';
 import { BotContext, SessionSpace } from 'src/app.module';
+import { Calendar } from 'telegram-inline-calendar';
 
 export class CreateAuctionWizard {
   private readonly steps = [
-    this.askForName,
-    this.askForDescription,
-    this.askForStartDate,
-    this.askForEndDate,
+    this.askForName.bind(this),
+    this.askForDescription.bind(this),
+    this.askForStartDate.bind(this),
+    this.askForEndDate.bind(this),
   ];
 
   private currentStepIndex = 0;
+  private calendar: Calendar;
 
-  constructor(private readonly auctions: AuctionsService) {}
+  constructor(private readonly auctions: AuctionsService) {
+    this.calendar = new Calendar({
+      locale: 'en',
+      firstDayOfWeek: 1,
+    });
+  }
 
   async handleMessage(ctx: BotContext, messageText: string, userId: string) {
+    const session: SessionSpace = ctx.session;
 
-    // Middleware puts session space related to the user in cx.session
-    const session : SessionSpace = ctx.session;
-    
     if (!session.auctionCreation) {
       session.auctionCreation = {};
     }
@@ -29,16 +34,18 @@ export class CreateAuctionWizard {
     }
 
     try {
-      const currentStep = this.steps[this.currentStepIndex];
-      await currentStep(ctx, messageText, userId, session);
+      const stepFunction = this.steps[this.currentStepIndex];
+      await stepFunction(ctx, messageText, userId, session.auctionCreation);
 
       if (this.currentStepIndex < this.steps.length - 1) {
         this.currentStepIndex++;
-        ctx.session.auctionCreation![userId] = session;
       } else {
         await this.finalizeAuctionCreation(ctx, userId);
-        delete (ctx.session.auctionCreation![userId]);
+        delete ctx.session.auctionCreation;
+        this.currentStepIndex = 0; // Reset the step index for the next use
       }
+
+      ctx.session.auctionCreation = session.auctionCreation;
     } catch (error) {
       console.error('Error during auction creation:', error);
       await ctx.reply('An error occurred. Please try again.');
@@ -61,47 +68,52 @@ export class CreateAuctionWizard {
 
   private async askForStartDate(ctx: BotContext, messageText: string, userId: string, session: Partial<CreateAuctionDto>) {
     if (!session.startDate) {
-      const startDate = new Date(messageText);
-      if (isNaN(startDate.getTime())) {
-        await ctx.reply('Invalid date format. Please enter the start date in YYYY-MM-DD format.');
-        return;
+      if (messageText === 'Select Date') {
+        await ctx.reply('Please select a start date:', this.calendar.startNavCalendar(ctx));
+      } else {
+        const startDate = new Date(messageText);
+        if (isNaN(startDate.getTime())) {
+          await ctx.reply('Invalid date format. Please enter the start date in YYYY-MM-DD format.');
+          return;
+        }
+        session.startDate = startDate;
+        await ctx.reply('Got it! Now, please provide the end date (YYYY-MM-DD format).');
       }
-      session.startDate = startDate;
-      await ctx.reply('Nice! Now, provide the end date (YYYY-MM-DD format).');
     }
   }
 
   private async askForEndDate(ctx: BotContext, messageText: string, userId: string, session: Partial<CreateAuctionDto>) {
     if (!session.endDate) {
-      const endDate = new Date(messageText);
-      if (isNaN(endDate.getTime())) {
-        await ctx.reply('Invalid date format. Please enter the end date in YYYY-MM-DD format.');
-        return;
+      if (messageText === 'Select Date') {
+        await ctx.reply('Please select an end date:', this.calendar.startNavCalendar(ctx));
+      } else {
+        const endDate = new Date(messageText);
+        if (isNaN(endDate.getTime())) {
+          await ctx.reply('Invalid date format. Please enter the end date in YYYY-MM-DD format.');
+          return;
+        }
+        session.endDate = endDate;
+        await ctx.reply('End date selected. You can now finalize the auction.');
       }
-      session.endDate = endDate;
     }
   }
 
   private async finalizeAuctionCreation(ctx: BotContext, userId: string) {
-    const session = ctx.session.auctionCreation![userId];
+    const session = ctx.session.auctionCreation as CreateAuctionDto;
 
     if (session.name && session.description && session.startDate && session.endDate) {
-      const createAuctionDto: CreateAuctionDto = {
-        name: session.name,
-        description: session.description,
-        startDate: session.startDate,
-        endDate: session.endDate,
-      };
+      const createAuctionDto: CreateAuctionDto = { ...session };
 
       try {
         const auction = await this.auctions.createAuction(createAuctionDto);
         await ctx.reply(`Auction created successfully! ID: ${auction.id}`);
       } catch (error) {
         console.error('Error creating auction:', error);
-        await ctx.reply('Failed to create auction. Please try again.');
+        await ctx.reply('Failed to create auction. Please try again later.');
       }
     } else {
       await ctx.reply('Incomplete auction details. Please start the process again.');
     }
   }
+
 }
