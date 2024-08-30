@@ -22,6 +22,10 @@ export class CreateAuctionWizard {
   }
 
   async handleMessage(ctx: BotContext, messageText: string, userId: string) {
+    console.log('Handling message : ', messageText, userId);
+    console.log('Current context : ', ctx);
+    console.log('Current session : ', ctx.session);
+
     const session: SessionSpace = ctx.session;
 
     if (!session.auctionCreation) {
@@ -42,7 +46,7 @@ export class CreateAuctionWizard {
       } else {
         await this.finalizeAuctionCreation(ctx, userId);
         delete ctx.session.auctionCreation;
-        this.currentStepIndex = 0; // Reset the step index for the next use
+        this.currentStepIndex = 0;
       }
 
       ctx.session.auctionCreation = session.auctionCreation;
@@ -72,7 +76,7 @@ export class CreateAuctionWizard {
         const calendarMessage = await this.calendar.startNavCalendar(ctx);
         await ctx.reply('Please select a start date:', calendarMessage);
       } else {
-        const startDate = new Date(messageText);
+        const startDate = new Date
         if (isNaN(startDate.getTime())) {
           await ctx.reply('Invalid date format. Please enter the start date in YYYY-MM-DD format.');
           return;
