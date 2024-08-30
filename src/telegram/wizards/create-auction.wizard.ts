@@ -1,7 +1,7 @@
 import { AuctionsService } from 'src/auctions/auctions.service';
 import { CreateAuctionDto } from 'src/auctions/dtos/create-auction.dto';
 import { BotContext, SessionSpace } from 'src/app.module';
-import { Calendar } from 'telegram-inline-calendar';
+import Calendar from 'telegram-inline-calendar';
 
 export class CreateAuctionWizard {
   private readonly steps = [

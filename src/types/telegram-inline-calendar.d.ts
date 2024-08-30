@@ -9,7 +9,7 @@ declare module 'telegram-inline-calendar' {
     }
   
     // Define the Calendar class with its methods
-    export class Calendar {
+    export default class Calendar {
       constructor(options?: CalendarOptions);
   
       /**
