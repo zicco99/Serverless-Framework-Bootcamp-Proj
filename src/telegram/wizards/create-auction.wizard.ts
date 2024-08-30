@@ -115,13 +115,11 @@ export class CreateAuctionWizardManager {
 
   private async clearConversation(ctx: BotContext, userMessageId: number, botMessageId: number): Promise<void> {
     try {
-      // Delete the user's message
-      await ctx.deleteMessage(userMessageId);
-
-      // Delete the bot's message
+      await new Promise<void>(resolve => setTimeout(resolve, 1000));
       await ctx.deleteMessage(botMessageId);
 
-      console.log('Messages deleted successfully.');
+      await new Promise<void>(resolve => setTimeout(resolve, 1000));
+      await ctx.deleteMessage(userMessageId);
     } catch (error) {
       console.error('Error deleting messages:', error);
     }
