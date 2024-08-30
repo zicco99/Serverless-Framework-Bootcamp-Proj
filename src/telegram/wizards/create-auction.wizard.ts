@@ -28,12 +28,11 @@ export class CreateAuctionWizard {
 
       if (this.currentStepIndex < this.steps.length - 1) {
         this.currentStepIndex++;
+        ctx.session.auctionCreation![userId] = session;
       } else {
         await this.finalizeAuctionCreation(ctx, userId);
         delete (ctx.session.auctionCreation![userId]);
       }
-
-      ctx.session.auctionCreation![userId] = session;
     } catch (error) {
       console.error('Error during auction creation:', error);
       await ctx.reply('An error occurred. Please try again.');
