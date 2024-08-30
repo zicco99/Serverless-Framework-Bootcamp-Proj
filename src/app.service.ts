@@ -21,8 +21,6 @@ class AppService {
       await ctx.reply('Unable to identify you. Please try again.');
       return;
     }
-    // Initialize session if not present
-    ctx.session.auctionCreation = ctx.session.auctionCreation || {};
 
     const buttons = Markup.inlineKeyboard([
       Markup.button.callback('Create Auction', 'CREATE_AUCTION'),
@@ -93,6 +91,7 @@ class AppService {
     // Initialize session if not present
     ctx.session.auctionCreation = ctx.session.auctionCreation || {};
 
+    // If the there is a intent in the session -> continue with the intent
     if (ctx.session.auctionCreation) {
       await this.createAuctionWizard.handleMessage(ctx, message, userId);
       return;

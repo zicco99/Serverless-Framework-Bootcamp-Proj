@@ -87,8 +87,7 @@ export class CreateAuctionWizard {
       const parsedDate = parseISO(messageText);
       
       if (isValid(parsedDate)) {
-        session.endDate = parsedDate.toISOString(); // Save as ISO string or any preferred format
-        await this.finalizeAuctionCreation(ctx, userId);
+        session.endDate = parsedDate.toISOString();
       } else {
         await ctx.reply('Invalid date format. Please provide the end date in YYYY-MM-DD format.');
       }
