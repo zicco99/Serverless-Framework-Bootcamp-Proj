@@ -22,12 +22,6 @@ class AppService {
     this.createAuctionWizard = new CreateAuctionWizard(auctions);
   }
 
-  private ensureSession(ctx: BotContext) {
-    if (!ctx.session.auctionCreation) {
-      ctx.session.auctionCreation = {};
-    }
-  }
-
   @Start()
   async startCommand(ctx: BotContext) {
     const userId = ctx.from?.id.toString();
@@ -36,7 +30,8 @@ class AppService {
       return;
     }
 
-    this.ensureSession(ctx);
+    // Initialize session if not present
+    ctx.session.auctionCreation = ctx.session.auctionCreation || {};
 
     const buttons = Markup.inlineKeyboard([
       Markup.button.callback('Create Auction', 'CREATE_AUCTION'),
@@ -55,16 +50,10 @@ class AppService {
       return;
     }
 
-    this.ensureSession(ctx);
+    ctx.session.auctionCreation = ctx.session.auctionCreation || {};
 
-    if (ctx.session.auctionCreation && ctx.session.auctionCreation[userId]) {
+    if (ctx.session.auctionCreation[userId]) {
       await ctx.reply('You are already creating an auction. Please continue with the auction creation process.');
-      return;
-    }
-
-    if (!ctx.message) {
-      console.warn('No message object found in context');
-      await ctx.reply('No message found in context.');
       return;
     }
 
@@ -79,13 +68,8 @@ class AppService {
       return;
     }
 
-    this.ensureSession(ctx);
-
-    // Ensure the session for this user is initialized
-    if (!ctx.session.auctionCreation) {
-      ctx.session.auctionCreation = {};
-    }
-
+    // Initialize session if not present
+    ctx.session.auctionCreation = ctx.session.auctionCreation || {};
     ctx.session.auctionCreation[userId] = {};
 
     await ctx.reply('Let’s create a new auction! Please provide the name of the auction.');
@@ -116,15 +100,10 @@ class AppService {
       return;
     }
 
-    this.ensureSession(ctx);
+    // Initialize session if not present
+    ctx.session.auctionCreation = ctx.session.auctionCreation || {};
 
-    if (!message) {
-      console.warn('No text found in message');
-      await ctx.reply("I didn't receive any text. Please try again.");
-      return;
-    }
-
-    if (ctx.session.auctionCreation && ctx.session.auctionCreation[userId]) {
+    if (ctx.session.auctionCreation[userId]) {
       await this.createAuctionWizard.handleMessage(ctx, message, userId);
       return;
     }
@@ -134,3 +113,4 @@ class AppService {
 }
 
 export { AppService, BotContext };
+

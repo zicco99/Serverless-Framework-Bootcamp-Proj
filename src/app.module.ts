@@ -9,6 +9,13 @@ import { AuctionsService } from './auctions/auctions.service';
     AuctionsModule,
     TelegrafModule.forRoot({
       token: process.env.BOT_TELEGRAM_KEY || "",
+      middlewares: [
+        // Add session middleware ( enriches the context with a session space )
+        (ctx, next) => {
+          ctx.session = ctx.session || {};
+          return next();
+        },
+      ],
       launchOptions: {
         webhook: {
           domain: process.env.GATEWAY_URL || "", 
