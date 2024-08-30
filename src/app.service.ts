@@ -1,58 +1,118 @@
 import { Injectable } from '@nestjs/common';
-import { Hears, Help, On, Start, Update, Action } from 'nestjs-telegraf';
+import { Hears, Help, Start, Update, Action } from 'nestjs-telegraf';
 import { Context, Markup } from 'telegraf';
+import { AuctionsService } from './auctions/auctions.service';
+import { CreateAuctionDto } from './auctions/dtos/create-auction.dto';
+import { CreateAuctionWizard } from './telegram/wizards/create-auction.wizard';
+
+interface BotContext extends Context {
+  session: {
+    auctionCreation?: {
+      [userId: string]: Partial<CreateAuctionDto>;
+    };
+  };
+}
 
 @Update()
 @Injectable()
-export class AppService {
-  getData(): { message: string } {
-    return { message: 'Welcome to the party, pal!' };
+class AppService {
+  private createAuctionWizard: CreateAuctionWizard;
+
+  constructor(private readonly auctions: AuctionsService) {
+    this.createAuctionWizard = new CreateAuctionWizard(auctions);
   }
 
   @Start()
-  async startCommand(ctx: Context) {
-    console.log("Message from user: ", ctx.message);
-    console.log("Context: ", ctx);
+  async startCommand(ctx: BotContext) {
+    const userId = ctx.from?.id.toString();
+    if (!userId) {
+      await ctx.reply('Unable to identify you. Please try again.');
+      return;
+    }
+
+    ctx.session.auctionCreation = ctx.session.auctionCreation ?? {};
 
     const buttons = Markup.inlineKeyboard([
-      Markup.button.callback('Get a Funny Reply', 'FUNNY_REPLY'),
+      Markup.button.callback('Create Auction', 'CREATE_AUCTION'),
+      Markup.button.callback('View Auctions', 'VIEW_AUCTIONS'),
       Markup.button.callback('Show Help', 'SHOW_HELP'),
     ]);
 
-    await ctx.reply('Hello there! 🖖 Ready to have some fun? Type /help if you get lost!', buttons);
+    await ctx.reply('Hello there! 🖖 Ready to manage some auctions? Use the buttons below to interact.', buttons);
   }
 
   @Help()
-  async helpCommand(ctx: Context) {
-    console.log("Context: ", ctx);
-    await ctx.reply('Need help? Just send me a sticker, a text, or type "lezzo" for a surprise! 😜');
+  async helpCommand(ctx: BotContext) {
+    const userId = ctx.from?.id.toString();
+    if (!userId) {
+      return 'Unable to identify you. Please try again.';
+    }
+
+    if(ctx.session.auctionCreation?.[userId]) {
+      return 'You are already creating an auction. '
+    }
+
+    if (!ctx.message) {
+      console.warn('No message object found in context');
+      return;
+    }
+
+    await ctx.reply('Need help? Use the buttons to manage auctions or type commands to interact.');
   }
 
-  @On('sticker')
-  async onSticker(ctx: Context) {
-    console.log("Context: ", ctx);
-    await ctx.reply('Wow, nice sticker! Here’s a virtual high-five! ✋');
+  @Action('CREATE_AUCTION')
+  async onCreateAuction(ctx: BotContext) {
+    const userId = ctx.from?.id.toString();
+    if (!userId) {
+      await ctx.reply('Unable to identify you. Please try again.');
+      return;
+    }
+
+    ctx.session.auctionCreation = ctx.session.auctionCreation ?? {};
+    //Create a new session for this user
+    ctx.session.auctionCreation[userId] = {};
+
+    await ctx.reply('Let’s create a new auction! Please provide the name of the auction.');
   }
 
-  @Hears('lezzo')
-  async hearsLezzo(ctx: Context) {
-    console.log("Context: ", ctx);
-    await ctx.reply('Maonna cara, muzunna! 😂');
+  @Action('VIEW_AUCTIONS')
+  async onViewAuctions(ctx: BotContext) {
+    try {
+      const auctions = await this.auctions.findAll();
+      if (auctions.length === 0) {
+        await ctx.reply('No open auctions at the moment.');
+      } else {
+        for (const auction of auctions) {
+          await ctx.reply(`Auction ID: ${auction.id}\nName: ${auction.name}\nStatus: ${auction.status}\nEnd Date: ${auction.endDate}`);
+        }
+      }
+    } catch (error) {
+      console.error('Error retrieving auctions:', error);
+      await ctx.reply('Failed to retrieve auctions. Please try again later.');
+    }
   }
 
-  @On('text')
-  async onText(ctx: Context) {
-    console.log("Context: ", ctx);
+  @Hears(/.*/) //Any input
+  async onText(ctx: BotContext, message: string) {
+    const userId = ctx.from?.id.toString();
+    if (!userId) {
+      await ctx.reply('Unable to identify you. Please try again.');
+      return;
+    }
 
-    const funnyReplies = [
-      'That’s interesting! Tell me more... 🤔',
-      'You’re on fire today! 🔥',
-      'Haha, good one! 😂',
-      'I totally agree! 👍',
-      'You just made my day! 🌞'
-    ];
+    if (!message) {
+      console.warn('No text found in message');
+      await ctx.reply("I didn't receive any text. Please try again.");
+      return;
+    }
 
-    const randomReply = funnyReplies[Math.floor(Math.random() * funnyReplies.length)];
-    await ctx.reply(randomReply);
+    //Route if and only session exists
+    if (ctx.session.auctionCreation?.[userId]) {
+      await this.createAuctionWizard.handleMessage(ctx, message, userId);
+
+    await ctx.reply("I'm not sure what to do with that. Use the buttons to manage auctions.");
   }
 }
+}
+
+export { AppService, BotContext };

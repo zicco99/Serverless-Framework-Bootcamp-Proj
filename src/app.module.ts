@@ -1,9 +1,12 @@
 import { Module } from '@nestjs/common';
 import { AppService } from './app.service';
 import { TelegrafModule, TelegrafModuleOptions } from 'nestjs-telegraf';
+import { AuctionsModule } from './auctions/auctions.module';
+import { AuctionsService } from './auctions/auctions.service';
 
 @Module({
   imports: [
+    AuctionsModule,
     TelegrafModule.forRoot({
       token: process.env.BOT_TELEGRAM_KEY || "",
       launchOptions: {
@@ -30,6 +33,6 @@ import { TelegrafModule, TelegrafModuleOptions } from 'nestjs-telegraf';
     } as TelegrafModuleOptions,
   )],
   controllers: [],
-  providers: [AppService],
+  providers: [AppService, AuctionsService],
 })
 export class AppModule {}
