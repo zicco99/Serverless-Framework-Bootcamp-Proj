@@ -1,18 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { Hears, Help, Start, Update, Action, Message, Context } from 'nestjs-telegraf';
 import { Markup } from 'telegraf';
-import { AuctionsService } from './auctions/auctions.service';
-import { CreateAuctionWizard } from './telegram/wizards/create-auction.wizard';
 import { BotContext } from './app.module';
+import { CreateAuctionWizardManager } from './telegram/wizards/create-auction.wizard';
+import { AuctionsService } from './auctions/auctions.service';
 
 @Update()
 @Injectable()
 class AppService {
-  private createAuctionWizard: CreateAuctionWizard;
-
-  constructor(private readonly auctions: AuctionsService) {
-    this.createAuctionWizard = new CreateAuctionWizard(auctions);
-  }
+  constructor(private readonly auctionWizardManager: CreateAuctionWizardManager, private readonly auctions: AuctionsService) {}
 
   @Start()
   async startCommand(ctx: BotContext) {
@@ -54,7 +50,7 @@ class AppService {
       await ctx.reply('Unable to identify you. Please try again.');
       return;
     }
-    
+
     ctx.session.auctionCreation = ctx.session.auctionCreation || {};
 
     await ctx.reply('Let’s create a new auction! Please provide the name of the auction.');
@@ -90,7 +86,7 @@ class AppService {
 
     // If the there is a intent in the session -> continue with the intent
     if (ctx.session.auctionCreation) {
-      await this.createAuctionWizard.handleMessage(ctx, message, userId);
+      await this.auctionWizardManager.handleMessage(ctx, message, userId);
       return;
     }
 

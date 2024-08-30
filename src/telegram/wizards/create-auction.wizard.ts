@@ -1,9 +1,18 @@
+import { Injectable } from '@nestjs/common';
 import { AuctionsService } from 'src/auctions/auctions.service';
 import { CreateAuctionDto } from 'src/auctions/dtos/create-auction.dto';
 import { BotContext, SessionSpace } from 'src/app.module';
 import { parseISO, isValid } from 'date-fns';
 
-export class CreateAuctionWizard {
+interface AuctionWizardState {
+  stepIndex: number;
+  data: Partial<CreateAuctionDto>;
+}
+
+@Injectable()
+export class CreateAuctionWizardManager {
+  private readonly userWizards = new Map<string, AuctionWizardState>();
+
   private readonly steps = [
     this.askForName.bind(this),
     this.askForDescription.bind(this),
@@ -11,20 +20,19 @@ export class CreateAuctionWizard {
     this.askForEndDate.bind(this),
   ];
 
-  private currentStepIndex = 0;
-
-  constructor(private readonly auctions: AuctionsService) {
-  }
+  constructor(private readonly auctions: AuctionsService) {}
 
   async handleMessage(ctx: BotContext, messageText: string, userId: string): Promise<void> {
     console.log('Handling message:', messageText, userId);
-    console.log('Current context:', ctx);
-    console.log('Current session:', ctx.session);
 
-    const session: SessionSpace = ctx.session;
+    let wizardState = this.userWizards.get(userId);
 
-    if (!session.auctionCreation) {
-      session.auctionCreation = {};
+    if (!wizardState) {
+      wizardState = {
+        stepIndex: 0,
+        data: {},
+      };
+      this.userWizards.set(userId, wizardState);
     }
 
     if (!messageText) {
@@ -33,18 +41,16 @@ export class CreateAuctionWizard {
     }
 
     try {
-      const stepFunction = this.steps[this.currentStepIndex];
-      await stepFunction(ctx, messageText, userId, session.auctionCreation);
+      const stepFunction = this.steps[wizardState.stepIndex];
+      await stepFunction(ctx, messageText, userId, wizardState.data);
 
-      if (this.currentStepIndex < this.steps.length - 1) {
-        this.currentStepIndex++;
+      if (wizardState.stepIndex < this.steps.length - 1) {
+        wizardState.stepIndex++;
       } else {
+        // Final step
         await this.finalizeAuctionCreation(ctx, userId);
-        delete ctx.session.auctionCreation;
-        this.currentStepIndex = 0;
+        this.userWizards.delete(userId);  // Clear the wizard state for this user
       }
-
-      ctx.session.auctionCreation = session.auctionCreation;
     } catch (error) {
       console.error('Error during auction creation:', error);
       await ctx.reply('An error occurred. Please try again.');
@@ -68,11 +74,10 @@ export class CreateAuctionWizard {
   private async askForStartDate(ctx: BotContext, messageText: string, userId: string, session: Partial<CreateAuctionDto>): Promise<void> {
     if (!session.startDate) {
       console.log("Received start date input:", messageText);
-      // Try to parse the date
       const parsedDate = parseISO(messageText);
-      
+
       if (isValid(parsedDate)) {
-        session.startDate = parsedDate.toISOString(); // Save the date in ISO format
+        session.startDate = parsedDate.toISOString();
         await ctx.reply('Got it! Now, provide the end date (YYYY-MM-DD format).');
       } else {
         await ctx.reply('Invalid date format. Please provide the start date in YYYY-MM-DD format.');
@@ -83,9 +88,8 @@ export class CreateAuctionWizard {
   private async askForEndDate(ctx: BotContext, messageText: string, userId: string, session: Partial<CreateAuctionDto>): Promise<void> {
     if (!session.endDate) {
       console.log("Received end date input:", messageText);
-      // Try to parse the date
       const parsedDate = parseISO(messageText);
-      
+
       if (isValid(parsedDate)) {
         session.endDate = parsedDate.toISOString();
       } else {
@@ -95,20 +99,24 @@ export class CreateAuctionWizard {
   }
 
   private async finalizeAuctionCreation(ctx: BotContext, userId: string): Promise<void> {
-    const session = ctx.session.auctionCreation as CreateAuctionDto;
+    const wizardState = this.userWizards.get(userId);
 
-    if (session.name && session.description && session.startDate && session.endDate) {
-      const createAuctionDto: CreateAuctionDto = { ...session };
+    if (wizardState) {
+      const session = wizardState.data as CreateAuctionDto;
 
-      try {
-        const auction = await this.auctions.createAuction(createAuctionDto);
-        await ctx.reply(`Auction created successfully! ID: ${auction.id}`);
-      } catch (error) {
-        console.error('Error creating auction:', error);
-        await ctx.reply('Failed to create auction. Please try again later.');
+      if (session.name && session.description && session.startDate && session.endDate) {
+        const createAuctionDto: CreateAuctionDto = { ...session };
+
+        try {
+          const auction = await this.auctions.createAuction(createAuctionDto);
+          await ctx.reply(`Auction created successfully! ID: ${auction.id}`);
+        } catch (error) {
+          console.error('Error creating auction:', error);
+          await ctx.reply('Failed to create auction. Please try again later.');
+        }
+      } else {
+        await ctx.reply('Incomplete auction details. Please start the process again.');
       }
-    } else {
-      await ctx.reply('Incomplete auction details. Please start the process again.');
     }
   }
 }

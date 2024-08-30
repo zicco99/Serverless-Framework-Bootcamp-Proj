@@ -5,6 +5,7 @@ import { AuctionsModule } from './auctions/auctions.module';
 import { AuctionsService } from './auctions/auctions.service';
 import { Context } from 'telegraf';
 import { CreateAuctionDto } from './auctions/dtos/create-auction.dto';
+import { CreateAuctionWizardManager } from './telegram/wizards/create-auction.wizard';
 
 
 interface SessionSpace {
@@ -75,7 +76,7 @@ let sessions = new Map<number, SessionSpace>();
     } as TelegrafModuleOptions),
   ],
   controllers: [],
-  providers: [AppService, AuctionsService],
+  providers: [AppService, CreateAuctionWizardManager],
 })
 export class AppModule {}
 
