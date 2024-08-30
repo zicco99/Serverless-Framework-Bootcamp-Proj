@@ -72,7 +72,7 @@ export class CreateAuctionWizard {
       const parsedDate = parseISO(messageText);
       
       if (isValid(parsedDate)) {
-        session.startDate = parsedDate.toISOString(); // Save as ISO string or any preferred format
+        session.startDate = parsedDate.toISOString(); // Save the date in ISO format
         await ctx.reply('Got it! Now, provide the end date (YYYY-MM-DD format).');
       } else {
         await ctx.reply('Invalid date format. Please provide the start date in YYYY-MM-DD format.');

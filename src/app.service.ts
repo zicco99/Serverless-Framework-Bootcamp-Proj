@@ -39,8 +39,6 @@ class AppService {
       return;
     }
 
-    ctx.session.auctionCreation = ctx.session.auctionCreation || {};
-
     if (ctx.session.auctionCreation) {
       await ctx.reply('You are already creating an auction. Please continue with the auction creation process.');
       return;
@@ -56,8 +54,7 @@ class AppService {
       await ctx.reply('Unable to identify you. Please try again.');
       return;
     }
-
-    // Initialize session if not present
+    
     ctx.session.auctionCreation = ctx.session.auctionCreation || {};
 
     await ctx.reply('Let’s create a new auction! Please provide the name of the auction.');
