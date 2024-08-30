@@ -1,25 +1,59 @@
 import { Module } from '@nestjs/common';
-import { AppService } from './app.service';
 import { TelegrafModule, TelegrafModuleOptions } from 'nestjs-telegraf';
+import { AppService } from './app.service';
 import { AuctionsModule } from './auctions/auctions.module';
 import { AuctionsService } from './auctions/auctions.service';
+import { Context } from 'telegraf';
+
+
+interface SessionSpace {
+  // Intent (ex. create-auction) -> space for data
+  [key: string]: any;
+}
+
+interface BotContext extends Context {
+  session: SessionSpace;
+}
+
+// UserID -> SessionSpace
+let sessions = new Map<number, SessionSpace>();
 
 @Module({
   imports: [
     AuctionsModule,
     TelegrafModule.forRoot({
-      token: process.env.BOT_TELEGRAM_KEY || "",
+      token: process.env.BOT_TELEGRAM_KEY || '',
       middlewares: [
-        // Add session middleware ( enriches the context with a session space )
-        (ctx, next) => {
-          ctx.session = ctx.session || {};
+        // Add session middleware
+        (ctx: BotContext, next: () => Promise<void>) => {
+
+          //If session doesn't exist -> create
+          if(!sessions){
+            sessions = new Map<number, SessionSpace>();
+          }
+
+          const userId = ctx.from?.id;
+
+          if (userId !== undefined) {
+            let user_session_space = sessions.get(userId);
+
+            if (!user_session_space) {
+              //If session doesn't exist -> create
+              const user_session_space = {} as SessionSpace;
+              sessions.set(userId, user_session_space);
+              ctx.session = user_session_space;
+            }
+            else{
+              ctx.session = user_session_space;
+            }
+          }
           return next();
         },
       ],
       launchOptions: {
         webhook: {
-          domain: process.env.GATEWAY_URL || "", 
-          path: "/dev/webhook", 
+          domain: process.env.GATEWAY_URL || '',
+          path: '/dev/webhook',
           maxConnections: 40,
         },
         dropPendingUpdates: true,
@@ -34,12 +68,14 @@ import { AuctionsService } from './auctions/auctions.service';
           'shipping_query',
           'pre_checkout_query',
           'poll',
-          'poll_answer'
+          'poll_answer',
         ],
       },
-    } as TelegrafModuleOptions,
-  )],
+    } as TelegrafModuleOptions),
+  ],
   controllers: [],
   providers: [AppService, AuctionsService],
 })
 export class AppModule {}
+
+export { SessionSpace, BotContext };

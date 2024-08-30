@@ -1,6 +1,6 @@
 import { AuctionsService } from 'src/auctions/auctions.service';
-import { BotContext } from '../../app.service';
 import { CreateAuctionDto } from 'src/auctions/dtos/create-auction.dto';
+import { BotContext, SessionSpace } from 'src/app.module';
 
 export class CreateAuctionWizard {
   private readonly steps = [
@@ -15,7 +15,13 @@ export class CreateAuctionWizard {
   constructor(private readonly auctions: AuctionsService) {}
 
   async handleMessage(ctx: BotContext, messageText: string, userId: string) {
-    const session = ctx.session.auctionCreation![userId] ?? {};
+
+    // Middleware puts session space related to the user in cx.session
+    const session : SessionSpace = ctx.session;
+    
+    if (!session.auctionCreation) {
+      session.auctionCreation = {};
+    }
 
     if (!messageText) {
       await ctx.reply("I didn't receive any text. Please try again.");

@@ -1,17 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { Hears, Help, Start, Update, Action } from 'nestjs-telegraf';
-import { Context, Markup } from 'telegraf';
+import { Markup } from 'telegraf';
 import { AuctionsService } from './auctions/auctions.service';
-import { CreateAuctionDto } from './auctions/dtos/create-auction.dto';
 import { CreateAuctionWizard } from './telegram/wizards/create-auction.wizard';
-
-interface BotContext extends Context {
-  session: {
-    auctionCreation?: {
-      [userId: string]: Partial<CreateAuctionDto>;
-    };
-  };
-}
+import { BotContext } from './app.module';
 
 @Update()
 @Injectable()
