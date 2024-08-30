@@ -1,12 +1,21 @@
 declare module 'telegram-inline-calendar' {
     import { CallbackQuery } from 'telegraf';
   
+    // Define options for Calendar configuration
+    export interface CalendarOptions {
+      locale?: string; // Locale of the calendar (e.g., 'en')
+      firstDayOfWeek?: number; // First day of the week (0 for Sunday, 1 for Monday)
+      // Add other options as necessary based on the package's documentation
+    }
+  
+    // Define the Calendar class with its methods
     export class Calendar {
       constructor(options?: CalendarOptions);
   
       /**
        * Creates a calendar markup with optional configuration.
        * @param options Configuration options for the calendar.
+       * @returns Calendar markup.
        */
       createCalendarMarkup(options?: CalendarOptions): any;
   
@@ -18,7 +27,7 @@ declare module 'telegram-inline-calendar' {
       handleCallbackQuery(callbackQuery: CallbackQuery): Date | -1;
   
       /**
-       * Starts or renders the calendar.
+       * Renders the calendar.
        * @param date Optional date to pre-select or display on the calendar.
        * @returns The calendar markup.
        */
@@ -37,12 +46,6 @@ declare module 'telegram-inline-calendar' {
        * @returns The selected date or -1 if the date is invalid.
        */
       clickButtonCalendar(ctx: any): Date | -1;
-    }
-  
-    export interface CalendarOptions {
-      locale?: string; // Locale of the calendar (e.g., 'en')
-      firstDayOfWeek?: number; // First day of the week (0 for Sunday, 1 for Monday)
-      // Add other options as necessary based on the package's documentation
     }
   }
   
