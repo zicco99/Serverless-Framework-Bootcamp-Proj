@@ -12,7 +12,7 @@ export class CreateAuctionWizard {
   ];
 
   private currentStepIndex = 0;
-  private calendar: Calendar;
+  private calendar;
 
   constructor(private readonly auctions: AuctionsService) {
     this.calendar = new Calendar({
@@ -68,35 +68,39 @@ export class CreateAuctionWizard {
 
   private async askForStartDate(ctx: BotContext, messageText: string, userId: string, session: Partial<CreateAuctionDto>) {
     if (!session.startDate) {
-      if (messageText === 'Select Date') {
-        await ctx.reply('Please select a start date:', this.calendar.startNavCalendar(ctx));
-      } else {
-        const startDate = new Date(messageText);
-        if (isNaN(startDate.getTime())) {
-          await ctx.reply('Invalid date format. Please enter the start date in YYYY-MM-DD format.');
-          return;
+        if (messageText === 'Select Date') {
+            const calendarMessage = this.calendar.startNavCalendar(ctx);
+            await ctx.reply('Please select a start date:', calendarMessage);
+        } else {
+            const startDate = new Date(messageText);
+            if (isNaN(startDate.getTime())) {
+                await ctx.reply('Invalid date format. Please enter the start date in YYYY-MM-DD format.');
+                return;
+            }
+            session.startDate = startDate;
+            await ctx.reply('Got it! Now, please provide the end date (YYYY-MM-DD format).');
         }
-        session.startDate = startDate;
-        await ctx.reply('Got it! Now, please provide the end date (YYYY-MM-DD format).');
-      }
     }
-  }
+}
 
-  private async askForEndDate(ctx: BotContext, messageText: string, userId: string, session: Partial<CreateAuctionDto>) {
+private async askForEndDate(ctx: BotContext, messageText: string, userId: string, session: Partial<CreateAuctionDto>) {
     if (!session.endDate) {
-      if (messageText === 'Select Date') {
-        await ctx.reply('Please select an end date:', this.calendar.startNavCalendar(ctx));
-      } else {
-        const endDate = new Date(messageText);
-        if (isNaN(endDate.getTime())) {
-          await ctx.reply('Invalid date format. Please enter the end date in YYYY-MM-DD format.');
-          return;
+        if (messageText === 'Select Date') {
+            // Ensure startNavCalendar returns a valid response
+            const calendarMessage = this.calendar.startNavCalendar(ctx);
+            await ctx.reply('Please select an end date:', calendarMessage);
+        } else {
+            const endDate = new Date(messageText);
+            if (isNaN(endDate.getTime())) {
+                await ctx.reply('Invalid date format. Please enter the end date in YYYY-MM-DD format.');
+                return;
+            }
+            session.endDate = endDate;
+            await ctx.reply('End date selected. You can now finalize the auction.');
         }
-        session.endDate = endDate;
-        await ctx.reply('End date selected. You can now finalize the auction.');
-      }
     }
-  }
+}
+
 
   private async finalizeAuctionCreation(ctx: BotContext, userId: string) {
     const session = ctx.session.auctionCreation as CreateAuctionDto;
