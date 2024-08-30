@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { Hears, Help, On, Start, Update } from 'nestjs-telegraf';
-import { Context } from 'telegraf';
+import { Hears, Help, On, Start, Update, Action } from 'nestjs-telegraf';
+import { Context, Markup } from 'telegraf';
 
 @Update()
 @Injectable()
@@ -13,8 +13,13 @@ export class AppService {
   async startCommand(ctx: Context) {
     console.log("Message from user: ", ctx.message);
     console.log("Context: ", ctx);
-    
-    await ctx.reply('Hello there! 🖖 Ready to have some fun? Type /help if you get lost!');
+
+    const buttons = Markup.inlineKeyboard([
+      Markup.button.callback('Get a Funny Reply', 'FUNNY_REPLY'),
+      Markup.button.callback('Show Help', 'SHOW_HELP'),
+    ]);
+
+    await ctx.reply('Hello there! 🖖 Ready to have some fun? Type /help if you get lost!', buttons);
   }
 
   @Help()
@@ -38,7 +43,7 @@ export class AppService {
   @On('text')
   async onText(ctx: Context) {
     console.log("Context: ", ctx);
-    
+
     const funnyReplies = [
       'That’s interesting! Tell me more... 🤔',
       'You’re on fire today! 🔥',
@@ -46,11 +51,8 @@ export class AppService {
       'I totally agree! 👍',
       'You just made my day! 🌞'
     ];
-    
+
     const randomReply = funnyReplies[Math.floor(Math.random() * funnyReplies.length)];
     await ctx.reply(randomReply);
   }
-
-  
-
 }
