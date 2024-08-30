@@ -73,8 +73,7 @@ export class CreateAuctionWizard {
   private async askForStartDate(ctx: BotContext, messageText: string, userId: string, session: Partial<CreateAuctionDto>) {
     if (!session.startDate) {
       if (messageText === 'Select Date') {
-        const calendarMessage = await this.calendar.startNavCalendar(ctx);
-        await ctx.reply('Please select a start date:', calendarMessage);
+        await this.calendar.startNavCalendar(ctx);
       } else {
         const startDate = new Date
         if (isNaN(startDate.getTime())) {
@@ -90,8 +89,7 @@ export class CreateAuctionWizard {
   private async askForEndDate(ctx: BotContext, messageText: string, userId: string, session: Partial<CreateAuctionDto>) {
     if (!session.endDate) {
       if (messageText === 'Select Date') {
-        const calendarMessage = await this.calendar.startNavCalendar(ctx);
-        await ctx.reply('Please select an end date:', calendarMessage);
+        await this.calendar.startNavCalendar(ctx);
       } else {
         const endDate = new Date(messageText);
         if (isNaN(endDate.getTime())) {
