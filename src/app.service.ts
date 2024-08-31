@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { Hears, Help, Start, Update, Action, Message, Context } from 'nestjs-telegraf';
-import { Markup } from 'telegraf';
+import { Hears, Help, Start, Update, Action, Message, Context, InjectBot } from 'nestjs-telegraf';
+import { Markup, Telegraf } from 'telegraf';
 import { BotContext } from './app.module';
 import { CreateAuctionWizardManager } from './telegram/wizards/create-auction.wizard';
 import { AuctionsService } from './auctions/auctions.service';
@@ -9,7 +9,12 @@ import { Auction } from './auctions/models/auction.model';
 @Update()
 @Injectable()
 class AppService {
-  constructor(private readonly auctionWizardManager: CreateAuctionWizardManager, private readonly auctions: AuctionsService) {}
+  constructor(@InjectBot() private readonly bot: Telegraf<BotContext>,private readonly auctionWizardManager: CreateAuctionWizardManager, private readonly auctions: AuctionsService) {
+    this.bot.telegram.setMyCommands([
+      { command: 'start', description: 'Start the bot' },
+      { command: 'help', description: 'Get help' },
+    ]);
+  }
 
   @Start()
   async startCommand(ctx: BotContext) {
@@ -19,15 +24,7 @@ class AppService {
       return;
     }
 
-    const keyboard = Markup.keyboard([
-      ['📝 Create Auction', 'Start'],
-      ['🔍 View Auctions', 'Get Instructions'],
-    ])
-      .resize()
-      .oneTime(false)
-      .reply_markup;
-
-    await ctx.reply('Hello there! 🖖 Ready to manage some auctions? Use the buttons below to interact.',{ reply_markup: keyboard });
+    await ctx.reply('Hello there! 🖖 Ready to manage some auctions? Use the buttons below to interact.');
   }
 
   @Help()
