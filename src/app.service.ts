@@ -14,7 +14,10 @@ class AppService {
       { command: 'start', description: 'Start the bot' },
       { command: 'help', description: 'Get help' },
     ]);
+
   }
+
+  private auctionsCounts : number | null = null;
 
   @Start()
   async startCommand(ctx: BotContext) {
@@ -24,7 +27,26 @@ class AppService {
       return;
     }
 
-    await ctx.reply('Hello there! 🖖 Ready to manage some auctions? Use the buttons below to interact.');
+    //If auction count still null, get count from DB
+    if (!this.auctionsCounts) this.auctionsCounts = (await this.auctions.findAll()).length
+
+    const welcomeMessage = `
+      Hi, ${ctx.from?.first_name}! :) (zik blesses you 🙏🏼)
+      Some stats:
+      Time: ${new Date().toISOString()} 🕖
+      Auctions: ${this.auctionsCounts} 🔥
+
+      ﹎﹎﹎﹎﹎﹎﹎
+      Welcome to a random auctions manager bot, stuff created with ❤️ by Zik
+      Start with Help! /help and /userguide 📘.
+
+      ﹎﹎﹎﹎﹎﹎﹎
+
+      Peace and Love ✌️❤️
+      Zik ®
+      `;
+
+    await ctx.reply(welcomeMessage);
   }
 
   @Help()
@@ -61,6 +83,8 @@ class AppService {
   async onViewAuctions(ctx: BotContext) {
     try {
       const auctions : Auction[] = await this.auctions.findAll();
+      this.auctionsCounts = auctions.length
+      
       if (auctions.length === 0) {
         await ctx.reply('No open auctions at the moment.');
       } else {
