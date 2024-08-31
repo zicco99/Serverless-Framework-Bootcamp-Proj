@@ -13,5 +13,5 @@ Get started by using /help and /userguide 📘.
 *﹎﹎﹎﹎﹎﹎﹎*
 
 Wishing you peace and love ✌️❤️,
-*Zik \\®*
+*- Zik*
 `;
