@@ -83,7 +83,10 @@ async startCommand(ctx: BotContext) {
       const auctions : Auction[] = await this.auctions.findAll();
       this.auctionsCounts = auctions.length
 
-      await ctx.reply(listAuctionsMessage(auctions),{ parse_mode : 'MarkdownV2' });
+      const msg = listAuctionsMessage(auctions)
+      console.log("Sending message: ", msg);
+      
+      await ctx.reply(msg,{ parse_mode : 'MarkdownV2' });
       
       if (auctions.length === 0) {
         await ctx.reply('No open auctions at the moment.');

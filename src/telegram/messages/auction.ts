@@ -12,7 +12,7 @@ export const formatAuctionMessage = (auction: Auction): string => {
   
     return `*${statusIcon} Auction Name:* ${escapeMarkdown(auction.name)}\n` +
            `*🆔 Auction ID:* \`${escapeMarkdown(auction.id)}\`\n` +
-           `*📝 Description:* ${escapeMarkdown(auction.description)}\n` +
+           `*📝 Description:* ${escapeMarkdown(auction.description).replace(/\./g, '\\.')}\n` +
            `*🚦 Status:* ${statusText}\n` +
            `*🗓️ Start Date:* ${escapeMarkdown(new Date(auction.startDate).toLocaleString().replace(/\./g, '\\.'))}\n` +
            `*⏰ End Date:* ${escapeMarkdown(new Date(auction.endDate).toLocaleString().replace(/\./g, '\\.'))}\n` +
