@@ -1,5 +1,6 @@
 export interface Auction {
     id: string;
+    idUser: string;
     name: string;
     description: string;
     status: AuctionStatus;

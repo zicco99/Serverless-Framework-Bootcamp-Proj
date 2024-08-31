@@ -98,9 +98,10 @@ export class CreateAuctionWizardManager {
 
   private async finalizeAuctionCreation(ctx: BotContext, userId: string): Promise<void> {
     const wizardState = this.userWizards.get(userId);
-
     if (wizardState) {
       const session = wizardState.data as CreateAuctionDto;
+      // Adding user id to session
+      session.idUser = userId;
 
       if (session.name && session.description && session.startDate && session.endDate) {
         const createAuctionDto: CreateAuctionDto = { ...session };

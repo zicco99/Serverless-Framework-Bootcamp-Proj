@@ -4,6 +4,7 @@ import { Markup } from 'telegraf';
 import { BotContext } from './app.module';
 import { CreateAuctionWizardManager } from './telegram/wizards/create-auction.wizard';
 import { AuctionsService } from './auctions/auctions.service';
+import { Auction } from './auctions/models/auction.model';
 
 @Update()
 @Injectable()
@@ -60,7 +61,7 @@ class AppService {
   @Action('VIEW_AUCTIONS')
   async onViewAuctions(ctx: BotContext) {
     try {
-      const auctions = await this.auctions.findAll();
+      const auctions : Auction[] = await this.auctions.findAll();
       if (auctions.length === 0) {
         await ctx.reply('No open auctions at the moment.');
       } else {

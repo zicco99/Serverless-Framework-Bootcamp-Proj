@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { TelegrafModule, TelegrafModuleOptions } from 'nestjs-telegraf';
 import { AppService } from './app.service';
 import { AuctionsModule } from './auctions/auctions.module';
-import { AuctionsService } from './auctions/auctions.service';
 import { Context } from 'telegraf';
 import { CreateAuctionDto } from './auctions/dtos/create-auction.dto';
 import { CreateAuctionWizardManager } from './telegram/wizards/create-auction.wizard';

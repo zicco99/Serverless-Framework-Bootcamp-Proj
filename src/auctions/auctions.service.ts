@@ -48,7 +48,7 @@ export class AuctionsService {
   }
 
   async createAuction(createAuctionDto: CreateAuctionDto): Promise<Auction> {
-    const { name, description, startDate, endDate } = createAuctionDto;
+    const { idUser, name, description, startDate, endDate } = createAuctionDto;
 
     if (startDate >= endDate) {
       throw new BadRequestException('Start date must be before end date');
@@ -56,6 +56,7 @@ export class AuctionsService {
 
     const newAuction: Auction = {
       id: uuid(),
+      idUser,
       name,
       description,
       status: AuctionStatus.OPEN,
