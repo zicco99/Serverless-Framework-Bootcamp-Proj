@@ -30,7 +30,7 @@ class AppService {
     //Retrieve stats:
     if (!this.auctionsCounts) this.auctionsCounts = (await this.auctions.findAll()).length
 
-    await ctx.reply(welcomeMessage(ctx.from?.first_name || "Buddy", this.auctionsCounts),{ parse_mode : 'HTML' });
+    await ctx.reply(welcomeMessage(ctx.from?.first_name || "Buddy", this.auctionsCounts),{ parse_mode : 'MarkdownV2' });
   }
 
   @Help()
