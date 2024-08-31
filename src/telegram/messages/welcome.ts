@@ -1,21 +1,18 @@
 import { escapeMarkdown } from './.utils';
 
 export const welcomeMessage = (userName: string, auctionsCounts: number): string => {
-  let message = `*Hi, ${userName}*
+    const currentTime = new Date().toLocaleString();
 
-Here are some quick stats for you:
-- *Current Time:* ${new Date().toLocaleString()} 🕖
-- *Auctions Available:* ${auctionsCounts.toString()} 🔥
+    let message = `*Hi, ${escapeMarkdown(userName)}!*\n\n` +
+                  `Here are some quick stats for you:\n` +
+                  `- *Current Time:* ${escapeMarkdown(currentTime)} 🕖\n` +
+                  `- *Auctions Available:* ${escapeMarkdown(auctionsCounts.toString())} 🔥\n\n` +
+                  `*﹎﹎﹎﹎﹎﹎﹎*\n\n` +
+                  `Welcome to the ultimate auctions manager bot! 🎉\n` +
+                  `Get started by using /help and /userguide 📘.\n\n` +
+                  `*﹎﹎﹎﹎﹎﹎﹎*\n\n` +
+                  `Wishing you peace and love ✌️❤️,\n` +
+                  `*Zik*`;
 
-*﹎﹎﹎﹎﹎﹎﹎*
-
-Welcome to the ultimate auctions manager bot.
-Get started by using /help and /userguide 📘.
-
-*﹎﹎﹎﹎﹎﹎﹎*
-
-Wishing you peace and love ✌️❤️,
-*Zik*`;
-
-  return escapeMarkdown(message);
+    return message;
 };

@@ -87,14 +87,6 @@ async startCommand(ctx: BotContext) {
       console.log("Sending message: ", msg);
 
       await ctx.reply(msg,{ parse_mode : 'MarkdownV2' });
-      
-      if (auctions.length === 0) {
-        await ctx.reply('No open auctions at the moment.');
-      } else {
-        for (const auction of auctions) {
-          await ctx.reply(`Auction ID: ${auction.id}\nName: ${auction.name}\nStatus: ${auction.status}\nEnd Date: ${auction.endDate}`);
-        }
-      }
     } catch (error) {
       console.error('Error retrieving auctions:', error);
       await ctx.reply('Failed to retrieve auctions. Please try again later.');
