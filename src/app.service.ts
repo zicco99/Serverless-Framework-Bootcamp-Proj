@@ -19,11 +19,12 @@ class AppService {
       return;
     }
 
-    const buttons = Markup.keyboard([
-      Markup.button.callback('📝 Create Auction', 'CREATE_AUCTION'),
-      Markup.button.callback('🔍 View Auctions', 'VIEW_AUCTIONS'),
-      Markup.button.callback('ℹ️ Show Help', 'SHOW_HELP'),
-    ]);
+    const menu = Markup.keyboard([
+      ['📝 Create Auction', 'Start'],  
+      ['🔍 View Auctions', 'Help'],    
+    ])
+      .resize()
+      .oneTime(false);
 
     await ctx.reply('Hello there! 🖖 Ready to manage some auctions? Use the buttons below to interact.', buttons);
   }
