@@ -1,4 +1,4 @@
-export const welcomeMessage = (userName : string, auctionsCounts: number) => `
+export const welcomeMessage = (userName: string, auctionsCounts: number) => `
 *Hi, ${userName} :) (zik blesses you 🙏🏼)*
 
 Here are some quick stats for you:
@@ -13,5 +13,5 @@ Get started by using /help and /userguide 📘.
 *﹎﹎﹎﹎﹎﹎﹎*
 
 Wishing you peace and love ✌️❤️,
-*Zik ®*
+*Zik \\®*
 `;
