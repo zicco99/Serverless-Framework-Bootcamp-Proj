@@ -11,7 +11,7 @@ interface AuctionWizardState {
 
 @Injectable()
 export class CreateAuctionWizardManager {
-  
+
   private readonly userWizards = new Map<string, AuctionWizardState>();
 
   private readonly steps = [
@@ -26,12 +26,18 @@ export class CreateAuctionWizardManager {
   async handleMessage(ctx: BotContext, messageText: string, userId: string): Promise<void> {
     console.log('Handling message:', { messageText, userId });
 
+    if (!messageText) {
+      await ctx.reply("🤔 I didn't receive any input. Please try again.");
+      return;
+    }
+
     if (messageText === '/cancel') {
       this.userWizards.delete(userId);
       await ctx.reply('❌ Auction creation has been cancelled.');
       return;
     }
 
+    //Obtain user's current state
     let wizardState = this.userWizards.get(userId);
 
     if (!wizardState) {
@@ -39,11 +45,7 @@ export class CreateAuctionWizardManager {
       this.userWizards.set(userId, wizardState);
     }
 
-    if (!messageText) {
-      await ctx.reply("🤔 I didn't receive any input. Please try again.");
-      return;
-    }
-
+    //Execute step and increment step index
     try {
       const currentStep = this.steps[wizardState.stepIndex];
       await currentStep(ctx, messageText, wizardState.data);
@@ -53,12 +55,16 @@ export class CreateAuctionWizardManager {
       } else {
         await this.finalizeAuctionCreation(ctx, userId);
         this.userWizards.delete(userId);
+        delete ctx.session.auctionCreation
       }
     } catch (error) {
       console.error('Error during auction creation:', error);
       await ctx.reply('⚠️ An unexpected error occurred. Please try again later.');
     }
   }
+
+
+  // Define steps functions
 
   private async askForName(ctx: BotContext, messageText: string, session: Partial<CreateAuctionDto>): Promise<void> {
     session.name = messageText;
