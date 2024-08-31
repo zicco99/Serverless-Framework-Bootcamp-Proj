@@ -1,5 +1,5 @@
 export const welcomeMessage = (userName: string, auctionsCounts: number) => `
-*Hi, ${userName} 👋*
+*Hi, ${userName}*
 
 Here are some quick stats for you:
 - *Current Time:* ${new Date().toLocaleString()} 🕖
@@ -13,5 +13,5 @@ Get started by using /help and /userguide 📘.
 *﹎﹎﹎﹎﹎﹎﹎*
 
 Wishing you peace and love ✌️❤️,
-*- Zik*
+*Zik*
 `;
