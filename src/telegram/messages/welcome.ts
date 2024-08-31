@@ -1,7 +1,8 @@
 import { escapeMarkdown } from './.utils';
 
-export const welcomeMessage = (userName: string, auctionsCounts: number) => `
-*Hi, ${escapeMarkdown(userName)}*
+export const welcomeMessage = (userName: string, auctionsCounts: number): string => {
+  // Construct the message with proper MarkdownV2 escaping
+  let message = `*Hi, ${escapeMarkdown(userName)}*
 
 Here are some quick stats for you:
 \\- *Current Time:* ${escapeMarkdown(new Date().toLocaleString())} 🕖
@@ -15,5 +16,8 @@ Get started by using /help and /userguide 📘.
 *﹎﹎﹎﹎﹎﹎﹎*
 
 Wishing you peace and love ✌️❤️,
-*Zik*
-`;
+*Zik*`;
+
+  // Escape the entire message
+  return escapeMarkdown(message);
+};
