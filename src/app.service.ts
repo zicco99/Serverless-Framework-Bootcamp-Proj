@@ -6,7 +6,7 @@ import { CreateAuctionWizardManager } from './telegram/wizards/create-auction.wi
 import { AuctionsService } from './auctions/auctions.service';
 import { Auction } from './auctions/models/auction.model';
 import { welcomeMessage } from './telegram/messages/welcome';
-import { listAuctionsMessage } from './telegram/messages/auction';
+import { auctionListMessage } from './telegram/messages/auction';
 import { InlineKeyboardMarkup } from 'telegraf/typings/core/types/typegram';
 
 @Update()
@@ -83,9 +83,9 @@ async startCommand(ctx: BotContext) {
       const auctions : Auction[] = await this.auctions.findAll();
       this.auctionsCounts = auctions.length
 
-      const msg = listAuctionsMessage(auctions)
+      const msg = auctionListMessage(auctions)
       console.log("Sending message: ", msg);
-      
+
       await ctx.reply(msg,{ parse_mode : 'MarkdownV2' });
       
       if (auctions.length === 0) {
