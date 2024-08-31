@@ -7,6 +7,7 @@ import { AuctionsService } from './auctions/auctions.service';
 import { Auction } from './auctions/models/auction.model';
 import { welcomeMessage } from './telegram/messages/welcome';
 import { listAuctionsMessage } from './telegram/messages/auction';
+import { InlineKeyboardMarkup } from 'telegraf/typings/core/types/typegram';
 
 @Update()
 @Injectable()
@@ -22,18 +23,29 @@ class AppService {
   private auctionsCounts : number | null = null;
 
   @Start()
-  async startCommand(ctx: BotContext) {
-    const userId = ctx.from?.id.toString();
-    if (!userId) {
-      await ctx.reply('Unable to identify you. Please try again.');
-      return;
-    }
-
-    //Retrieve stats:
-    if (!this.auctionsCounts) this.auctionsCounts = (await this.auctions.findAll()).length
-
-    await ctx.reply(welcomeMessage(ctx.from?.first_name || "Buddy", this.auctionsCounts),{ parse_mode : 'MarkdownV2' });
+async startCommand(ctx: BotContext) {
+  const userId = ctx.from?.id.toString();
+  if (!userId) {
+    await ctx.reply('Unable to identify you. Please try again.');
+    return;
   }
+
+  // Retrieve stats
+  if (!this.auctionsCounts) {
+    this.auctionsCounts = (await this.auctions.findAll()).length;
+  }
+
+  // Define inline keyboard
+  const inlineKeyboard: InlineKeyboardMarkup = Markup.inlineKeyboard([
+    [Markup.button.callback('View Auctions', 'VIEW_AUCTIONS')],
+  ]).reply_markup as InlineKeyboardMarkup; 
+
+  await ctx.reply(
+    welcomeMessage(ctx.from?.first_name || 'Buddy', this.auctionsCounts),
+    { parse_mode: 'MarkdownV2', reply_markup: inlineKeyboard }
+  );
+}
+
 
   @Help()
   async helpCommand(ctx: BotContext) {
