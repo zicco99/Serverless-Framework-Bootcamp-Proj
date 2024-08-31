@@ -6,6 +6,7 @@ import { CreateAuctionWizardManager } from './telegram/wizards/create-auction.wi
 import { AuctionsService } from './auctions/auctions.service';
 import { Auction } from './auctions/models/auction.model';
 import { welcomeMessage } from './telegram/messages/welcome';
+import { listAuctionsMessage } from './telegram/messages/auction';
 
 @Update()
 @Injectable()
@@ -69,6 +70,8 @@ class AppService {
     try {
       const auctions : Auction[] = await this.auctions.findAll();
       this.auctionsCounts = auctions.length
+
+      await ctx.reply(listAuctionsMessage(auctions),{ parse_mode : 'MarkdownV2' });
       
       if (auctions.length === 0) {
         await ctx.reply('No open auctions at the moment.');
