@@ -23,3 +23,7 @@ export const formatAuctionMessage = (auction: Auction): string => {
   // Escape the entire message
   return escapeMarkdown(message);
 };
+
+export const auctionListMessage = (auctions: Auction[]): string => {
+  return auctions.map(formatAuctionMessage).join('\n\n');
+};
