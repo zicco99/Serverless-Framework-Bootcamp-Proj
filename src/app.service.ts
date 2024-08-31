@@ -27,26 +27,10 @@ class AppService {
       return;
     }
 
-    //If auction count still null, get count from DB
+    //Retrieve stats:
     if (!this.auctionsCounts) this.auctionsCounts = (await this.auctions.findAll()).length
 
-    const welcomeMessage = `
-      Hi, ${ctx.from?.first_name}! :) (zik blesses you 🙏🏼)
-      Some stats:
-      Time: ${new Date().toISOString()} 🕖
-      Auctions: ${this.auctionsCounts} 🔥
-
-      ﹎﹎﹎﹎﹎﹎﹎
-      Welcome to a random auctions manager bot, stuff created with ❤️ by Zik
-      Start with Help! /help and /userguide 📘.
-
-      ﹎﹎﹎﹎﹎﹎﹎
-
-      Peace and Love ✌️❤️
-      Zik ®
-      `;
-
-    await ctx.reply(welcomeMessage);
+    await ctx.reply(welcomeMessage(ctx.from?.first_name || "Buddy", this.auctionsCounts),{ parse_mode : 'HTML' });
   }
 
   @Help()
