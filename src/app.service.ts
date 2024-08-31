@@ -19,14 +19,15 @@ class AppService {
       return;
     }
 
-    const menu = Markup.keyboard([
-      ['📝 Create Auction', 'Start'],  
-      ['🔍 View Auctions', 'Help'],    
+    const keyboard = Markup.keyboard([
+      ['📝 Create Auction', 'Start'],
+      ['🔍 View Auctions', 'Get Instructions'],
     ])
       .resize()
-      .oneTime(false);
+      .oneTime(false)
+      .reply_markup;
 
-    await ctx.reply('Hello there! 🖖 Ready to manage some auctions? Use the buttons below to interact.', menu);
+    await ctx.reply('Hello there! 🖖 Ready to manage some auctions? Use the buttons below to interact.',{ reply_markup: keyboard });
   }
 
   @Help()
