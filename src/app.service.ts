@@ -5,6 +5,7 @@ import { BotContext } from './app.module';
 import { CreateAuctionWizardManager } from './telegram/wizards/create-auction.wizard';
 import { AuctionsService } from './auctions/auctions.service';
 import { Auction } from './auctions/models/auction.model';
+import { welcomeMessage } from './telegram/messages/welcome';
 
 @Update()
 @Injectable()
