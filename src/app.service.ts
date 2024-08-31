@@ -26,7 +26,7 @@ class AppService {
       .resize()
       .oneTime(false);
 
-    await ctx.reply('Hello there! 🖖 Ready to manage some auctions? Use the buttons below to interact.', buttons);
+    await ctx.reply('Hello there! 🖖 Ready to manage some auctions? Use the buttons below to interact.', menu);
   }
 
   @Help()
