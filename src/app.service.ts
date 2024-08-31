@@ -19,10 +19,10 @@ class AppService {
       return;
     }
 
-    const buttons = Markup.inlineKeyboard([
-      Markup.button.callback('Create Auction', 'CREATE_AUCTION'),
-      Markup.button.callback('View Auctions', 'VIEW_AUCTIONS'),
-      Markup.button.callback('Show Help', 'SHOW_HELP'),
+    const buttons = Markup.keyboard([
+      Markup.button.callback('📝 Create Auction', 'CREATE_AUCTION'),
+      Markup.button.callback('🔍 View Auctions', 'VIEW_AUCTIONS'),
+      Markup.button.callback('ℹ️ Show Help', 'SHOW_HELP'),
     ]);
 
     await ctx.reply('Hello there! 🖖 Ready to manage some auctions? Use the buttons below to interact.', buttons);
