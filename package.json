@@ -25,6 +25,7 @@
     "@nestjs/platform-express": "^10.4.1",
     "@nestjsx/crud": "^4.4.0",
     "@nestjsx/crud-request": "^4.4.0",
+    "@tonconnect/sdk": "^3.0.5",
     "aws-serverless-express": "^3.3.5",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",

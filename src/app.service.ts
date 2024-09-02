@@ -8,11 +8,12 @@ import { Auction } from './auctions/models/auction.model';
 import { welcomeMessage } from './telegram/messages/welcome';
 import { auctionListMessage } from './telegram/messages/auction';
 import { InlineKeyboardMarkup } from 'telegraf/typings/core/types/typegram';
+import { UsersService } from './users/users.service';
 
 @Update()
 @Injectable()
 class AppService {
-  constructor(@InjectBot() private readonly bot: Telegraf<BotContext>,private readonly auctionWizardManager: CreateAuctionWizardManager, private readonly auctions: AuctionsService) {
+  constructor(@InjectBot() private readonly bot: Telegraf<BotContext>,private readonly auctionWizardManager: CreateAuctionWizardManager, private readonly auctions: AuctionsService, private readonly users: UsersService) {
     this.bot.telegram.setMyCommands([
       { command: 'start', description: 'Start the bot' },
       { command: 'help', description: 'Get help' },
@@ -29,6 +30,8 @@ async startCommand(ctx: BotContext) {
     await ctx.reply('Unable to identify you. Please try again.');
     return;
   }
+
+
 
   // Retrieve stats
   if (!this.auctionsCounts) {
@@ -99,6 +102,11 @@ async startCommand(ctx: BotContext) {
     const userId = ctx.from?.id.toString();
     if (!userId) {
       await ctx.reply('Unable to identify you. Please try again.');
+      return;
+    }
+
+    if (!message) {
+      await ctx.reply("🤔 I didn't receive any input. Please try again.");
       return;
     }
 

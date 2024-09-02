@@ -5,6 +5,7 @@ import { AuctionsModule } from './auctions/auctions.module';
 import { Context } from 'telegraf';
 import { CreateAuctionDto } from './auctions/dtos/create-auction.dto';
 import { CreateAuctionWizardManager } from './telegram/wizards/create-auction.wizard';
+import { UsersModule } from './users/users.module';
 
 
 interface SessionSpace {
@@ -22,6 +23,7 @@ let sessions = new Map<number, SessionSpace>();
 @Module({
   imports: [
     AuctionsModule,
+    UsersModule,
     TelegrafModule.forRoot({
       token: process.env.BOT_TELEGRAM_KEY || '',
       middlewares: [
