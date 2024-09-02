@@ -71,7 +71,7 @@ custom:
         - ${self:provider.stage}
   
   warmup:
-    enabled: true
+    enabled: false
     functions:
       main:
         enabled: true
