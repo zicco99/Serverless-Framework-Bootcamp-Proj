@@ -1,12 +1,13 @@
-Resources:
-  UsersTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: ${self:custom.UsersTable.name}
-      BillingMode: PAY_PER_REQUEST
-      AttributeDefinitions:
-        - AttributeName: userId
-          AttributeType: N 
-      KeySchema:
-        - AttributeName: userId
-          KeyType: HASH 
+UsersTable:
+  Type: AWS::DynamoDB::Table
+  Properties:
+    TableName: ${self:custom.UsersTable.name}
+    BillingMode: PAY_PER_REQUEST
+    AttributeDefinitions:
+      - AttributeName: userId
+        AttributeType: N 
+    KeySchema:
+      - AttributeName: userId
+        KeyType: HASH 
+
+
