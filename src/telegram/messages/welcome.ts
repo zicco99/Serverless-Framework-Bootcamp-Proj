@@ -9,7 +9,7 @@ export const welcomeMessage = (userName: string, auctionsCounts: number): string
                   `\\- *Auctions Available:* ${escapeMarkdown(auctionsCounts.toString())} 🔥\n\n` +
                   `*﹎﹎﹎﹎﹎﹎﹎*\n\n` +
                   `Welcome to the ultimate auctions manager bot\\! 🎉\n` +
-                  `Get started by using /help and /userguide 📘\\.\n\n` +
+                  `Get started by using /help 📘\\.\n\n` +
                   `*﹎﹎﹎﹎﹎﹎﹎*\n\n` +
                   `Wishing you peace and love ❤️\n` +
                   `*Zik*`;

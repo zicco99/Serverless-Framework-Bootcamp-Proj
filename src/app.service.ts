@@ -37,7 +37,8 @@ async startCommand(ctx: BotContext) {
 
   // Define inline keyboard
   const inlineKeyboard: InlineKeyboardMarkup = Markup.inlineKeyboard([
-    [Markup.button.callback('View Auctions', 'VIEW_AUCTIONS')],
+    [Markup.button.callback('📦 Create Auction', 'CREATE_AUCTION')],
+    [Markup.button.callback('🔍 View Auctions', 'VIEW_AUCTIONS')]
   ]).reply_markup as InlineKeyboardMarkup; 
 
   await ctx.reply(
