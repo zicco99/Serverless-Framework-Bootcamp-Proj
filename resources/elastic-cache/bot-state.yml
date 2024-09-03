@@ -14,7 +14,6 @@ BotStateCluster:
           Value: !Sub "${self:custom.base}-redis-cluster"
 
 # Security Groups: looks like a plugin firewall rule-based for a VPC
-
 BotStateSG:
   Type: AWS::EC2::SecurityGroup
   Properties:
