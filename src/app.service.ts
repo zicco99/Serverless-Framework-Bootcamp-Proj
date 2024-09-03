@@ -63,10 +63,11 @@ class AppService {
   async startCommand(ctx: BotContext) {
     const userId = ctx.from?.id;
     if (!userId) {
-      await ctx.reply('Unable to identify you. Please try again.');
+      await ctx.reply('Unable to identify you\\. Please try again\\.');
       return;
     }
 
+    console.log(`[${userId}][/start] -- User started the bot`);
     const { session_space, session_newly_created } = await this.getUserStateOrInit(userId, ctx);
 
     if(!session_space) {
@@ -80,12 +81,12 @@ class AppService {
         { parse_mode: 'MarkdownV2' }
       );
       return;
-    }
-
-    await ctx.reply(
+    }else { 
+      await ctx.reply(
       `👋 👋 You are new here \\! Welcome buddy :)`,
-      { parse_mode: 'MarkdownV2' }
-    );
+      { parse_mode: 'MarkdownV2' });
+      console.log(`[${userId}][/start] -- New user session created: `, session_space);
+    }
 
     this.auctionsCounts ??= (await this.auctions.findAll()).length;
 
@@ -94,6 +95,7 @@ class AppService {
       [Markup.button.callback('🔍 View Auctions', Intent.VIEW_AUCTIONS)],
     ]).reply_markup as InlineKeyboardMarkup;
 
+    console.log(`[${userId}][/start] -- Welcome message sent `, session_space);
     await ctx.reply(
       welcomeMessage(ctx.from?.first_name || 'Buddy', this.auctionsCounts),
       { parse_mode: 'MarkdownV2', reply_markup: inlineKeyboard }
@@ -126,9 +128,12 @@ class AppService {
       return;
     }
 
+    console.log(`[${userId}][/start] -- Creating auction -> Checking if last intent is NONE: `, session_space);
     if (session_space.last_intent === Intent.NONE) {
+      console.log(`[${userId}][/start] -- No intent -> Creating auction: `, session_space);
       await this.auctionWizard.handleMessage(userId, Intent.CREATE_AUCTION, session_space.last_intent_extra as CreateAuctionIntentExtra, ctx, '');
     } else {
+      console.log(`[${userId}][/start] -- Found intent -> Restoring session: `, session_space);
       await this.restoreSession(session_space, ctx, userId, '📦 Create Auction');
     }
   }
@@ -155,10 +160,6 @@ class AppService {
     if (!userId) {
       await ctx.reply('Unable to identify you. Please try again.');
       return;
-    }
-
-    if (this.redis) {
-      await this.redis.emit('message', { userId, message });
     }
 
     if (!message) {
