@@ -52,7 +52,7 @@ functions:
       - ${file(iam/AuctionsTableIAM.yml):AuctionsTableIAM}
       - ${file(iam/TeamsCacheTableIAM.yml):TeamsCacheTableIAM}
       - ${file(iam/UsersTableIAM.yml):UsersTableIAM}
-      - ${file(resources/BotStateLambdaIAM.yml):BotStateLambdaIAM}
+      - ${file(resources/elastic-cache/bot-state.yml):BotStateLambdaIAM}
     environment:
       REGION: ${self:provider.region}
       USERS_TABLE_NAME: ${self:custom.UsersTable.name}
