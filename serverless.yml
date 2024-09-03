@@ -30,6 +30,10 @@ resources:
     PrivateRouteTable: ${file(resources/vpc/main.yml):PrivateRouteTable}
     PrivateSubnetRouteTableAssociation: ${file(resources/vpc/main.yml):PrivateSubnetRouteTableAssociation}
 
+    BotStateCluster: ${file(resources/elastic-cache/bot-state-redis.yml):BotStateCluster}
+    BotStateSubnetGroup: ${file(resources/elastic-cache/bot-state-redis.yml):BotStateSubnetGroup}
+
+
 
 functions:
   main:
@@ -43,6 +47,7 @@ functions:
       - ${file(iam/AuctionsTableIAM.yml):AuctionsTableIAM}
       - ${file(iam/TeamsCacheTableIAM.yml):TeamsCacheTableIAM}
       - ${file(iam/UsersTableIAM.yml):UsersTableIAM}
+      - ${file(iam/BotStateIAM.yml):BotStateIAM}
     environment:
       REGION: ${self:provider.region}
       USERS_TABLE_NAME: ${self:custom.UsersTable.name}
@@ -81,6 +86,7 @@ custom:
     indexArn: !Join ["/", ["${self:custom.TeamsCacheTable.arn}", "index/${self:custom.TeamsCacheTable.indexName}"]]
 
   #Networking
+  
   MainVPC:
     name: ${self:custom.base}-main-vpc
     cidr: 10.0.0.0/24
@@ -95,12 +101,12 @@ custom:
   PrivateRouteTable:
     name: ${self:custom.base}-private-route-table
 
-  ElastiCache:
+  BotStateCache:
     port: 6379
-    securityGroup:
-      name: ${self:custom.base}-elastiCache-sg
+    BotStateSG:
+      name: ${self:custom.base}-bot-state-sg
       description: "Security group for ElastiCache Redis cluster"
-      allowCidr: ${self:custom.PrivateSubnet.cidr}
+      allowCidr: ${self:custom.PrivateSubnet.cidr} #Allow traffic from private subnets only
 
   #API
   APIGateway:

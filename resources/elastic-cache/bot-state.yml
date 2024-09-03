@@ -1,0 +1,49 @@
+
+
+BotStateCluster:
+    Type: AWS::ElastiCache::CacheCluster
+    Properties:
+      CacheNodeType: cache.t3.micro
+      Engine: redis
+      NumCacheNodes: 1
+      ClusterName: !Sub ${self:custom.BotStateCluster.name}
+      VpcSecurityGroupIds:
+        - !Ref BotStateSG
+      Port: !Sub ${self:custom.BotStateCache.port}
+      CacheSubnetGroupName: !Ref BotStateSubnetGroup
+      Tags:
+        - Key: Name
+          Value: !Sub "${self:custom.base}-redis-cluster"
+
+# Security Groups: looks like a plugin firewall rule-based for a VPC
+BotStateSG:
+  Type: AWS::EC2::SecurityGroup
+  Properties:
+    GroupDescription: !Sub ${self:custom.BotStateCache.BotStateSG.description}
+    VpcId: !Ref MainVPC
+    SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: !Sub ${self:custom.BotStateCache.port}
+        ToPort: !Sub ${self:custom.BotStateCache.port}
+        CidrIp: !Sub ${self:custom.BotStateCache.securityGroup.allowCidr}
+
+
+# Subnet Group: the group of subnets that the VPC will use
+BotStateSubnetGroup:
+  Type: AWS::ElastiCache::SubnetGroup
+  Properties:
+    Description: "Subnet group for Bot State Redis cluster"
+    SubnetIds:
+      - !Ref PrivateSubnet
+    Tags:
+      - Key: Name
+        Value: !Sub "${self:custom.base}-redis-subnet-group"
+
+  
+# LambdaIAM: IAM permissions for the lambda
+BotStateLambdaIAM:
+  Effect: Allow
+  Action:
+    - "elasticache:DescribeCacheClusters"
+    - "elasticache:Connect"
+  Resource: !GetAtt BotStateCluster.Arn
