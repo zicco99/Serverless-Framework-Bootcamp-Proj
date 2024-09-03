@@ -33,7 +33,8 @@ resources:
     #Elastic Cache
     BotStateCluster: ${file(resources/elastic-cache/bot-state.yml):BotStateCluster}
     BotStateSG: ${file(resources/elastic-cache/bot-state.yml):BotStateSG}
-    BotStateSubnetGroup: ${file(resources/vpc/main.yml):BotStateSubnetGroup}
+    BotStateSubnetGroup: ${file(resources/elastic-cache/bot-state.yml):BotStateSubnetGroup}
+
 
 
 
@@ -70,6 +71,7 @@ custom:
   base: ${self:service}-${opt:stage, 'dev'}
 
   #Storage
+
   BotStateCluster:
     name: ${self:custom.base}-bot-state-cluster
     arn: !GetAtt BotStateCluster.Arn
@@ -90,6 +92,7 @@ custom:
     indexArn: !Join ["/", ["${self:custom.TeamsCacheTable.arn}", "index/${self:custom.TeamsCacheTable.indexName}"]]
 
   #Networking
+
   MainVPC:
     name: ${self:custom.base}-main-vpc
     cidr: 10.0.0.0/24
@@ -106,13 +109,14 @@ custom:
 
   BotState:
     port: 6379
-    arn: !GetAtt BotStateCluster.Arn
+    arn: ${self:custom.BotStateCluster.arn}
     BotStateSG:
       name: ${self:custom.base}-bot-state-sg
       description: "Security group for Bot State Redis cluster"
       allowCidr: ${self:custom.PrivateSubnet.cidr} # Allow traffic from private subnet only
 
-  #API
+  #---------API
+
   APIGateway:
     Url:
       Fn::Join:
