@@ -64,7 +64,7 @@ functions:
       BOT_TELEGRAM_KEY: ${ssm:/${self:custom.base}/bot-telegram-key}
       DEFAULT_BOT_NAME: ${self:custom.base}-bot
       GATEWAY_URL: ${self:custom.APIGateway.Url}
-      BOT_STATE_REDIS_ADDRESS: !Sub "master.${self:custom.BotStateCluster.address}:${self:custom.BotStateCluster.port}" # In-transit encryption enabled master.clusterName...
+      BOT_STATE_REDIS_ADDRESS: !Sub "master.${self:custom.BotStateCluster.address}:${self:custom.BotState.fromPort}" # In-transit encryption enabled master.clusterName...
       BOT_STATE_REDIS_PORT: ${self:custom.BotStateCluster.port}
       INTENT_TTL: 3600
     vpc:
@@ -84,7 +84,6 @@ custom:
     name: ${self:custom.base}-bot-state-cluster
     arn: !Sub "arn:aws:elasticache:${AWS::Region}:${AWS::AccountId}:cluster/${BotStateCluster}"
     address: !GetAtt BotStateCluster.RedisEndpoint.Address
-    port: !GetAtt BotStateCluster.RedisEndpoint.Port
 
   UsersTable:
     name: ${self:custom.base}-users-table
