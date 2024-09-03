@@ -6,6 +6,7 @@ import { Context } from 'telegraf';
 import { CreateAuctionDto } from './auctions/dtos/create-auction.dto';
 import { CreateAuctionWizardManager } from './telegram/wizards/create-auction.wizard';
 import { UsersModule } from './users/users.module';
+import { ClientsModule, Transport } from '@nestjs/microservices';
 
 
 interface SessionSpace {
@@ -24,6 +25,16 @@ let sessions = new Map<number, SessionSpace>();
   imports: [
     AuctionsModule,
     UsersModule,
+    ClientsModule.register([
+      {
+        name: 'bot-cache-client-redis',
+        transport: Transport.REDIS,
+        options: {
+          host: process.env.BOT_STATE_ADDRESS,
+          port: 6379,
+        },
+      },
+    ]),
     TelegrafModule.forRoot({
       token: process.env.BOT_TELEGRAM_KEY || '',
       middlewares: [
