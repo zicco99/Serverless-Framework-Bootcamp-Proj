@@ -44,6 +44,9 @@ class AppService {
       { command: 'start', description: 'Start the bot' },
       { command: 'help', description: 'Get help' },
     ]);
+
+    //Attach redis to auctionWizard
+    auctionWizard.setRedis(this.redis);
   }
 
   private async getUserSessionSpace(userId: number): Promise<SessionSpace | null> {
