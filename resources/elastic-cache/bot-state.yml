@@ -14,6 +14,7 @@ BotStateCluster:
           Value: !Sub "${self:custom.base}-redis-cluster"
 
 # Security Groups: looks like a plugin firewall rule-based for a VPC
+
 BotStateSG:
   Type: AWS::EC2::SecurityGroup
   Properties:
@@ -23,7 +24,27 @@ BotStateSG:
       - IpProtocol: tcp
         FromPort: !Sub ${self:custom.BotState.port}
         ToPort: !Sub ${self:custom.BotState.port}
-        CidrIp: !Sub ${self:custom.BotState.BotStateSG.allowCidr}
+        SourceSecurityGroupId: !Ref LambdaSG  # Redis <- Lambda
+    Tags:
+      - Key: Name
+        Value: !Sub "${self:custom.base}-redis-sg"
+
+
+# Security Group for Lambda Function
+LambdaSG:
+  Type: AWS::EC2::SecurityGroup
+  Properties:
+    GroupDescription: !Sub ${self:custom.Lambda.description}
+    VpcId: !Ref MainVPC
+    SecurityGroupEgress:
+      - IpProtocol: tcp
+        FromPort: !Sub ${self:custom.BotState.port}
+        ToPort: !Sub ${self:custom.BotState.port}
+        CidrIp: 0.0.0.0/0 # Lambda -> Anywhere
+    Tags:
+      - Key: Name
+        Value: !Sub "${self:custom.Lambda.name}"
+
 
 
 # Subnet Group: the group of subnets that the VPC will use
@@ -36,6 +57,7 @@ BotStateSubnetGroup:
     Tags:
       - Key: Name
         Value: !Sub "${self:custom.base}-redis-subnet-group"
+
 
   
 # LambdaIAM: IAM permissions for the lambda

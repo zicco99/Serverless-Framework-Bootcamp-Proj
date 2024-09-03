@@ -7,7 +7,6 @@ import { ClientProviderOptions, ClientsModule, ClientsModuleOptions, RedisOption
 import { SessionSpace } from './users/models/user.model';
 import { AuctionWizard } from './telegram/wizards/create-auction.wizard';
 
-
 interface BotContext extends Context {
   session_space: SessionSpace;
 }

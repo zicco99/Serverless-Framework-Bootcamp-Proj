@@ -33,6 +33,7 @@ resources:
     #Elastic Cache
     BotStateCluster: ${file(resources/elastic-cache/bot-state.yml):BotStateCluster}
     BotStateSG: ${file(resources/elastic-cache/bot-state.yml):BotStateSG}
+    LambdaSG: ${file(resources/elastic-cache/bot-state.yml):LambdaSG}
     BotStateSubnetGroup: ${file(resources/elastic-cache/bot-state.yml):BotStateSubnetGroup}
 
 
@@ -66,7 +67,11 @@ functions:
       BOT_STATE_ADDRESS: ${self:custom.BotStateCluster.address}
       BOT_STATE_PORT: ${self:custom.BotState.port}
       INTENT_TTL: 3600
-
+    vpc:
+      securityGroupIds:
+        - !Ref LambdaSG
+      subnetIds:
+        - !Ref PrivateSubnet
     warmup:
       enabled: true
 
@@ -118,6 +123,10 @@ custom:
       name: ${self:custom.base}-bot-state-sg
       description: "Security group for Bot State Redis cluster"
       allowCidr: ${self:custom.PrivateSubnet.cidr} # Allow traffic from private subnet only
+    LambdaSG:
+      name: ${self:custom.base}-lambda-sg
+      description: "Security group for Bot State Redis cluster"
+      allowCidr: ${self:custom.PrivateSubnet.cidr}
 
   #API
 
