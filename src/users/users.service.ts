@@ -5,31 +5,25 @@ import { DynamoDBClient, GetItemCommand, PutItemCommand, UpdateItemCommand, Dele
 import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
 import { User } from './models/user.model';
 import { CreateUserDto } from './dtos/create-user.dto';
+import { BotContext } from 'src/app.service';
 
 @Injectable()
 export class UsersService {
   private readonly client = new DynamoDBClient({ region: 'eu-west-1' });
   private readonly tableName = process.env.USERS_TABLE_NAME;
 
-  async createUser(createUserDto: CreateUserDto): Promise<User> {
-    const { userId, chatId, username, firstName, lastName, languageCode, firstInteraction, initialContext } = createUserDto;
-
-    const intUserId = parseInt(userId);
-    const intChatId = parseInt(chatId);
-
-    if (isNaN(intUserId) || isNaN(intChatId)) {
-      throw new BadRequestException('Invalid user ID or chat ID');
-    }
+  async createUser(createUserDto: CreateUserDto, initialContext: BotContext): Promise<User> {
+    const { userId, chatId, username, firstName, lastName, languageCode } = createUserDto;
 
     const newUser: User = {
-      userId: intUserId,
-      chatId: intChatId,
+      userId: userId,
+      chatId: chatId,
       username,
       firstName,
       lastName,
       languageCode,
-      firstInteraction,
-      initialContext,
+      firstInteraction: new Date().toISOString(),
+      initialContext: JSON.stringify(initialContext),
     };
 
     const command = new PutItemCommand({
@@ -40,4 +34,19 @@ export class UsersService {
     await this.client.send(command);
     return newUser;
   }
+
+  async findUser(userId: number): Promise<User | null> {
+    const command = new GetItemCommand({
+      TableName: this.tableName,
+      Key: marshall({ userId }),
+    });
+
+    const result = await this.client.send(command);
+
+    if (!result.Item) {
+      return null;
+    }
+    return unmarshall(result.Item) as User;
+  }
+
 }

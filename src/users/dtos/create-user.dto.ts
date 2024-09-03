@@ -1,14 +1,15 @@
-import { IsEmail, IsNotEmpty, IsOptional } from 'class-validator';
+import { IsEmail, IsInt, IsNotEmpty, IsOptional } from 'class-validator';
 import { Preferences } from '../models/user.model';
 
 
 class CreateUserDto {
 
     @IsNotEmpty()
-    userId: string;
+    @IsInt()
+    userId: number;
 
     @IsNotEmpty()
-    chatId: string;
+    chatId: number;
 
     @IsNotEmpty()
     @IsOptional()
@@ -22,16 +23,6 @@ class CreateUserDto {
 
     @IsOptional()
     languageCode: string;
-
-    @IsNotEmpty()
-    firstInteraction: Date;
-
-    @IsOptional()
-    initialContext: string;
-
-    @IsOptional()
-    preferences: Preferences;
-
 }
 
 export { CreateUserDto }
