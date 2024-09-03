@@ -1,6 +1,4 @@
 import { IsEmail, IsInt, IsNotEmpty, IsOptional } from 'class-validator';
-import { Preferences } from '../models/user.model';
-
 
 class CreateUserDto {
 
@@ -23,6 +21,8 @@ class CreateUserDto {
 
     @IsOptional()
     languageCode: string;
+    
+
 }
 
 export { CreateUserDto }

@@ -65,6 +65,7 @@ functions:
       GATEWAY_URL: ${self:custom.APIGateway.Url}
       BOT_STATE_ADDRESS: ${self:custom.BotStateCluster.address}
       BOT_STATE_PORT: ${self:custom.BotState.port}
+      INTENT_TTL: 3600
 
     warmup:
       enabled: true
