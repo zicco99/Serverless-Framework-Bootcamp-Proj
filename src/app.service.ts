@@ -52,7 +52,7 @@ class AppService {
     }
 
     await ctx.reply(
-      `👋 Welcome to the auction bot! Here is your user: \n${escapeMarkdown(showUser(user))}`,
+      `👋 Welcome to the auction bot \\! Here is your user: \n${escapeMarkdown(showUser(user))}`,
       { parse_mode: 'MarkdownV2' }
     );
 
@@ -67,7 +67,7 @@ class AppService {
       welcomeMessage(ctx.from?.first_name || 'Buddy', this.auctionsCounts),
       { parse_mode: 'MarkdownV2', reply_markup: inlineKeyboard }
     );
-    
+
   }
 
 
