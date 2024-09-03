@@ -44,4 +44,4 @@ BotStateLambdaIAM:
   Action:
     - "elasticache:DescribeCacheClusters"
     - "elasticache:Connect"
-  Resource: !GetAtt BotStateCluster.Arn
+  Resource: ${self:custom.BotStateCluster.arn}
