@@ -25,6 +25,9 @@ let sessions = new Map<number, SessionSpace>();
         options: {
           host: `redis://${process.env.BOT_STATE_ADDRESS}`,
           port: parseInt(process.env.BOT_STATE_PORT || '6379', 10),
+          tlsOptions: {
+            rejectUnauthorized: false
+          }
           
         } as RedisOptions
       } as ClientProviderOptions,
