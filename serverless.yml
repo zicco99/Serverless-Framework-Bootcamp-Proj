@@ -64,8 +64,8 @@ functions:
       BOT_TELEGRAM_KEY: ${ssm:/${self:custom.base}/bot-telegram-key}
       DEFAULT_BOT_NAME: ${self:custom.base}-bot
       GATEWAY_URL: ${self:custom.APIGateway.Url}
-      BOT_STATE_ADDRESS: ${self:custom.BotStateCluster.address}
-      BOT_STATE_PORT: ${self:custom.BotState.port}
+      BOT_STATE_REDIS_ADDRESS: ${self:custom.BotStateCluster.address}
+      BOT_STATE_REDIS_PORT: ${self:custom.BotState.port}
       INTENT_TTL: 3600
     vpc:
       securityGroupIds:
@@ -129,7 +129,6 @@ custom:
       allowCidr: ${self:custom.PrivateSubnet.cidr}
 
   #API
-
   APIGateway:
     Url:
       Fn::Join:

@@ -1,6 +1,7 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Hears, Help, Start, Update, Action, Message, Context, InjectBot } from 'nestjs-telegraf';
 import { Markup, Telegraf } from 'telegraf';
+import Redis from 'ioredis';
 import { AuctionWizard, CreateAuctionIntentExtra } from './telegram/wizards/create-auction.wizard';
 import { AuctionsService } from './auctions/auctions.service';
 import { Auction } from './auctions/models/auction.model';
@@ -8,7 +9,6 @@ import { welcomeMessage } from './telegram/messages/welcome';
 import { auctionListMessage } from './telegram/messages/auction';
 import { InlineKeyboardMarkup } from 'telegraf/typings/core/types/typegram';
 import { escapeMarkdown } from './telegram/messages/.utils';
-import { ClientProxy } from '@nestjs/microservices';
 import { BotContext, SessionSpace } from './app.module';
 import { Intent, showSessionSpace, IntentExtra } from './users/models/user.model';
 
@@ -16,26 +16,65 @@ import { Intent, showSessionSpace, IntentExtra } from './users/models/user.model
 @Injectable()
 class AppService {
   private auctionsCounts: number | null = null;
+  private redis: Redis;
 
   constructor(
     @InjectBot() private readonly bot: Telegraf<BotContext>,
     private readonly auctionWizard: AuctionWizard,
     private readonly auctions: AuctionsService,
-    @Inject('BOT_CACHE_CLIENT_REDIS') private readonly redis: ClientProxy,
   ) {
+    this.redis = new Redis({
+      host: process.env.BOT_STATE_REDIS_ADDRESS,
+      port: parseInt(process.env.BOT_STATE_REDIS_PORT || '6379', 10),
+      tls: {}
+    });
+
+    this.redis.on('error', (err: Error) => {
+      console.error('Redis error:', err);
+    });
+
+    this.redis.on('connect', () => {
+      console.log('Connected to Redis');
+    });
 
     console.log("Setting up bot commands...");
     this.bot.telegram.setMyCommands([
       { command: 'start', description: 'Start the bot' },
       { command: 'help', description: 'Get help' },
     ]);
-
-    console.log("Connecting to Redis...");
-    this.redis.connect().catch(err => {
-      console.error("Redis connection error: ", err);
-      process.exit(1);
-    })
   }
+
+  private async getUserSessionSpace(userId: number): Promise<SessionSpace | null> {
+    const sessionSpace = await this.redis.get(`user:${userId}`);
+    return sessionSpace ? JSON.parse(sessionSpace) : null;
+  }
+
+  private async setUserSessionSpace(userId: number, sessionSpace: SessionSpace): Promise<void> {
+    await this.redis.set(`user:${userId}`, JSON.stringify(sessionSpace));
+  }
+
+  private async resetLastIntent(userId: number, sessionSpace: SessionSpace): Promise<void> {
+    sessionSpace.last_intent = Intent.NONE;
+    sessionSpace.last_intent_timestamp = new Date().toISOString();
+    sessionSpace.last_intent_extra = {} as IntentExtra;
+    await this.setUserSessionSpace(userId, sessionSpace);
+  }
+
+  private async restoreSession(session_space: SessionSpace, ctx: BotContext, userId: number, message: string): Promise<void> {
+    if (session_space.last_intent !== Intent.NONE) {
+      switch (session_space.last_intent) {
+        case Intent.CREATE_AUCTION:
+          await this.auctionWizard.handleMessage(userId, session_space.last_intent, session_space.last_intent_extra as CreateAuctionIntentExtra, ctx, message);
+          break;
+        default:
+          await ctx.reply("I'm not sure what to do with that. Please use the buttons or commands.");
+          break;
+      }
+    } else {
+      await ctx.reply("Your session has expired or is not valid. Please start over.");
+    }
+  }
+  
 
   private async getUserStateOrInit(userId: number, ctx: BotContext): Promise<{ session_space: SessionSpace | null, session_newly_created: boolean }> {
     let session_space = await this.getUserSessionSpace(userId);
@@ -61,9 +100,8 @@ class AppService {
       await this.setUserSessionSpace(userId, session_space);
     }
 
-    return { session_space , session_newly_created };
+    return { session_space, session_newly_created };
   }
-
 
   @Start()
   async startCommand(ctx: BotContext) {
@@ -77,7 +115,7 @@ class AppService {
     const { session_space, session_newly_created } = await this.getUserStateOrInit(userId, ctx);
     console.log(`[${userId}][/start] -- User session space retrieved by Redis: `, session_space);
 
-    if(!session_space) {
+    if (!session_space) {
       await ctx.reply('Unable to identify you. Please try again.');
       return;
     }
@@ -88,10 +126,11 @@ class AppService {
         { parse_mode: 'MarkdownV2' }
       );
       return;
-    }else { 
+    } else {
       await ctx.reply(
-      `👋 👋 You are new here \\! Welcome buddy :)`,
-      { parse_mode: 'MarkdownV2' });
+        `👋 👋 You are new here \\! Welcome buddy :)`,
+        { parse_mode: 'MarkdownV2' }
+      );
       console.log(`[${userId}][/start] -- New user session created: `, session_space);
     }
 
@@ -130,7 +169,7 @@ class AppService {
 
     const { session_space } = await this.getUserStateOrInit(userId, ctx);
 
-    if(!session_space) {
+    if (!session_space) {
       await ctx.reply('Unable to load user data. Please try again.');
       return;
     }
@@ -175,7 +214,7 @@ class AppService {
     }
 
     const { session_space } = await this.getUserStateOrInit(userId, ctx);
-    if(!session_space) {
+    if (!session_space) {
       await ctx.reply('Unable to load user data. Please try again.');
       return;
     }
@@ -185,7 +224,7 @@ class AppService {
       return;
     }
 
-    const intentTTL = parseInt(process.env.INTENT_TTL!);
+    const intentTTL = parseInt(process.env.INTENT_TTL!, 10);
     if (session_space.last_intent === Intent.CREATE_AUCTION) {
       const init_ts = session_space.last_intent_timestamp;
       if (init_ts && (new Date().getTime() - new Date(init_ts).getTime()) > intentTTL) {
@@ -199,39 +238,9 @@ class AppService {
         await this.auctionWizard.handleMessage(userId, session_space.last_intent, session_space.last_intent_extra as CreateAuctionIntentExtra, ctx, message);
       }
     } else {
-      await ctx.reply("I'm not sure what to do with that. Use the buttons to manage auctions.");
-    }
-  }
-
-
-  // Load user session from Redis + Session restore mechanism
-
-  private async getUserSessionSpace(userId: number): Promise<SessionSpace | null> {
-    const session_space = await this.redis.send('get_user', { userId }).toPromise();
-    return session_space ? JSON.parse(session_space) as SessionSpace : null;
-  }
-
-  private async setUserSessionSpace(userId: number, session_space: SessionSpace): Promise<void> {
-    await this.redis.send('set_user', { userId, session_space: JSON.stringify(session_space) }).toPromise();
-  }
-
-  private async resetLastIntent(userId: number, session_space: SessionSpace): Promise<void> {
-    session_space.last_intent = Intent.NONE;
-    session_space.last_intent_timestamp = new Date().toISOString();
-    session_space.last_intent_extra = {} as IntentExtra;
-    await this.setUserSessionSpace(userId, session_space);
-  }
-
-  private async restoreSession(session_space: SessionSpace, ctx: BotContext, userId: number, message: string): Promise<void> {
-    if (session_space.last_intent !== Intent.NONE) {
-      switch (session_space.last_intent) {
-        case Intent.CREATE_AUCTION:
-          await this.auctionWizard.handleMessage(userId, session_space.last_intent, session_space.last_intent_extra as  CreateAuctionIntentExtra, ctx, message);
-          break;
-      }
+      await ctx.reply("I'm not sure what to do with that. Use the buttons to manage auctions or type commands.");
     }
   }
 }
 
-export { AppService, BotContext };
-
+export { AppService };
