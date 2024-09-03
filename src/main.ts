@@ -7,6 +7,11 @@ import * as serverless from 'aws-serverless-express';
 import { proxy } from 'aws-serverless-express';
 import { getBotToken } from 'nestjs-telegraf';
 
+
+export const BotState = () => {
+
+}
+
 let cachedServer: Server;
 
 process.on('uncaughtException', function (error) {

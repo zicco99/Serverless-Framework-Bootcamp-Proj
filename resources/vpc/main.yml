@@ -1,0 +1,54 @@
+MainVPC:
+  Type: AWS::EC2::VPC
+  Properties:
+    CidrBlock: ${self:custom.MainVPC.cidr}
+    EnableDnsSupport: ${self:custom.MainVPC.enableDnsSupport}
+    EnableDnsHostnames: ${self:custom.MainVPC.enableDnsHostnames}
+    Tags:
+      - Key: Name
+        Value: !Sub "${self:custom.base}-main-vpc"
+
+PrivateSubnet:
+  Type: AWS::EC2::Subnet
+  Properties:
+    VpcId: !Ref MainVPC
+    CidrBlock: ${self:custom.PrivateSubnet.cidr}
+    AvailabilityZone: !Select [0, !GetAZs ${self:custom.PrivateSubnet.availabilityZone}]
+    Tags:
+      - Key: Name
+        Value: !Sub "${self:custom.base}-private-subnet"
+
+PrivateRouteTable:
+  Type: AWS::EC2::RouteTable
+  Properties:
+    VpcId: !Ref MainVPC
+    Tags:
+      - Key: Name
+        Value: !Sub "${self:custom.base}-private-route-table"
+
+PrivateSubnetRouteTableAssociation:
+  Type: AWS::EC2::SubnetRouteTableAssociation
+  Properties:
+    SubnetId: !Ref PrivateSubnet
+    RouteTableId: !Ref PrivateRouteTable
+
+MyElastiCacheSG:
+  Type: AWS::EC2::SecurityGroup
+  Properties:
+    GroupDescription: ${self:custom.ElastiCache.securityGroup.description}
+    VpcId: !Ref MainVPC
+    SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: ${self:custom.ElastiCache.port}
+        ToPort: ${self:custom.ElastiCache.port}
+        CidrIp: ${self:custom.ElastiCache.securityGroup.allowCidr}
+
+BotStateSubnetGroup:
+  Type: AWS::ElastiCache::SubnetGroup
+  Properties:
+    Description: "Subnet group for Bot State Redis cluster"
+    SubnetIds:
+      - !Ref PrivateSubnet
+    Tags:
+      - Key: Name
+        Value: !Sub "${self:custom.base}-redis-subnet-group"

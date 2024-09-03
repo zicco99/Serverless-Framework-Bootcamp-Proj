@@ -1,0 +1,17 @@
+BotStateCluster:
+  Type: AWS::ElastiCache::CacheCluster
+  Properties:
+    CacheNodeType: cache.t3.micro
+    Engine: redis
+    NumCacheNodes: 1
+    ClusterName: ${custom.BotStateCluster.name}
+    VpcSecurityGroupIds:
+      - sg-0123456789abcdef0  # Replace with your security group
+    CacheSubnetGroupName: !Ref MyCacheSubnetGroup
+
+BotStateSubnetGroup:
+  Type: AWS::ElastiCache::SubnetGroup
+  Properties:
+    Description: "Subnet group for Bot State Redis cluster"
+    SubnetIds:
+      - subnet-0123456789abcdef0  # Replace with your subnet IDs

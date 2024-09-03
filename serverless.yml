@@ -19,9 +19,16 @@ package:
 
 resources:
   Resources:
+    #Storage
     UsersTable: ${file(resources/UsersTable.yml):UsersTable}
     AuctionsTable: ${file(resources/AuctionsTable.yml):AuctionsTable}
     TeamsCacheTable: ${file(resources/TeamsCacheTable.yml):TeamsCacheTable}
+
+    #Networking
+    MainVPC: ${file(resources/vpc/main.yml):MainVPC}
+    PrivateSubnet: ${file(resources/vpc/main.yml):PrivateSubnet}
+    PrivateRouteTable: ${file(resources/vpc/main.yml):PrivateRouteTable}
+    PrivateSubnetRouteTableAssociation: ${file(resources/vpc/main.yml):PrivateSubnetRouteTableAssociation}
 
 
 functions:
@@ -52,18 +59,50 @@ functions:
 
 custom:
   base: ${self:service}-${opt:stage, 'dev'}
+
+  #Storage
+  BotStateCluster:
+    name: ${self:custom.base}-bot-state-cluster
+    arn: !GetAtt BotStateCluster.Arn
+
   UsersTable:
     name: ${self:custom.base}-users-table
     arn: !GetAtt UsersTable.Arn
+
   AuctionsTable:
     name: ${self:custom.base}-auctions-table
     arn: !GetAtt AuctionsTable.Arn
     indexArn: !Join ["/", ["${self:custom.AuctionsTable.arn}", "index/statusAndEndDate"]]
+
   TeamsCacheTable:
     name: ${self:custom.base}-teams-cache-table
     arn: !GetAtt TeamsCacheTable.Arn
     indexName: TeamNameIndex
     indexArn: !Join ["/", ["${self:custom.TeamsCacheTable.arn}", "index/${self:custom.TeamsCacheTable.indexName}"]]
+
+  #Networking
+  MainVPC:
+    name: ${self:custom.base}-main-vpc
+    cidr: 10.0.0.0/24
+    enableDnsSupport: true
+    enableDnsHostnames: true
+
+  PrivateSubnet:
+    name: ${self:custom.base}-private-subnet
+    cidr: 10.0.0.0/26
+    availabilityZone: ${self:provider.region}
+
+  PrivateRouteTable:
+    name: ${self:custom.base}-private-route-table
+
+  ElastiCache:
+    port: 6379
+    securityGroup:
+      name: ${self:custom.base}-elastiCache-sg
+      description: "Security group for ElastiCache Redis cluster"
+      allowCidr: ${self:custom.PrivateSubnet.cidr}
+
+  #API
   APIGateway:
     Url:
       Fn::Join:
@@ -75,6 +114,7 @@ custom:
         - Ref: "AWS::URLSuffix"
         - "/"
         - ${self:provider.stage}
+  
   
   warmup:
     enabled: false
