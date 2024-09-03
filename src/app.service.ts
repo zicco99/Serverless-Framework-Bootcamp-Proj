@@ -28,6 +28,7 @@ class AppService {
     this.redis = new Redis({
       host: process.env.BOT_STATE_REDIS_ADDRESS,
       port: parseInt(process.env.BOT_STATE_REDIS_PORT || '6379', 10),
+      family: 6,
       maxRetriesPerRequest: 5,
       tls: {}
     });
