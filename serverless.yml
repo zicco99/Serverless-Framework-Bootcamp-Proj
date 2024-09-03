@@ -30,8 +30,11 @@ resources:
     PrivateRouteTable: ${file(resources/vpc/main.yml):PrivateRouteTable}
     PrivateSubnetRouteTableAssociation: ${file(resources/vpc/main.yml):PrivateSubnetRouteTableAssociation}
 
-    BotStateCluster: ${file(resources/elastic-cache/bot-state-redis.yml):BotStateCluster}
-    BotStateSubnetGroup: ${file(resources/elastic-cache/bot-state-redis.yml):BotStateSubnetGroup}
+    BotStateCluster: ${file(resources/elastic-cache/bot-state.yml):BotStateCluster}
+    BotStateSG: ${file(resources/elastic-cache/bot-state.yml):BotStateSG}
+    BotStateSubnetGroup: ${file(resources/vpc/main.yml):BotStateSubnetGroup}
+    
+
 
 
 
