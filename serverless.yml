@@ -64,7 +64,7 @@ functions:
       BOT_TELEGRAM_KEY: ${ssm:/${self:custom.base}/bot-telegram-key}
       DEFAULT_BOT_NAME: ${self:custom.base}-bot
       GATEWAY_URL: ${self:custom.APIGateway.Url}
-      BOT_STATE_REDIS_ADDRESS: ${self:custom.BotStateCluster.address}
+      BOT_STATE_REDIS_ADDRESS: master.${self:custom.BotStateCluster.address} # In-transit encryption enabled master.clusterName.xxxxxx.regionAndAz.cache.amazonaws.com:port
       BOT_STATE_REDIS_PORT: ${self:custom.BotStateCluster.port}
       INTENT_TTL: 3600
     vpc:
