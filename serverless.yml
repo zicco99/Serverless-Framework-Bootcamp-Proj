@@ -121,11 +121,11 @@ custom:
     arn: ${self:custom.BotStateCluster.arn}
     BotStateSG:
       name: ${self:custom.base}-bot-state-sg
-      description: "Security group for Bot State Redis cluster"
-      allowCidr: ${self:custom.PrivateSubnet.cidr} # Allow traffic from private subnet only
+      description: "Redis <- Lambda"
+      allowCidr: ${self:custom.PrivateSubnet.cidr}
     LambdaSG:
       name: ${self:custom.base}-lambda-sg
-      description: "Security group for Bot State Redis cluster"
+      description: "Lambda -> Anywhere"
       allowCidr: ${self:custom.PrivateSubnet.cidr}
 
   #API
