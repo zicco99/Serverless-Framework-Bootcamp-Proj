@@ -5,6 +5,7 @@ import { AuctionsModule } from './auctions/auctions.module';
 import { Context } from 'telegraf';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { SessionSpace } from './users/models/user.model';
+import { AuctionWizard } from './telegram/wizards/create-auction.wizard';
 
 
 interface BotContext extends Context {
@@ -53,7 +54,7 @@ let sessions = new Map<number, SessionSpace>();
     } as TelegrafModuleOptions),
   ],
   controllers: [],
-  providers: [AppService,],
+  providers: [AppService, AuctionWizard],
 })
 export class AppModule {}
 

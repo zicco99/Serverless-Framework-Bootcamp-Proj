@@ -11,7 +11,6 @@ import { escapeMarkdown } from './telegram/messages/.utils';
 import { ClientProxy } from '@nestjs/microservices';
 import { BotContext, SessionSpace } from './app.module';
 import { Intent, showSessionSpace, IntentExtra } from './users/models/user.model';
-import { CreateAuctionDto } from './auctions/dtos/create-auction.dto';
 
 @Update()
 @Injectable()
