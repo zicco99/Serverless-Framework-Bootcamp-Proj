@@ -3,7 +3,7 @@ import { TelegrafModule, TelegrafModuleOptions } from 'nestjs-telegraf';
 import { AppService } from './app.service';
 import { AuctionsModule } from './auctions/auctions.module';
 import { Context } from 'telegraf';
-import { ClientsModule, Transport } from '@nestjs/microservices';
+import { ClientProviderOptions, ClientsModule, ClientsModuleOptions, RedisOptions, Transport } from '@nestjs/microservices';
 import { SessionSpace } from './users/models/user.model';
 import { AuctionWizard } from './telegram/wizards/create-auction.wizard';
 
@@ -23,10 +23,11 @@ let sessions = new Map<number, SessionSpace>();
         name: 'BOT_CACHE_CLIENT_REDIS',
         transport: Transport.REDIS,
         options: {
-          host: process.env.BOT_STATE_ADDRESS,
-          port: 6379,
-        },
-      },
+          host: `redis://${process.env.BOT_STATE_ADDRESS}`,
+          port: parseInt(process.env.BOT_STATE_PORT || '6379', 10),
+          
+        } as RedisOptions
+      } as ClientProviderOptions,
     ]),
     TelegrafModule.forRoot({
       token: process.env.BOT_TELEGRAM_KEY || '',
