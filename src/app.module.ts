@@ -12,8 +12,8 @@ interface BotContext extends Context {
   session_space: SessionSpace;
 }
 
-// UserID -> SessionSpace
-let sessions = new Map<number, SessionSpace>();
+console.log("Bot state address: ", process.env.BOT_STATE_ADDRESS);
+console.log("Bot state port: ", process.env.BOT_STATE_PORT);
 
 @Module({
   imports: [

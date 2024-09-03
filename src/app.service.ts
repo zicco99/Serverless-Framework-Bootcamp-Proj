@@ -31,7 +31,10 @@ class AppService {
     ]);
 
     console.log("Connecting to Redis...");
-    this.redis.connect();
+    this.redis.connect().catch(err => {
+      console.error("Redis connection error: ", err);
+      process.exit(1);
+    })
   }
 
   private async getUserStateOrInit(userId: number, ctx: BotContext): Promise<{ session_space: SessionSpace | null, session_newly_created: boolean }> {
