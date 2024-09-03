@@ -23,7 +23,7 @@ console.log("Bot state port: ", process.env.BOT_STATE_PORT);
         name: 'BOT_CACHE_CLIENT_REDIS',
         transport: Transport.REDIS,
         options: {
-          host: `redis://${process.env.BOT_STATE_ADDRESS}`,
+          host: process.env.BOT_STATE_ADDRESS,
           port: parseInt(process.env.BOT_STATE_PORT || '6379', 10),
           tlsOptions: {
             rejectUnauthorized: false
