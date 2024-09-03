@@ -45,7 +45,7 @@ class AppService {
         username: ctx.from!.username || '',
         firstName: ctx.from!.first_name,
         lastName: ctx.from!.last_name || '',
-        languageCode: ctx.from!.language_code || 'EN',
+        languageCode: ctx.from!.language_code || 'en',
       };
 
       user = await this.users.createUser(createUserDto, ctx);
