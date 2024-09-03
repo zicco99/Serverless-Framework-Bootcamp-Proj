@@ -23,8 +23,7 @@ BotStateSG:
       - IpProtocol: tcp
         FromPort: !Sub ${self:custom.BotStateCache.port}
         ToPort: !Sub ${self:custom.BotStateCache.port}
-        CidrIp: !Sub ${self:custom.BotStateCache.securityGroup.allowCidr}
-
+        CidrIp: !Sub ${self:custom.BotStateCache.}
 
 # Subnet Group: the group of subnets that the VPC will use
 BotStateSubnetGroup:

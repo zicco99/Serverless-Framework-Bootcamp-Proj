@@ -30,10 +30,11 @@ resources:
     PrivateRouteTable: ${file(resources/vpc/main.yml):PrivateRouteTable}
     PrivateSubnetRouteTableAssociation: ${file(resources/vpc/main.yml):PrivateSubnetRouteTableAssociation}
 
+    #Elastic Cache
     BotStateCluster: ${file(resources/elastic-cache/bot-state.yml):BotStateCluster}
     BotStateSG: ${file(resources/elastic-cache/bot-state.yml):BotStateSG}
     BotStateSubnetGroup: ${file(resources/vpc/main.yml):BotStateSubnetGroup}
-    
+
 
 
 
@@ -104,12 +105,13 @@ custom:
   PrivateRouteTable:
     name: ${self:custom.base}-private-route-table
 
-  BotStateCache:
+  BotState:
     port: 6379
+    arn: !GetAtt BotStateCluster.Arn
     BotStateSG:
       name: ${self:custom.base}-bot-state-sg
-      description: "Security group for ElastiCache Redis cluster"
-      allowCidr: ${self:custom.PrivateSubnet.cidr} #Allow traffic from private subnets only
+      description: "Security group for Bot State Redis cluster"
+      allowCidr: ${self:custom.PrivateSubnet.cidr} # Allow traffic from private subnets only
 
   #API
   APIGateway:
