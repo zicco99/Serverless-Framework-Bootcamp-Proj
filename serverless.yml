@@ -65,7 +65,7 @@ functions:
       DEFAULT_BOT_NAME: ${self:custom.base}-bot
       GATEWAY_URL: ${self:custom.APIGateway.Url}
       BOT_STATE_REDIS_ADDRESS: ${self:custom.BotStateCluster.address}
-      BOT_STATE_REDIS_PORT: ${self:custom.BotStateCluster.fromPort}
+      BOT_STATE_REDIS_PORT: ${self:custom.BotStateCluster.port}
       INTENT_TTL: 3600
     vpc:
       securityGroupIds:
@@ -84,6 +84,7 @@ custom:
     name: ${self:custom.base}-bot-state-cluster
     arn: !Sub "arn:aws:elasticache:${AWS::Region}:${AWS::AccountId}:cluster/${BotStateCluster}"
     address: !GetAtt BotStateCluster.RedisEndpoint.Address
+    port: !GetAtt BotStateCluster.RedisEndpoint.Port
 
   UsersTable:
     name: ${self:custom.base}-users-table
