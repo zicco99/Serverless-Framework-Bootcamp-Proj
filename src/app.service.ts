@@ -23,6 +23,8 @@ class AppService {
     private readonly auctionWizard: AuctionWizard,
     private readonly auctions: AuctionsService,
   ) {
+
+    console.log("Connecting to Redis... redis://", process.env.BOT_STATE_REDIS_ADDRESS, ":", process.env.BOT_STATE_REDIS_PORT);
     this.redis = new Redis({
       host: process.env.BOT_STATE_REDIS_ADDRESS,
       port: parseInt(process.env.BOT_STATE_REDIS_PORT || '6379', 10),
