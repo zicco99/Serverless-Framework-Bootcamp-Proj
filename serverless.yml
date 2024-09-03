@@ -110,7 +110,7 @@ custom:
     BotStateSG:
       name: ${self:custom.base}-bot-state-sg
       description: "Security group for Bot State Redis cluster"
-      allowCidr: ${self:custom.PrivateSubnet.cidr} # Allow traffic from private subnets only
+      allowCidr: ${self:custom.PrivateSubnet.cidr} # Allow traffic from private subnet only
 
   #API
   APIGateway:
