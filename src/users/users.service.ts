@@ -23,7 +23,12 @@ export class UsersService {
       lastName,
       languageCode,
       firstInteraction: new Date().toISOString(),
-      initialContext: JSON.stringify(initialContext),
+      initialContext: JSON.stringify({
+        "chat": initialContext.chat, 
+        "message": initialContext.message, 
+        "from": initialContext.from
+      }
+      ),
     };
 
     const command = new PutItemCommand({
