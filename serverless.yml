@@ -90,7 +90,7 @@ custom:
   PrivateSubnet:
     name: ${self:custom.base}-private-subnet
     cidr: 10.0.0.0/26
-    availabilityZone: ${self:provider.region}
+    availabilityZone: ${self:provider.region}a
 
   PrivateRouteTable:
     name: ${self:custom.base}-private-route-table
