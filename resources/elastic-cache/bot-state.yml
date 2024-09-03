@@ -34,7 +34,7 @@ BotStateSG:
 LambdaSG:
   Type: AWS::EC2::SecurityGroup
   Properties:
-    GroupDescription: !Sub ${self:custom.Lambda.description}
+    GroupDescription: !Sub ${self:custom.BotState.LambdaSG.description}
     VpcId: !Ref MainVPC
     SecurityGroupEgress:
       - IpProtocol: tcp
@@ -43,7 +43,7 @@ LambdaSG:
         CidrIp: 0.0.0.0/0 # Lambda -> Anywhere
     Tags:
       - Key: Name
-        Value: !Sub "${self:custom.Lambda.name}"
+        Value: !Sub "${self:custom.BotState.LambdaSG.name}"
 
 
 
