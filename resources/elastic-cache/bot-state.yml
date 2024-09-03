@@ -7,7 +7,7 @@ BotStateCluster:
       ClusterName: !Sub ${self:custom.BotStateCluster.name}
       VpcSecurityGroupIds:
         - !Ref BotStateSG
-      Port: !Sub ${self:custom.BotState.port}
+      Port: !Sub ${self:custom.BotState.fromPort}
       CacheSubnetGroupName: !Ref BotStateSubnetGroup
       Tags:
         - Key: Name
@@ -21,8 +21,8 @@ BotStateSG:
     VpcId: !Ref MainVPC
     SecurityGroupIngress:
       - IpProtocol: tcp
-        FromPort: !Sub ${self:custom.BotState.port}
-        ToPort: !Sub ${self:custom.BotState.port}
+        FromPort: !Sub ${self:custom.BotState.fromPort}
+        ToPort: !Sub ${self:custom.BotState.toPort}
         SourceSecurityGroupId: !Ref LambdaSG  # Redis <- Lambda
     Tags:
       - Key: Name
@@ -37,8 +37,8 @@ LambdaSG:
     VpcId: !Ref MainVPC
     SecurityGroupEgress:
       - IpProtocol: tcp
-        FromPort: !Sub ${self:custom.BotState.port}
-        ToPort: !Sub ${self:custom.BotState.port}
+        FromPort: !Sub ${self:custom.BotState.fromPort}
+        ToPort: !Sub ${self:custom.BotState.toPort}
         CidrIp: 0.0.0.0/0 # Lambda -> Anywhere
     Tags:
       - Key: Name

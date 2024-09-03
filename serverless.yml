@@ -117,7 +117,8 @@ custom:
     name: ${self:custom.base}-private-route-table
 
   BotState:
-    port: 6379
+    fromPort: 6379
+    toPort: 6380
     arn: ${self:custom.BotStateCluster.arn}
     BotStateSG:
       name: ${self:custom.base}-bot-state-sg
