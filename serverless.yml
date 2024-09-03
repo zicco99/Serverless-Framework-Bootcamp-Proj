@@ -38,6 +38,7 @@ functions:
       - ${file(iam/UsersTableIAM.yml):UsersTableIAM}
     environment:
       REGION: ${self:provider.region}
+      USERS_TABLE_NAME: ${self:custom.UsersTable.name}
       TEAMS_CACHE_TABLE_NAME: ${self:custom.TeamsCacheTable.name}
       TEAMS_CACHE_TABLE_INDEX_NAME: ${self:custom.TeamsCacheTable.indexName}
       AUCTIONS_TABLE_NAME: ${self:custom.AuctionsTable.name}
