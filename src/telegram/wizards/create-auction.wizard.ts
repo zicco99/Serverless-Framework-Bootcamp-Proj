@@ -1,11 +1,10 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { AuctionsService } from 'src/auctions/auctions.service';
 import { CreateAuctionDto } from 'src/auctions/dtos/create-auction.dto';
 import { BotContext } from 'src/app.module';
 import { parseISO, isValid } from 'date-fns';
 import { Intent, IntentExtra } from 'src/users/models/user.model';
-import { ClientProxy } from '@nestjs/microservices';
-import { firstValueFrom } from 'rxjs';
+import { Redis } from 'ioredis';
 
 interface CreateAuctionIntentExtra extends IntentExtra {
   stepIndex: number;
@@ -14,35 +13,49 @@ interface CreateAuctionIntentExtra extends IntentExtra {
 
 @Injectable()
 class AuctionWizard {
-  constructor(
-    private readonly auctions: AuctionsService, 
-    @Inject('BOT_CACHE_CLIENT_REDIS') private readonly redis: ClientProxy
-  ) {
-    this.redis.connect();
+  private redis: Redis;
+
+  constructor(private readonly auctions: AuctionsService) {}
+
+  setRedis(redis: Redis) {
+    this.redis = redis;
   }
 
-  // Define the steps for creating an auction
   private readonly createAuctionSteps = [
     this.askString('name', 'description'),
     this.askString('description', 'startDate'),
     this.askDate('startDate', 'endDate'),
     this.askDate('endDate', ''),
-    this.finalizeAuctionCreation
+    this.finalizeAuctionCreation.bind(this)
   ];
 
-  // Prompt the user for a string value
+  private async updateRedisField(userId: string, key: string, value: any): Promise<void> {
+    try {
+      const redisKey = `user_session:${userId}`;
+      await this.redis.hset(redisKey, `data:${key}`, JSON.stringify(value));
+    } catch (error) {
+      console.error('Error updating Redis:', error);
+    }
+  }
+  
+
+  private async getRedisField(userId: number, key: string): Promise<string | null> {
+    try {
+      const redisKey = `user_session:${userId}`;
+      const value = await this.redis.hget(redisKey, `data:${key}`);
+      return value || null;
+    } catch (error) {
+      console.error('Error getting Redis field:', error);
+      return null;
+    }
+  }
+
   private askString(key: string, nextInfo: string) {
     return async (ctx: BotContext, messageText: string, session: Partial<CreateAuctionDto>) => {
       const userId = session.idUser;
       if (userId) {
-        await firstValueFrom(this.redis.send('update_user_session_space', {
-          userId,
-          field: `last_intent_extra.data.${key}`,
-          value: messageText
-        }));
-  
+        await this.updateRedisField(userId, key, messageText);
         await ctx.reply(`📝 Your ${key} has been set to "${messageText}".`);
-        
         if (nextInfo) {
           await ctx.reply(`Next, please provide the ${nextInfo}.`);
         }
@@ -51,22 +64,15 @@ class AuctionWizard {
       }
     };
   }
-  
-  // Prompt the user for a date value
+
   private askDate(key: string, nextInfo: string) {
     return async (ctx: BotContext, messageText: string, session: Partial<CreateAuctionDto>) => {
       const parsedDate = parseISO(messageText);
       if (isValid(parsedDate)) {
         const userId = session.idUser;
         if (userId) {
-          await firstValueFrom(this.redis.send('update_user_session_space', {
-            userId,
-            field: `last_intent_extra.data.${key}`,
-            value: parsedDate.toISOString()
-          }));
-          
+          await this.updateRedisField(userId, key, parsedDate.toISOString());
           await ctx.reply(`📅 Your ${key} has been set to "${parsedDate.toISOString()}".`);
-          
           if (nextInfo) {
             await ctx.reply(`Next, please provide the ${nextInfo}.`);
           }
@@ -79,13 +85,12 @@ class AuctionWizard {
     };
   }
 
-  // Finalize the auction creation process
   private async finalizeAuctionCreation(ctx: BotContext, _: string, session: Partial<CreateAuctionDto>): Promise<void> {
     if (!session.idUser || !session.name || !session.description || !session.startDate || !session.endDate) {
       await ctx.reply('⚠️ Incomplete auction details. Please provide all required information and try again.');
       return;
     }
-  
+
     const createAuctionDto: CreateAuctionDto = {
       idUser: session.idUser.toString(),
       name: session.name!,
@@ -93,7 +98,7 @@ class AuctionWizard {
       startDate: session.startDate!,
       endDate: session.endDate!,
     };
-  
+
     try {
       const auction = await this.auctions.createAuction(createAuctionDto);
       await ctx.reply(`🎉 Your auction has been created successfully! 🆔 ID: ${auction.id}`);
@@ -103,7 +108,6 @@ class AuctionWizard {
     }
   }
 
-  // Handle incoming messages and manage auction creation steps
   async handleMessage(
     userId: number,
     intent: Intent,
@@ -126,7 +130,7 @@ class AuctionWizard {
           if (stepIndex < this.createAuctionSteps.length - 1) {
             intentExtra.stepIndex = ++stepIndex;
           } else {
-            this.finalizeAuctionCreation(ctx, '', intentExtra.data);
+            await this.finalizeAuctionCreation(ctx, '', intentExtra.data);
           }
         } catch (error) {
           console.error('Error during auction creation:', error);

@@ -26,6 +26,7 @@ class AppService {
     this.redis = new Redis({
       host: process.env.BOT_STATE_REDIS_ADDRESS,
       port: parseInt(process.env.BOT_STATE_REDIS_PORT || '6379', 10),
+      maxRetriesPerRequest: 5,
       tls: {}
     });
 
@@ -35,6 +36,7 @@ class AppService {
 
     this.redis.on('connect', () => {
       console.log('Connected to Redis');
+      auctionWizard.setRedis(this.redis);
     });
 
     console.log("Setting up bot commands...");
