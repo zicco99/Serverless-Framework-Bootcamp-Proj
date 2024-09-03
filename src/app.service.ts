@@ -34,8 +34,9 @@ class AppService {
       return;
     }
 
-    let user = this.users.findUser(userId);
+    let user = await this.users.findUser(userId);
     if (!user) {
+      //Create user space on DynamoDB
       console.log("Creating user [", userId, "] using context: ", ctx);
 
       const createUserDto: CreateUserDto = {
@@ -47,15 +48,16 @@ class AppService {
         languageCode: ctx.from!.language_code || 'EN',
       };
 
+      user = await this.users.createUser(createUserDto, ctx);
+    }
+
     await ctx.reply(
       `👋 Welcome to the auction bot! Here is your user: \n${escapeMarkdown(showUser(user))}`,
       { parse_mode: 'MarkdownV2' }
     );
 
-    // Lazy-load auction counts
     this.auctionsCounts ??= (await this.auctions.findAll()).length;
 
-    // Define inline keyboard
     const inlineKeyboard: InlineKeyboardMarkup = Markup.inlineKeyboard([
       [Markup.button.callback('📦 Create Auction', 'CREATE_AUCTION')],
       [Markup.button.callback('🔍 View Auctions', 'VIEW_AUCTIONS')],
@@ -65,9 +67,8 @@ class AppService {
       welcomeMessage(ctx.from?.first_name || 'Buddy', this.auctionsCounts),
       { parse_mode: 'MarkdownV2', reply_markup: inlineKeyboard }
     );
-    }
+    
   }
-
 
 
   @Help()
