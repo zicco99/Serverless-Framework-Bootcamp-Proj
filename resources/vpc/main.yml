@@ -13,7 +13,7 @@ PrivateSubnet:
   Properties:
     VpcId: !Ref MainVPC
     CidrBlock: ${self:custom.PrivateSubnet.cidr}
-    AvailabilityZone: !Select [0, !GetAZs !Ref 'AWS::Region']
+    AvailabilityZone: ${self:custom.PrivateSubnet.availabilityZone}a
     Tags:
       - Key: Name
         Value: !Sub "${self:custom.base}-private-subnet"
