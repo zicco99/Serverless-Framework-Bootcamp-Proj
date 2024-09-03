@@ -90,7 +90,6 @@ custom:
     indexArn: !Join ["/", ["${self:custom.TeamsCacheTable.arn}", "index/${self:custom.TeamsCacheTable.indexName}"]]
 
   #Networking
-  
   MainVPC:
     name: ${self:custom.base}-main-vpc
     cidr: 10.0.0.0/24
