@@ -52,7 +52,7 @@ functions:
       - ${file(iam/AuctionsTableIAM.yml):AuctionsTableIAM}
       - ${file(iam/TeamsCacheTableIAM.yml):TeamsCacheTableIAM}
       - ${file(iam/UsersTableIAM.yml):UsersTableIAM}
-      - ${file(iam/BotStateIAM.yml):BotStateIAM}
+      - ${file(resources/BotStateLambdaIAM.yml):BotStateLambdaIAM}
     environment:
       REGION: ${self:provider.region}
       USERS_TABLE_NAME: ${self:custom.UsersTable.name}
@@ -115,7 +115,7 @@ custom:
       description: "Security group for Bot State Redis cluster"
       allowCidr: ${self:custom.PrivateSubnet.cidr} # Allow traffic from private subnet only
 
-  #---------API
+  #API
 
   APIGateway:
     Url:
