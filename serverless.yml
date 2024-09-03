@@ -66,7 +66,7 @@ functions:
       GATEWAY_URL: ${self:custom.APIGateway.Url}
       BOT_STATE_REDIS_ADDRESS: !Join 
           - ""
-          - - "master.rediss://"
+          - - "rediss://"
             - ${self:custom.BotStateCluster.address}
             
       BOT_STATE_REDIS_PORT: ${self:custom.BotState.fromPort}
