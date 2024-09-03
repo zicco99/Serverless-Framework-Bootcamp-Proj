@@ -23,11 +23,14 @@ class AppService {
     private readonly auctions: AuctionsService,
     @Inject('BOT_CACHE_CLIENT_REDIS') private readonly redis: ClientProxy,
   ) {
+
+    console.log("Setting up bot commands...");
     this.bot.telegram.setMyCommands([
       { command: 'start', description: 'Start the bot' },
       { command: 'help', description: 'Get help' },
     ]);
 
+    console.log("Connecting to Redis...");
     this.redis.connect();
   }
 
@@ -69,6 +72,7 @@ class AppService {
 
     console.log(`[${userId}][/start] -- User started the bot`);
     const { session_space, session_newly_created } = await this.getUserStateOrInit(userId, ctx);
+    console.log(`[${userId}][/start] -- User session space retrieved by Redis: `, session_space);
 
     if(!session_space) {
       await ctx.reply('Unable to identify you. Please try again.');
