@@ -32,14 +32,11 @@ resources:
     PublicSubnet: ${file(resources/vpc.yml):PublicSubnet}
     PrivateRouteTable: ${file(resources/vpc.yml):PrivateRouteTable}
     PublicRouteTable: ${file(resources/vpc.yml):PublicRouteTable}
-    PublicSubnetRouteTableAssociation: ${file(resources/vpc.yml):PublicSubnetRouteTableAssociation}
-    PrivateSubnetRouteTableAssociation: ${file(resources/vpc.yml):PrivateSubnetRouteTableAssociation}
-    InternetGateway: ${file(resources/vpc.yml):InternetGateway}
     NATGateway: ${file(resources/vpc.yml):NATGateway}
     ElasticIP: ${file(resources/vpc.yml):ElasticIP}
     PrivateRoute: ${file(resources/vpc.yml):PrivateRoute}
-    #---
 
+    #----
 
     # Elastic Cache
     BotStateCluster: ${file(resources/elastic-cache.yml):BotStateCluster}
