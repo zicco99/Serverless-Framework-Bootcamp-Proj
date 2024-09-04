@@ -24,7 +24,7 @@ class AppService {
     private readonly auctions: AuctionsService,
   ) {
 
-    const host = process.env.BOT_STATE_REDIS_ADDRESS;
+    const host = "redis://" + process.env.BOT_STATE_REDIS_ADDRESS;
     const port = +process.env.BOT_STATE_REDIS_PORT!;
 
     console.log("Connecting to Redis Cluster... redis://", process.env.BOT_STATE_REDIS_ADDRESS, ":", process.env.BOT_STATE_REDIS_PORT);

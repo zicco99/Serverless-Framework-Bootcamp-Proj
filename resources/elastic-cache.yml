@@ -15,7 +15,7 @@ BotStateCluster:
     ClusterName: !Sub ${self:custom.BotStateCluster.name}
     CacheSubnetGroupName: !Ref BotStateSubnetGroup
     VpcSecurityGroupIds:
-      - !Ref BotStateSG
+      - !GetAttr BotStateSG.GroupId
     Port: !Sub ${self:custom.BotState.fromPort}
     Tags:
       - Key: Name
