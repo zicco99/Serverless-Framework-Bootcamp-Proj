@@ -2,8 +2,6 @@ MainVPC:
   Type: AWS::EC2::VPC
   Properties:
     CidrBlock: ${self:custom.MainVPC.cidr}
-    EnableDnsSupport: ${self:custom.MainVPC.enableDnsSupport}
-    EnableDnsHostnames: ${self:custom.MainVPC.enableDnsHostnames}
     Tags:
       - Key: Name
         Value: !Sub "${self:custom.base}-main-vpc"
@@ -33,26 +31,3 @@ PrivateSubnetRouteTableAssociation:
     SubnetId: !Ref PrivateSubnet
     RouteTableId: !Ref PrivateRouteTable
 
-# Security Groups: seems to be a firewall rule for the VPC
-BotStateSG:
-  Type: AWS::EC2::SecurityGroup
-  Properties:
-    GroupDescription: ${self:custom.BotState.BotStateSG.description}
-    VpcId: !Ref MainVPC
-    SecurityGroupIngress:
-      - IpProtocol: tcp
-        FromPort: ${self:custom.BotState.port}
-        ToPort: ${self:custom.BotState.}
-        CidrIp: ${self:custom.BotState.BotStateSG.allowCidr}
-
-
-# Subnet Group: the group of subnets that the VPC will use
-BotStateSubnetGroup:
-  Type: AWS::ElastiCache::SubnetGroup
-  Properties:
-    Description: "Subnet group for Bot State Redis cluster"
-    SubnetIds:
-      - !Ref PrivateSubnet
-    Tags:
-      - Key: Name
-        Value: !Sub "${self:custom.base}-redis-subnet-group"

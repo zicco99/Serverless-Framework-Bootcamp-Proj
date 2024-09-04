@@ -14,7 +14,6 @@ BotStateCluster:
         - Key: Name
           Value: !Sub "${self:custom.base}-redis-cluster"
 
-# Security Groups: looks like a plugin firewall rule-based for a VPC
 BotStateSG:
   Type: AWS::EC2::SecurityGroup
   Properties:
@@ -24,7 +23,7 @@ BotStateSG:
       - IpProtocol: tcp
         FromPort: !Sub ${self:custom.BotState.fromPort}
         ToPort: !Sub ${self:custom.BotState.toPort}
-        SourceSecurityGroupId: !Ref LambdaSG  # Redis <- Lambda
+        SourceSecurityGroupId: !Ref LambdaSG  # Allow traffic from Lambda to Redis
     Tags:
       - Key: Name
         Value: !Sub "${self:custom.base}-redis-sg"
@@ -34,16 +33,19 @@ BotStateSG:
 LambdaSG:
   Type: AWS::EC2::SecurityGroup
   Properties:
+    GroupName: !Sub ${self:custom.BotState.LambdaSG.name}
     GroupDescription: !Sub ${self:custom.BotState.LambdaSG.description}
-    VpcId: !Ref MainVPC
+    VpcId: !Ref TaskVPC
     SecurityGroupEgress:
       - IpProtocol: tcp
         FromPort: !Sub ${self:custom.BotState.fromPort}
         ToPort: !Sub ${self:custom.BotState.toPort}
         CidrIp: 0.0.0.0/0
-    Tags:
-      - Key: Name
-        Value: !Sub "${self:custom.BotState.LambdaSG.name}"
+    SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: !Sub ${self:custom.BotState.fromPort}
+        ToPort: !Sub ${self:custom.BotState.toPort}
+        CidrIp: !Ref BotStateSG.CidrBlock
 
 
 
@@ -51,13 +53,10 @@ LambdaSG:
 BotStateSubnetGroup:
   Type: AWS::ElastiCache::SubnetGroup
   Properties:
+    CacheSubnetGroupName: !Sub "${self:custom.base}-redis-subnet-group"
     Description: "Subnet group for Bot State Redis cluster"
     SubnetIds:
       - !Ref PrivateSubnet
-    Tags:
-      - Key: Name
-        Value: !Sub "${self:custom.base}-redis-subnet-group"
-
 
   
 # LambdaIAM: IAM permissions for the lambda

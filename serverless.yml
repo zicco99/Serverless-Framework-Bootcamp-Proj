@@ -39,8 +39,6 @@ resources:
 
 
 
-
-
 functions:
   main:
     handler: src/main.handler
@@ -70,7 +68,7 @@ functions:
       INTENT_TTL: 3600
     vpc:
       securityGroupIds:
-        - !Ref LambdaSG
+        - !GetAtt LambdaSG.GroupId
       subnetIds:
         - !Ref PrivateSubnet
     warmup:
@@ -106,8 +104,6 @@ custom:
   MainVPC:
     name: ${self:custom.base}-main-vpc
     cidr: 10.0.0.0/24
-    enableDnsSupport: true
-    enableDnsHostnames: true
 
   PrivateSubnet:
     name: ${self:custom.base}-private-subnet
@@ -118,6 +114,7 @@ custom:
     name: ${self:custom.base}-private-route-table
 
   BotState:
+    port: 6379
     fromPort: 6379
     toPort: 6380
     arn: ${self:custom.BotStateCluster.arn}
