@@ -9,6 +9,7 @@ BotStateCluster:
         - !Ref BotStateSG
       Port: !Sub ${self:custom.BotState.fromPort}
       CacheSubnetGroupName: !Ref BotStateSubnetGroup
+      TransitEncryptionEnabled: true  # Enable TLS encryption
       Tags:
         - Key: Name
           Value: !Sub "${self:custom.base}-redis-cluster"
@@ -23,26 +24,15 @@ BotStateSG:
       - IpProtocol: tcp
         FromPort: !Sub ${self:custom.BotState.fromPort}
         ToPort: !Sub ${self:custom.BotState.toPort}
-        SourceSecurityGroupId: !Ref LambdaSG  # Redis <- Lambda
-    Tags:
-      - Key: Name
-        Value: !Sub "${self:custom.base}-redis-sg"
-
-
-# Security Group for Lambda Function
-LambdaSG:
-  Type: AWS::EC2::SecurityGroup
-  Properties:
-    GroupDescription: !Sub ${self:custom.BotState.LambdaSG.description}
-    VpcId: !Ref MainVPC
+        SourceSecurityGroupId: !Ref BotStateSG
     SecurityGroupEgress:
       - IpProtocol: tcp
         FromPort: !Sub ${self:custom.BotState.fromPort}
         ToPort: !Sub ${self:custom.BotState.toPort}
-        CidrIp: 0.0.0.0/0 # Lambda -> Anywhere
+        CidrIp: !Ref BotStateSG
     Tags:
       - Key: Name
-        Value: !Sub "${self:custom.BotState.LambdaSG.name}"
+        Value: !Sub "${self:custom.base}-redis-sg"
 
 
 

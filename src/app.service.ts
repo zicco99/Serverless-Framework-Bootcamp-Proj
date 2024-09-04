@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Hears, Help, Start, Update, Action, Message, Context, InjectBot } from 'nestjs-telegraf';
 import { Markup, Telegraf } from 'telegraf';
-import Redis from 'ioredis';
+import { Cluster } from "ioredis";
 import { AuctionWizard, CreateAuctionIntentExtra } from './telegram/wizards/create-auction.wizard';
 import { AuctionsService } from './auctions/auctions.service';
 import { Auction } from './auctions/models/auction.model';
@@ -16,7 +16,7 @@ import { Intent, showSessionSpace, IntentExtra } from './users/models/user.model
 @Injectable()
 class AppService {
   private auctionsCounts: number | null = null;
-  private redis: Redis;
+  private redis: Cluster;
 
   constructor(
     @InjectBot() private readonly bot: Telegraf<BotContext>,
@@ -24,13 +24,15 @@ class AppService {
     private readonly auctions: AuctionsService,
   ) {
 
-    console.log("Connecting to Redis... redis://", process.env.BOT_STATE_REDIS_ADDRESS, ":", process.env.BOT_STATE_REDIS_PORT);
-    this.redis = new Redis({
-      host: process.env.BOT_STATE_REDIS_ADDRESS,
-      port: parseInt(process.env.BOT_STATE_REDIS_PORT || '6379', 10),
-      family: 6,
-      maxRetriesPerRequest: 5,
-      tls: {}
+    const host = process.env.BOT_STATE_REDIS_ADDRESS;
+    const port = +process.env.BOT_STATE_REDIS_PORT!;
+
+    console.log("Connecting to Redis Cluster... redis://", process.env.BOT_STATE_REDIS_ADDRESS, ":", process.env.BOT_STATE_REDIS_PORT);
+    this.redis = new Cluster([{ host, port }]{
+      dnsLookup: (address, callback) => callback(null, address),
+      redisOptions: {
+        tls: {},
+      },
     });
 
     this.redis.on('error', (err: Error) => {

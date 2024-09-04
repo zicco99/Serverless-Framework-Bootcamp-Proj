@@ -4,7 +4,7 @@ import { CreateAuctionDto } from 'src/auctions/dtos/create-auction.dto';
 import { BotContext } from 'src/app.module';
 import { parseISO, isValid } from 'date-fns';
 import { Intent, IntentExtra } from 'src/users/models/user.model';
-import { Redis } from 'ioredis';
+import { Cluster } from 'ioredis';
 
 interface CreateAuctionIntentExtra extends IntentExtra {
   stepIndex: number;
@@ -13,11 +13,11 @@ interface CreateAuctionIntentExtra extends IntentExtra {
 
 @Injectable()
 class AuctionWizard {
-  private redis: Redis;
+  private redis: Cluster;
 
   constructor(private readonly auctions: AuctionsService) {}
 
-  setRedis(redis: Redis) {
+  setRedis(redis: Cluster) {
     this.redis = redis;
   }
 
