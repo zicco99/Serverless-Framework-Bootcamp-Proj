@@ -5,6 +5,7 @@ BotStateCluster:
       Engine: redis
       NumCacheNodes: 1
       ClusterName: !Sub ${self:custom.BotStateCluster.name}
+      CacheSubnetGroupName: !Ref BotStateSubnetGroup # NEEDED
       VpcSecurityGroupIds:
         - !Ref BotStateSG
       Port: !Sub ${self:custom.BotState.fromPort}
@@ -13,20 +14,29 @@ BotStateCluster:
         - Key: Name
           Value: !Sub "${self:custom.base}-redis-cluster"
 
+# A subnet group in the context of Amazon ElastiCache, including Redis, 
+# is essentially a collection of one or more subnets within your VPC where the cache nodes can be deployed.
+BotStateSubnetGroup:
+  Type: AWS::ElastiCache::SubnetGroup # Group in which the Redis nodes will be deployed
+  Properties:
+    CacheSubnetGroupName: !Sub "${self:custom.base}-bot-state-subnet-group"
+    Description: "Subnet Group needed by Redis"
+    SubnetIds:
+      - !Ref PrivateSubnet  # Subnet(s) to which th group belongs
+
+
 BotStateSG:
   Type: AWS::EC2::SecurityGroup
   Properties:
+    GroupName: !Sub "${self:custom.base}-bot-state-sg"
     GroupDescription: !Sub ${self:custom.BotState.BotStateSG.description}
     VpcId: !Ref MainVPC
+    
     SecurityGroupIngress:
       - IpProtocol: tcp
         FromPort: !Sub ${self:custom.BotState.fromPort}
         ToPort: !Sub ${self:custom.BotState.toPort}
         SourceSecurityGroupId: !Ref LambdaSG  # Allow traffic from Lambda to Redis
-    Tags:
-      - Key: Name
-        Value: !Sub "${self:custom.base}-redis-sg"
-
 
 # Security Group for Lambda Function
 LambdaSG:
@@ -39,13 +49,12 @@ LambdaSG:
       - IpProtocol: tcp
         FromPort: !Sub ${self:custom.BotState.fromPort}
         ToPort: !Sub ${self:custom.BotState.toPort}
-        CidrIp: 0.0.0.0/0
+        CidrIp: ${self:custom.PrivateSubnet.cidr}
     SecurityGroupIngress:
       - IpProtocol: tcp
         FromPort: !Sub ${self:custom.BotState.fromPort}
         ToPort: !Sub ${self:custom.BotState.toPort}
-        cidrIp: 0.0.0.0/0
-
+        cidrIp: ${self:custom.PrivateSubnet.cidr}
   
 # LambdaIAM: IAM permissions for the lambda
 BotStateLambdaIAM:
@@ -54,3 +63,5 @@ BotStateLambdaIAM:
     - "elasticache:DescribeCacheClusters"
     - "elasticache:Connect"
   Resource: ${self:custom.BotStateCluster.arn}
+
+
