@@ -20,3 +20,4 @@ BotStateCluster:
     Tags:
       - Key: Name
         Value: !Sub "${self:custom.base}-redis-cluster"
+
