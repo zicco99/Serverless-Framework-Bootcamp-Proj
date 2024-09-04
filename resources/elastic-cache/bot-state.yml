@@ -44,7 +44,7 @@ LambdaSG:
       - IpProtocol: tcp
         FromPort: !Sub ${self:custom.BotState.fromPort}
         ToPort: !Sub ${self:custom.BotState.toPort}
-        SourceSecurityGroupId: !Ref BotStateSG
+        cidrIp: 0.0.0.0/0
 
   
 # LambdaIAM: IAM permissions for the lambda
