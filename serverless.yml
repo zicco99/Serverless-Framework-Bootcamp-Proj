@@ -119,12 +119,12 @@ custom:
 
   PrivateSubnet:
     name: ${self:custom.base}-private-subnet
-    cidr: 10.0.0.0/26
+    cidr: 10.0.0.64/26 # 10.0.0.64 - 10.0.0.127
     availabilityZone: ${self:provider.region}a
 
   PublicSubnet:
     name: ${self:custom.base}-public-subnet
-    cidr: 10.0.1.0/26 # (32 - 26 = 8 = 2^8 = 256 hosts)
+    cidr: 10.0.0.0/26 # Splitting 10.0.0.0/25 in two
     availabilityZone: ${self:provider.region}a
 
   PrivateRouteTable:
