@@ -7,6 +7,7 @@ BotStateSubnetGroup:
       - !Ref PrivateSubnet
 
 BotStateCluster:
+  DependsOn: BotStateSubnetGroup
   Type: AWS::ElastiCache::CacheCluster
   Properties:
     CacheNodeType: cache.t3.micro
@@ -15,7 +16,7 @@ BotStateCluster:
     ClusterName: !Sub ${self:custom.BotStateCluster.name}
     CacheSubnetGroupName: !Ref BotStateSubnetGroup
     VpcSecurityGroupIds:
-      - !GetAttr BotStateSG.GroupId
+      - !GetAtt BotStateSG.GroupId
     Port: !Sub ${self:custom.BotState.fromPort}
     Tags:
       - Key: Name

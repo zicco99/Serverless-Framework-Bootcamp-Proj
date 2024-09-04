@@ -11,6 +11,7 @@ BotStateSG:
         SourceSecurityGroupId: !Ref LambdaSG
 
 LambdaSG:
+  DependsOn: VPC
   Type: AWS::EC2::SecurityGroup
   Properties:
     GroupName: !Sub "${self:custom.base}-lambda-sg"

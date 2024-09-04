@@ -82,7 +82,8 @@ PrivateSubnetRouteTableAssociation:
 
 ElasticIP:
   Type: AWS::EC2::EIP
-  # Allocates an Elastic IP for the NAT Gateway
+  Properties:
+    Domain: vpc
 
 NATGateway:
   Type: AWS::EC2::NatGateway
