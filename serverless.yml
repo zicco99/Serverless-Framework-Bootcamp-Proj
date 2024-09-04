@@ -19,22 +19,41 @@ package:
 
 resources:
   Resources:
+  
     #Storage
     UsersTable: ${file(resources/UsersTable.yml):UsersTable}
     AuctionsTable: ${file(resources/AuctionsTable.yml):AuctionsTable}
     TeamsCacheTable: ${file(resources/TeamsCacheTable.yml):TeamsCacheTable}
 
-    #Networking
-    MainVPC: ${file(resources/vpc/main.yml):MainVPC}
-    PrivateSubnet: ${file(resources/vpc/main.yml):PrivateSubnet}
-    PrivateRouteTable: ${file(resources/vpc/main.yml):PrivateRouteTable}
-    PrivateSubnetRouteTableAssociation: ${file(resources/vpc/main.yml):PrivateSubnetRouteTableAssociation}
+    #- Networking
+    # Contains the VPC, subnets, and security groups (Networking stuff)
+    # MainVPC: ${file(resources/vpc.yml):MainVPC}
+    # PrivateSubnet: ${file(resources/vpc.yml):PrivateSubnet}
+    # PublicSubnet: ${file(resources/vpc.yml):PublicSubnet}
+    # PrivateRouteTable: ${file(resources/vpc.yml):PrivateRouteTable}
+    # PublicRouteTable: ${file(resources/vpc.yml):PublicRouteTable}
+    # PublicSubnetRouteTableAssociation: ${file(resources/vpc.yml):PublicSubnetRouteTableAssociation}
+    # PrivateSubnetRouteTableAssociation: ${file(resources/vpc.yml):PrivateSubnetRouteTableAssociation}
+    # InternetGateway: ${file(resources/vpc.yml):InternetGateway}
+    # NATGateway: ${file(resources/vpc.yml):NATGateway}
+    # ElasticIP: ${file(resources/vpc.yml):ElasticIP}
+    # PrivateRoute: ${file(resources/vpc.yml):PrivateRoute}
+    #----
+    ${file(resources/vpc.yml)}
 
-    #Elastic Cache
-    BotStateCluster: ${file(resources/elastic-cache/bot-state.yml):BotStateCluster}
-    BotStateSG: ${file(resources/elastic-cache/bot-state.yml):BotStateSG}
-    LambdaSG: ${file(resources/elastic-cache/bot-state.yml):LambdaSG}
-    BotStateSubnetGroup: ${file(resources/elastic-cache/bot-state.yml):BotStateSubnetGroup}
+
+    #- Elastic Cache
+    #BotStateCluster: ${file(resources/elastic-cache.yml):BotStateCluster}
+    #BotStateSubnetGroup: ${file(resources/elastic-cache.yml):BotStateSubnetGroup}
+    #----
+    ${file(resources/elastic-cache.yml)}
+
+
+    #- Security
+    #LambdaSG: ${file(resources/security-groups.yml):LambdaSG}
+    #BotStateSG: ${file(resources/security-groups.yml):BotStateSG}
+    #----
+    ${file(resources/security-groups.yml)}
 
 
 functions:
