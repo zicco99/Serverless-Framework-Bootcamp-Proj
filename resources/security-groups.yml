@@ -1,29 +1,28 @@
-SecurityGroups:
-  BotStateSG:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupName: !Sub "${self:custom.base}-bot-state-sg"
-      GroupDescription: !Sub "Security group for Redis cluster"
-      VpcId: !Ref MainVPC
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: !Sub ${self:custom.BotState.fromPort}
-          ToPort: !Sub ${self:custom.BotState.toPort}
-          SourceSecurityGroupId: !Ref LambdaSG
+BotStateSG:
+  Type: AWS::EC2::SecurityGroup
+  Properties:
+    GroupName: !Sub "${self:custom.base}-bot-state-sg"
+    GroupDescription: !Sub "Security group for Redis cluster"
+    VpcId: !Ref MainVPC
+    SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: !Sub ${self:custom.BotState.fromPort}
+        ToPort: !Sub ${self:custom.BotState.toPort}
+        SourceSecurityGroupId: !Ref LambdaSG
 
-  LambdaSG:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupName: !Sub "${self:custom.base}-lambda-sg"
-      GroupDescription: !Sub "Security group for Lambda function"
-      VpcId: !Ref MainVPC
-      SecurityGroupEgress:
-        - IpProtocol: tcp
-          FromPort: !Sub ${self:custom.BotState.fromPort}
-          ToPort: !Sub ${self:custom.BotState.toPort}
-          CidrIp: 0.0.0.0/0
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: !Sub ${self:custom.BotState.fromPort}
-          ToPort: !Sub ${self:custom.BotState.toPort}
+LambdaSG:
+  Type: AWS::EC2::SecurityGroup
+  Properties:
+    GroupName: !Sub "${self:custom.base}-lambda-sg"
+    GroupDescription: !Sub "Security group for Lambda function"
+    VpcId: !Ref MainVPC
+    SecurityGroupEgress:
+      - IpProtocol: tcp
+        FromPort: !Sub ${self:custom.BotState.fromPort}
+        ToPort: !Sub ${self:custom.BotState.toPort}
+        CidrIp: 0.0.0.0/0
+    SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: !Sub ${self:custom.BotState.fromPort}
+        ToPort: !Sub ${self:custom.BotState.toPort}
           

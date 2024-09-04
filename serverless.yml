@@ -19,50 +19,48 @@ package:
 
 resources:
   Resources:
-    # Storage
+
+    #Storage
     UsersTable: ${file(resources/UsersTable.yml):UsersTable}
     AuctionsTable: ${file(resources/AuctionsTable.yml):AuctionsTable}
     TeamsCacheTable: ${file(resources/TeamsCacheTable.yml):TeamsCacheTable}
 
     #- Networking
     # Contains the VPC, subnets, and security groups (Networking stuff)
-    # MainVPC: ${file(resources/vpc.yml):MainVPC}
-    # PrivateSubnet: ${file(resources/vpc.yml):PrivateSubnet}
-    # PublicSubnet: ${file(resources/vpc.yml):PublicSubnet}
-    # PrivateRouteTable: ${file(resources/vpc.yml):PrivateRouteTable}
-    # PublicRouteTable: ${file(resources/vpc.yml):PublicRouteTable}
-    # PublicSubnetRouteTableAssociation: ${file(resources/vpc.yml):PublicSubnetRouteTableAssociation}
-    # PrivateSubnetRouteTableAssociation: ${file(resources/vpc.yml):PrivateSubnetRouteTableAssociation}
-    # InternetGateway: ${file(resources/vpc.yml):InternetGateway}
-    # NATGateway: ${file(resources/vpc.yml):NATGateway}
-    # ElasticIP: ${file(resources/vpc.yml):ElasticIP}
-    # PrivateRoute: ${file(resources/vpc.yml):PrivateRoute}
-    #----
-    ${file(resources/vpc.yml):VPC}
-    
+    MainVPC: ${file(resources/vpc.yml):MainVPC}
+    PrivateSubnet: ${file(resources/vpc.yml):PrivateSubnet}
+    PublicSubnet: ${file(resources/vpc.yml):PublicSubnet}
+    PrivateRouteTable: ${file(resources/vpc.yml):PrivateRouteTable}
+    PublicRouteTable: ${file(resources/vpc.yml):PublicRouteTable}
+    PublicSubnetRouteTableAssociation: ${file(resources/vpc.yml):PublicSubnetRouteTableAssociation}
+    PrivateSubnetRouteTableAssociation: ${file(resources/vpc.yml):PrivateSubnetRouteTableAssociation}
+    InternetGateway: ${file(resources/vpc.yml):InternetGateway}
+    NATGateway: ${file(resources/vpc.yml):NATGateway}
+    ElasticIP: ${file(resources/vpc.yml):ElasticIP}
+    PrivateRoute: ${file(resources/vpc.yml):PrivateRoute}
+    #---
 
 
     # Elastic Cache
-    #BotStateCluster: ${file(resources/elastic-cache.yml):BotStateCluster}
-    #BotStateSubnetGroup: ${file(resources/elastic-cache.yml):BotStateSubnetGroup}
-    #   
-    ${file(resources/elastic-cache.yml):ElasticCache}
-
-
-    #- Security
-    #LambdaSG: ${file(resources/security-groups.yml):LambdaSG}
-    #BotStateSG: ${file(resources/security-groups.yml):BotStateSG}
+    BotStateCluster: ${file(resources/elastic-cache.yml):BotStateCluster}
+    BotStateSubnetGroup: ${file(resources/elastic-cache.yml):BotStateSubnetGroup}
     #----
-    ${file(resources/security-groups.yml):SecurityGroups}
+
+
+    #- Security Groups
+    LambdaSG: ${file(resources/security-groups.yml):LambdaSG}
+    BotStateSG: ${file(resources/security-groups.yml):BotStateSG}
+    #----
+
 
 functions:
   main:
     handler: src/main.handler
-    memorySize: 1024
+    memorySize: 1024 
     events:
       - http:
           method: any
-          path: /{proxy+}
+          path: /{proxy+}    
     iamRoleStatements:
       - ${file(iam/AuctionsTableIAM.yml):AuctionsTableIAM}
       - ${file(iam/TeamsCacheTableIAM.yml):TeamsCacheTableIAM}
@@ -79,20 +77,22 @@ functions:
       DEFAULT_BOT_NAME: ${self:custom.base}-bot
       GATEWAY_URL: ${self:custom.APIGateway.Url}
       BOT_STATE_REDIS_ADDRESS: ${self:custom.BotStateCluster.address}
+            
       BOT_STATE_REDIS_PORT: ${self:custom.BotState.fromPort}
       INTENT_TTL: 3600
     vpc:
       securityGroupIds:
-        - ${file(resources/security-groups.yml):LambdaSG}
+        - !Ref LambdaSG
       subnetIds:
-        - ${file(resources/vpc.yml):PrivateSubnet}
+        - !Ref PrivateSubnet
     warmup:
       enabled: true
 
 custom:
   base: ${self:service}-${opt:stage, 'dev'}
 
-  # Storage
+  #Storage
+
   BotStateCluster:
     name: ${self:custom.base}-bot-state-cluster
     arn: !Sub "arn:aws:elasticache:${AWS::Region}:${AWS::AccountId}:cluster/${BotStateCluster}"
@@ -113,7 +113,8 @@ custom:
     indexName: TeamNameIndex
     indexArn: !Join ["/", ["${self:custom.TeamsCacheTable.arn}", "index/${self:custom.TeamsCacheTable.indexName}"]]
 
-  # Networking
+  #Networking
+
   MainVPC:
     name: ${self:custom.base}-main-vpc
     cidr: 10.0.0.0/24
@@ -140,19 +141,20 @@ custom:
       description: "Lambda to Anywhere"
       allowCidr: ${self:custom.PrivateSubnet.cidr}
 
-  # API
+  #API
   APIGateway:
     Url:
       Fn::Join:
-        - ""
-        - - "https://"
-          - Ref: "ApiGatewayRestApi"
-          - ".execute-api."
-          - ${self:provider.region}.
-          - Ref: "AWS::URLSuffix"
-          - "/"
-          - ${self:provider.stage}
-
+      - ""
+      - - "https://"
+        - Ref: "ApiGatewayRestApi"
+        - ".execute-api."
+        - ${self:provider.region}.
+        - Ref: "AWS::URLSuffix"
+        - "/"
+        - ${self:provider.stage}
+  
+  
   warmup:
     enabled: false
     functions:
@@ -168,3 +170,6 @@ custom:
           requestType: warmup
           timestamp: ${opt:timestamp, 'now'}
         concurrency: 1
+
+
+        

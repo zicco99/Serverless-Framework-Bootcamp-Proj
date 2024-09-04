@@ -1,23 +1,22 @@
-ElasticCache:
-  BotStateSubnetGroup:
-    Type: AWS::ElastiCache::SubnetGroup
-    Properties:
-      CacheSubnetGroupName: !Sub "${self:custom.base}-bot-state-subnet-group"
-      Description: "Subnet Group needed by Redis"
-      SubnetIds:
-        - !Ref PrivateSubnet
+BotStateSubnetGroup:
+  Type: AWS::ElastiCache::SubnetGroup
+  Properties:
+    CacheSubnetGroupName: !Sub "${self:custom.base}-bot-state-subnet-group"
+    Description: "Subnet Group needed by Redis"
+    SubnetIds:
+      - !Ref PrivateSubnet
 
-  BotStateCluster:
-    Type: AWS::ElastiCache::CacheCluster
-    Properties:
-      CacheNodeType: cache.t3.micro
-      Engine: redis
-      NumCacheNodes: 1
-      ClusterName: !Sub ${self:custom.BotStateCluster.name}
-      CacheSubnetGroupName: !Ref BotStateSubnetGroup
-      VpcSecurityGroupIds:
-        - !Ref BotStateSG
-      Port: !Sub ${self:custom.BotState.fromPort}
-      Tags:
-        - Key: Name
-          Value: !Sub "${self:custom.base}-redis-cluster"
+BotStateCluster:
+  Type: AWS::ElastiCache::CacheCluster
+  Properties:
+    CacheNodeType: cache.t3.micro
+    Engine: redis
+    NumCacheNodes: 1
+    ClusterName: !Sub ${self:custom.BotStateCluster.name}
+    CacheSubnetGroupName: !Ref BotStateSubnetGroup
+    VpcSecurityGroupIds:
+      - !Ref BotStateSG
+    Port: !Sub ${self:custom.BotState.fromPort}
+    Tags:
+      - Key: Name
+        Value: !Sub "${self:custom.base}-redis-cluster"

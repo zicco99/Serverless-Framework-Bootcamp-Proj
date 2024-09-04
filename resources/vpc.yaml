@@ -1,74 +1,74 @@
-VPC: # Contains the VPC, subnets, and security groups (Networking stuff)
-  MainVPC:
-    Type: AWS::EC2::VPC
-    Properties:
-      CidrBlock: ${self:custom.MainVPC.cidr}
-      Tags:
-        - Key: Name
-          Value: !Sub "${self:custom.base}-main-vpc"
+# Contains the VPC, subnets, and security groups (Networking stuff)
+MainVPC:
+  Type: AWS::EC2::VPC
+  Properties:
+    CidrBlock: ${self:custom.MainVPC.cidr}
+    Tags:
+      - Key: Name
+        Value: !Sub "${self:custom.base}-main-vpc"
 
-  PrivateSubnet:
-    Type: AWS::EC2::Subnet
-    Properties:
-      VpcId: !Ref MainVPC
-      CidrBlock: ${self:custom.PrivateSubnet.cidr}
-      AvailabilityZone: ${self:custom.PrivateSubnet.availabilityZone}
-      MapPublicIpOnLaunch: false
-      Tags:
-        - Key: Name
-          Value: !Sub "${self:custom.base}-private-subnet"
+PrivateSubnet:
+  Type: AWS::EC2::Subnet
+  Properties:
+    VpcId: !Ref MainVPC
+    CidrBlock: ${self:custom.PrivateSubnet.cidr}
+    AvailabilityZone: ${self:custom.PrivateSubnet.availabilityZone}
+    MapPublicIpOnLaunch: false
+    Tags:
+      - Key: Name
+        Value: !Sub "${self:custom.base}-private-subnet"
 
-  PublicSubnet:
-    Type: AWS::EC2::Subnet
-    Properties:
-      VpcId: !Ref MainVPC
-      CidrBlock: ${self:custom.PublicSubnet.cidr}
-      AvailabilityZone: ${self:custom.PublicSubnet.availabilityZone}
-      MapPublicIpOnLaunch: true
-      Tags:
-        - Key: Name
-          Value: !Sub "${self:custom.base}-public-subnet"
+PublicSubnet:
+  Type: AWS::EC2::Subnet
+  Properties:
+    VpcId: !Ref MainVPC
+    CidrBlock: ${self:custom.PublicSubnet.cidr}
+    AvailabilityZone: ${self:custom.PublicSubnet.availabilityZone}
+    MapPublicIpOnLaunch: true
+    Tags:
+      - Key: Name
+        Value: !Sub "${self:custom.base}-public-subnet"
 
-  PrivateRouteTable:
-    Type: AWS::EC2::RouteTable
-    Properties:
-      VpcId: !Ref MainVPC
-      Tags:
-        - Key: Name
-          Value: !Sub "${self:custom.base}-private-route-table"
+PrivateRouteTable:
+  Type: AWS::EC2::RouteTable
+  Properties:
+    VpcId: !Ref MainVPC
+    Tags:
+      - Key: Name
+        Value: !Sub "${self:custom.base}-private-route-table"
 
-  PublicRouteTable:
-    Type: AWS::EC2::RouteTable
-    Properties:
-      VpcId: !Ref MainVPC
-      Tags:
-        - Key: Name
-          Value: !Sub "${self:custom.base}-public-route-table"
+PublicRouteTable:
+  Type: AWS::EC2::RouteTable
+  Properties:
+    VpcId: !Ref MainVPC
+    Tags:
+      - Key: Name
+        Value: !Sub "${self:custom.base}-public-route-table"
 
-  PrivateSubnetRouteTableAssociation:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Properties:
-      SubnetId: !Ref PrivateSubnet
-      RouteTableId: !Ref PrivateRouteTable
+PrivateSubnetRouteTableAssociation:
+  Type: AWS::EC2::SubnetRouteTableAssociation
+  Properties:
+    SubnetId: !Ref PrivateSubnet
+    RouteTableId: !Ref PrivateRouteTable
 
-  PublicSubnetRouteTableAssociation:
-    Type: AWS::EC2::SubnetRouteTableAssociation
-    Properties:
-      SubnetId: !Ref PublicSubnet
-      RouteTableId: !Ref PublicRouteTable
+PublicSubnetRouteTableAssociation:
+  Type: AWS::EC2::SubnetRouteTableAssociation
+  Properties:
+    SubnetId: !Ref PublicSubnet
+    RouteTableId: !Ref PublicRouteTable
 
-  NATGateway:
-    Type: AWS::EC2::NatGateway
-    Properties:
-      AllocationId: !GetAtt ElasticIP.AllocationId
-      SubnetId: !Ref PublicSubnet
+NATGateway:
+  Type: AWS::EC2::NatGateway
+  Properties:
+    AllocationId: !GetAtt ElasticIP.AllocationId
+    SubnetId: !Ref PublicSubnet
 
-  ElasticIP:
-    Type: AWS::EC2::EIP
+ElasticIP:
+  Type: AWS::EC2::EIP
 
-  PrivateRoute:
-    Type: AWS::EC2::Route
-    Properties:
-      RouteTableId: !Ref PrivateRouteTable
-      DestinationCidrBlock: 0.0.0.0/0
-      NatGatewayId: !Ref NATGateway
+PrivateRoute:
+  Type: AWS::EC2::Route
+  Properties:
+    RouteTableId: !Ref PrivateRouteTable
+    DestinationCidrBlock: 0.0.0.0/0
+    NatGatewayId: !Ref NATGateway
