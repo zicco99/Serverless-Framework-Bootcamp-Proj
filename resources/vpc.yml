@@ -1,5 +1,3 @@
-# VPC Configuration File
-
 MainVPC:
   Type: AWS::EC2::VPC
   Properties:

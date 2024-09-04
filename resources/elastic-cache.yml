@@ -18,15 +18,11 @@ BotStateCluster:
     VpcSecurityGroupIds:
       - !GetAtt BotStateSG.GroupId
     Port: !Sub ${self:custom.BotState.fromPort}
-    Tags:
-      - Key: Name
-        Value: !Sub "${self:custom.base}-redis-cluster"
+
 
 BotStateLambdaIAM:
   Effect: Allow
   Action:
-    - "elasticache:DescribeCacheClusters"
+    - elasticache:DescribeCacheClusters
   Resource:
-    - !Sub "arn:aws:elasticache:${AWS::Region}:${AWS::AccountId}:cache-cluster/${BotStateCluster}"
-
-
+    - ${self:custom.BotStateCluster.arn}
