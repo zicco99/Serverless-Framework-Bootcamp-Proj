@@ -19,7 +19,6 @@ BotStateCluster:
       VpcSecurityGroupIds:
         - !Ref BotStateSG
       Port: !Sub ${self:custom.BotState.fromPort}
-      TransitEncryptionEnabled: true 
       Tags:
         - Key: Name
           Value: !Sub "${self:custom.base}-redis-cluster"
