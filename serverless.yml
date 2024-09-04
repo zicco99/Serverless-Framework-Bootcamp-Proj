@@ -144,7 +144,7 @@ custom:
     port: 6379
     fromPort: 6379
     toPort: 6380
-    arn: !Sub "arn:aws:elasticache:${AWS::Region}:${AWS::AccountId}:cache-cluster/${self:custom.BotStateCluster.name}"
+    arn: !Sub "arn:aws:elasticache:${AWS::Region}:${AWS::AccountId}:cluster/${self:custom.BotStateCluster.name}"
     BotStateSG:
       name: ${self:custom.base}-bot-state-sg
       description: "Ingress allowed from Lambda"
