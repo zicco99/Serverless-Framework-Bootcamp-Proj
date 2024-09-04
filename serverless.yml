@@ -71,7 +71,7 @@ functions:
       - ${file(iam/AuctionsTableIAM.yml):AuctionsTableIAM}
       - ${file(iam/TeamsCacheTableIAM.yml):TeamsCacheTableIAM}
       - ${file(iam/UsersTableIAM.yml):UsersTableIAM}
-      - ${file(resources/elastic-cache/bot-state.yml):BotStateLambdaIAM}
+      - $(file(resources/elastic-cache.yml):BotStateLambdaIAM)
     environment:
       REGION: ${self:provider.region}
       USERS_TABLE_NAME: ${self:custom.UsersTable.name}
@@ -84,7 +84,6 @@ functions:
       GATEWAY_URL: ${self:custom.APIGateway.Url}
       BOT_STATE_REDIS_ADDRESS: ${self:custom.BotStateCluster.address}
       BOT_STATE_REDIS_CLUSTER_ID: ${self:custom.BotStateCluster.id}
-            
       BOT_STATE_REDIS_PORT: ${self:custom.BotState.fromPort}
       INTENT_TTL: 3600
     vpc:
