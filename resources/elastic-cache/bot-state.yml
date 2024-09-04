@@ -5,7 +5,7 @@ BotStateCluster:
       Engine: redis
       NumCacheNodes: 1
       ClusterName: !Sub ${self:custom.BotStateCluster.name}
-      CacheSubnetGroupName: !GetAtt BotStateSubnetGroup.CacheSubnetGroupName
+      CacheSubnetGroupName: !Ref BotStateSubnetGroup
       VpcSecurityGroupIds:
         - !Ref BotStateSG
       Port: !Sub ${self:custom.BotState.fromPort}
