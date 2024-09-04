@@ -14,6 +14,7 @@ PrivateSubnet:
     VpcId: !Ref MainVPC
     CidrBlock: ${self:custom.PrivateSubnet.cidr}
     AvailabilityZone: ${self:custom.PrivateSubnet.availabilityZone}
+    MapPublicIpOnLaunch: false # This is a private subnet
     Tags:
       - Key: Name
         Value: !Sub "${self:custom.base}-private-subnet"
@@ -41,7 +42,7 @@ BotStateSG:
     SecurityGroupIngress:
       - IpProtocol: tcp
         FromPort: ${self:custom.BotState.port}
-        ToPort: ${self:custom.BotState.port}
+        ToPort: ${self:custom.BotState.}
         CidrIp: ${self:custom.BotState.BotStateSG.allowCidr}
 
 
