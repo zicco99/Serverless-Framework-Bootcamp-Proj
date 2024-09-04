@@ -34,9 +34,6 @@ resources:
     BotStateCluster: ${file(resources/elastic-cache/bot-state.yml):BotStateCluster}
     BotStateSG: ${file(resources/elastic-cache/bot-state.yml):BotStateSG}
     LambdaSG: ${file(resources/elastic-cache/bot-state.yml):LambdaSG}
-    BotStateSubnetGroup: ${file(resources/elastic-cache/bot-state.yml):BotStateSubnetGroup}
-
-
 
 
 functions:
@@ -68,7 +65,7 @@ functions:
       INTENT_TTL: 3600
     vpc:
       securityGroupIds:
-        - !GetAtt LambdaSG.GroupId
+        - !Ref LambdaSG
       subnetIds:
         - !Ref PrivateSubnet
     warmup:

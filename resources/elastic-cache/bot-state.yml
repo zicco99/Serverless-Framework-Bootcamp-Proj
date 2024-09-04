@@ -8,7 +8,6 @@ BotStateCluster:
       VpcSecurityGroupIds:
         - !Ref BotStateSG
       Port: !Sub ${self:custom.BotState.fromPort}
-      CacheSubnetGroupName: !Ref BotStateSubnetGroup
       TransitEncryptionEnabled: true  # Enable TLS encryption
       Tags:
         - Key: Name
@@ -46,17 +45,6 @@ LambdaSG:
         FromPort: !Sub ${self:custom.BotState.fromPort}
         ToPort: !Sub ${self:custom.BotState.toPort}
         CidrIp: !Ref BotStateSG.CidrBlock
-
-
-
-# Subnet Group: the group of subnets that the VPC will use
-BotStateSubnetGroup:
-  Type: AWS::ElastiCache::SubnetGroup
-  Properties:
-    CacheSubnetGroupName: !Sub "${self:custom.base}-redis-subnet-group"
-    Description: "Subnet group for Bot State Redis cluster"
-    SubnetIds:
-      - !Ref PrivateSubnet
 
   
 # LambdaIAM: IAM permissions for the lambda
