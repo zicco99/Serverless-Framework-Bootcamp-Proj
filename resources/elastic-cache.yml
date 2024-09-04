@@ -22,3 +22,12 @@ BotStateCluster:
       - Key: Name
         Value: !Sub "${self:custom.base}-redis-cluster"
 
+BotStateLambdaIAM:
+  Effect: Allow
+  Action:
+    - "elasticache:DescribeCacheClusters"
+    - "elasticache:Connect"
+  Resource: - !GetAtt BotStateCluster.ARN
+
+
+

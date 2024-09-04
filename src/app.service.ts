@@ -18,7 +18,10 @@ import * as AWS from 'aws-sdk';
 class AppService {
   private readonly logger = new Logger(AppService.name);
   private redis: Redis;
-  auctionsCounts: number;
+  private auctionsCounts: number;
+  private readonly awsRegion = process.env.AWS_REGION;
+  private readonly redisClusterId = process.env.BOT_STATE_REDIS_CLUSTER_ID;
+  private readonly intentTTL = parseInt(process.env.INTENT_TTL!, 10);
 
   constructor(
     @InjectBot() private readonly bot: Telegraf<BotContext>,
@@ -31,11 +34,11 @@ class AppService {
 
   private async initializeRedis() {
     this.logger.log('Connecting to AWS ElastiCache Redis Cluster...');
-    const elastiCache = new AWS.ElastiCache({ region: process.env.AWS_REGION });
+    const elastiCache = new AWS.ElastiCache({ region: this.awsRegion });
 
     try {
       const data = await elastiCache.describeCacheClusters({
-        CacheClusterId: process.env.BOT_STATE_REDIS_CLUSTER_ID,
+        CacheClusterId: this.redisClusterId,
         ShowCacheNodeInfo: true,
       }).promise();
 
@@ -46,7 +49,7 @@ class AppService {
         this.redis = new Redis({
           host,
           port,
-          tls: {},
+          tls: {}, // Enable TLS if required
         });
 
         this.redis.on('error', (err) => this.logger.error('Redis error:', err));
@@ -248,21 +251,12 @@ class AppService {
       return;
     }
 
-    const intentTTL = parseInt(process.env.INTENT_TTL!, 10);
-    if (session_space.last_intent === Intent.CREATE_AUCTION) {
-      const init_ts = session_space.last_intent_timestamp;
-      if (init_ts && (new Date().getTime() - new Date(init_ts).getTime()) > intentTTL) {
-        session_space.last_intent = Intent.NONE;
-        session_space.last_intent_timestamp = new Date().toISOString();
-        session_space.last_intent_extra = {} as IntentExtra;
-
-        await this.setUserSessionSpace(userId, session_space);
-        await ctx.reply("Session has timed out. Please start the process again.");
-      } else {
-        await this.auctionWizard.handleMessage(userId, session_space.last_intent, session_space.last_intent_extra as CreateAuctionIntentExtra, ctx, message);
-      }
+    const isSessionExpired = (new Date().getTime() - new Date(session_space.last_intent_timestamp).getTime()) > this.intentTTL;
+    if (session_space.last_intent === Intent.CREATE_AUCTION && isSessionExpired) {
+      await this.resetLastIntent(userId, session_space);
+      await ctx.reply("Session has timed out. Please start the process again.");
     } else {
-      await ctx.reply("I'm not sure what to do with that. Use the buttons to manage auctions or type commands.");
+      await this.auctionWizard.handleMessage(userId, session_space.last_intent, session_space.last_intent_extra as CreateAuctionIntentExtra, ctx, message);
     }
   }
 }
