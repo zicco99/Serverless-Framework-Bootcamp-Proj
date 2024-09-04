@@ -1,3 +1,13 @@
+# A subnet group in the context of Amazon ElastiCache, including Redis, 
+# is essentially a collection of one or more subnets within your VPC where the cache nodes can be deployed.
+BotStateSubnetGroup:
+  Type: AWS::ElastiCache::SubnetGroup # Group in which the Redis nodes will be deployed
+  Properties:
+    CacheSubnetGroupName: !Sub "${self:custom.base}-bot-state-subnet-group"
+    Description: "Subnet Group needed by Redis"
+    SubnetIds:
+      - !Ref PrivateSubnet  # Subnet(s) to which th group belongs
+
 BotStateCluster:
     Type: AWS::ElastiCache::CacheCluster
     Properties:
@@ -13,16 +23,6 @@ BotStateCluster:
       Tags:
         - Key: Name
           Value: !Sub "${self:custom.base}-redis-cluster"
-
-# A subnet group in the context of Amazon ElastiCache, including Redis, 
-# is essentially a collection of one or more subnets within your VPC where the cache nodes can be deployed.
-BotStateSubnetGroup:
-  Type: AWS::ElastiCache::SubnetGroup # Group in which the Redis nodes will be deployed
-  Properties:
-    CacheSubnetGroupName: !Sub "${self:custom.base}-bot-state-subnet-group"
-    Description: "Subnet Group needed by Redis"
-    SubnetIds:
-      - !Ref PrivateSubnet  # Subnet(s) to which th group belongs
 
 
 BotStateSG:
