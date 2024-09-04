@@ -19,7 +19,7 @@ package:
 
 resources:
   Resources:
-  
+
     #Storage
     UsersTable: ${file(resources/UsersTable.yml):UsersTable}
     AuctionsTable: ${file(resources/AuctionsTable.yml):AuctionsTable}
@@ -39,21 +39,21 @@ resources:
     # ElasticIP: ${file(resources/vpc.yml):ElasticIP}
     # PrivateRoute: ${file(resources/vpc.yml):PrivateRoute}
     #----
-    ${file(resources/vpc.yml)}
+    ${file(resources/vpc.yml):VPC}
 
 
     #- Elastic Cache
     #BotStateCluster: ${file(resources/elastic-cache.yml):BotStateCluster}
     #BotStateSubnetGroup: ${file(resources/elastic-cache.yml):BotStateSubnetGroup}
     #----
-    ${file(resources/elastic-cache.yml)}
+    ${file(resources/elastic-cache.yml):ElasticCache}
 
 
     #- Security
     #LambdaSG: ${file(resources/security-groups.yml):LambdaSG}
     #BotStateSG: ${file(resources/security-groups.yml):BotStateSG}
     #----
-    ${file(resources/security-groups.yml)}
+    ${file(resources/security-groups.yml)SecurityGroups}
 
 
 functions:
