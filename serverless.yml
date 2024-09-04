@@ -40,7 +40,7 @@ resources:
 
     # Elastic Cache
     BotStateCluster: ${file(resources/elastic-cache.yml):BotStateCluster}
-    BotStateSubnetGroup: ${file(resources/elastic-cache.yml):BotStateSubnetGroup}
+    #BotStateSubnetGroup: ${file(resources/elastic-cache.yml):BotStateSubnetGroup}
     #----
 
 
