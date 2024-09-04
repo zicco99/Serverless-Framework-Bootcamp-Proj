@@ -88,7 +88,7 @@ functions:
       INTENT_TTL: 3600
     vpc:
       securityGroupIds:
-        - !Ref LambdaSG
+        - !GetAtt LambdaSG.GroupId
       subnetIds:
         - !Ref PrivateSubnet
     warmup:
