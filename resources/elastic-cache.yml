@@ -26,9 +26,7 @@ BotStateLambdaIAM:
   Effect: Allow
   Action:
     - "elasticache:DescribeCacheClusters"
-    - "elasticache:Connect"
-  Resource: 
-    - !GetAtt BotStateCluster.Arn
-
+  Resource:
+    - !Sub "arn:aws:elasticache:${AWS::Region}:${AWS::AccountId}:cache-cluster/${BotStateCluster}"
 
 
