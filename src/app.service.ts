@@ -34,7 +34,7 @@ class AppService {
 
   private async initializeRedis() {
     this.logger.log('Connecting to AWS ElastiCache Redis Cluster...');
-    const elastiCache = new AWS.ElastiCache({ region: this.awsRegion });
+    const elastiCache = new AWS.ElastiCache({ region: this.awsRegion, });
 
     try {
       const data = await elastiCache.describeCacheClusters({
@@ -42,9 +42,13 @@ class AppService {
         ShowCacheNodeInfo: true,
       }).promise();
 
+      console.log("ElastiCache sent me the node endpoints: ", data);
+
       const nodeEndpoint = data.CacheClusters?.[0]?.CacheNodes?.[0]?.Endpoint;
       if (nodeEndpoint?.Address && nodeEndpoint?.Port) {
         const { Address: host, Port: port } = nodeEndpoint;
+
+        console.log("Connecting to Redis: ", host, port);
 
         this.redis = new Redis({
           host,
@@ -57,6 +61,8 @@ class AppService {
           this.logger.log('Connected to Redis');
           this.auctionWizard.setRedis(this.redis);
         });
+
+        this.logger.log(`Redis endpoint: ${host}:${port}`);
       } else {
         this.logger.error('No cache node endpoint found.');
       }
