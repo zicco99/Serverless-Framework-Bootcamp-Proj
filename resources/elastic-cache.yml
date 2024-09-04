@@ -23,6 +23,6 @@ BotStateCluster:
 BotStateLambdaIAM:
   Effect: Allow
   Action:
-    - elasticache:DescribeCacheClusters
+    - "elasticache:DescribeCacheClusters"
   Resource:
     - ${self:custom.BotStateCluster.arn}
