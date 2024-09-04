@@ -114,17 +114,17 @@ custom:
 
   MainVPC:
     name: ${self:custom.base}-vpc
-    cidr: 10.0.0.0/25
+    cidr: 10.0.0.0/26
     availabilityZone: ${self:provider.region}a
 
   PrivateSubnet:
     name: ${self:custom.base}-private-subnet
-    cidr: 10.0.0.128/25
+    cidr: 10.0.0.0/26
     availabilityZone: ${self:provider.region}a
 
   PublicSubnet:
     name: ${self:custom.base}-public-subnet
-    cidr: 10.0.0.0/26
+    cidr: 10.0.1.0/26 # (32 - 26 = 8 = 2^8 = 256 hosts)
     availabilityZone: ${self:provider.region}a
 
   PrivateRouteTable:
