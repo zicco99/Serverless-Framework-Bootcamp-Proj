@@ -24,15 +24,26 @@ BotStateSG:
       - IpProtocol: tcp
         FromPort: !Sub ${self:custom.BotState.fromPort}
         ToPort: !Sub ${self:custom.BotState.toPort}
-        SourceSecurityGroupId: !Ref BotStateSG
+        SourceSecurityGroupId: !Ref LambdaSG  # Redis <- Lambda
+    Tags:
+      - Key: Name
+        Value: !Sub "${self:custom.base}-redis-sg"
+
+
+# Security Group for Lambda Function
+LambdaSG:
+  Type: AWS::EC2::SecurityGroup
+  Properties:
+    GroupDescription: !Sub ${self:custom.BotState.LambdaSG.description}
+    VpcId: !Ref MainVPC
     SecurityGroupEgress:
       - IpProtocol: tcp
         FromPort: !Sub ${self:custom.BotState.fromPort}
         ToPort: !Sub ${self:custom.BotState.toPort}
-        CidrIp: !Ref BotStateSG
+        CidrIp: 0.0.0.0/0
     Tags:
       - Key: Name
-        Value: !Sub "${self:custom.base}-redis-sg"
+        Value: !Sub "${self:custom.BotState.LambdaSG.name}"
 
 
 
