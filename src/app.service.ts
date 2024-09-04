@@ -28,7 +28,7 @@ class AppService {
     const port = +process.env.BOT_STATE_REDIS_PORT!;
 
     console.log("Connecting to Redis Cluster... redis://", process.env.BOT_STATE_REDIS_ADDRESS, ":", process.env.BOT_STATE_REDIS_PORT);
-    this.redis = new Cluster([{ host, port }]{
+    this.redis = new Cluster([{ host, port }],{
       dnsLookup: (address, callback) => callback(null, address),
       redisOptions: {
         tls: {},
