@@ -42,7 +42,6 @@ resources:
     BotStateSubnetGroup: ${file(resources/elastic-cache.yml):BotStateSubnetGroup}
     #----
 
-
     #- Security Groups
     LambdaSG: ${file(resources/security-groups.yml):LambdaSG}
     BotStateSG: ${file(resources/security-groups.yml):BotStateSG}
