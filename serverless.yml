@@ -35,12 +35,11 @@ resources:
     NATGateway: ${file(resources/vpc.yml):NATGateway}
     ElasticIP: ${file(resources/vpc.yml):ElasticIP}
     PrivateRoute: ${file(resources/vpc.yml):PrivateRoute}
-
     #----
 
     # Elastic Cache
     BotStateCluster: ${file(resources/elastic-cache.yml):BotStateCluster}
-    #BotStateSubnetGroup: ${file(resources/elastic-cache.yml):BotStateSubnetGroup}
+    BotStateSubnetGroup: ${file(resources/elastic-cache.yml):BotStateSubnetGroup}
     #----
 
 
