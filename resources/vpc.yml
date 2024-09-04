@@ -1,4 +1,5 @@
-# Contains the VPC, subnets, and security groups (Networking stuff)
+# VPC Configuration File
+
 MainVPC:
   Type: AWS::EC2::VPC
   Properties:
@@ -6,17 +7,22 @@ MainVPC:
     Tags:
       - Key: Name
         Value: !Sub "${self:custom.base}-main-vpc"
+  # Creates the main VPC
 
-PrivateSubnet:
-  Type: AWS::EC2::Subnet
+InternetGateway:
+  Type: AWS::EC2::InternetGateway
   Properties:
-    VpcId: !Ref MainVPC
-    CidrBlock: ${self:custom.PrivateSubnet.cidr}
-    AvailabilityZone: ${self:custom.PrivateSubnet.availabilityZone}
-    MapPublicIpOnLaunch: false
     Tags:
       - Key: Name
-        Value: !Sub "${self:custom.base}-private-subnet"
+        Value: !Sub "${self:custom.base}-internet-gateway"
+  # Provides internet access to the VPC
+
+AttachInternetGateway:
+  Type: AWS::EC2::VPCGatewayAttachment
+  Properties:
+    VpcId: !Ref MainVPC
+    InternetGatewayId: !Ref InternetGateway
+  # Attaches the Internet Gateway to the VPC
 
 PublicSubnet:
   Type: AWS::EC2::Subnet
@@ -28,14 +34,7 @@ PublicSubnet:
     Tags:
       - Key: Name
         Value: !Sub "${self:custom.base}-public-subnet"
-
-PrivateRouteTable:
-  Type: AWS::EC2::RouteTable
-  Properties:
-    VpcId: !Ref MainVPC
-    Tags:
-      - Key: Name
-        Value: !Sub "${self:custom.base}-private-route-table"
+  # Defines a public subnet with public IP addresses
 
 PublicRouteTable:
   Type: AWS::EC2::RouteTable
@@ -44,27 +43,61 @@ PublicRouteTable:
     Tags:
       - Key: Name
         Value: !Sub "${self:custom.base}-public-route-table"
-
-PrivateSubnetRouteTableAssociation:
-  Type: AWS::EC2::SubnetRouteTableAssociation
-  Properties:
-    SubnetId: !Ref PrivateSubnet
-    RouteTableId: !Ref PrivateRouteTable
+  # Creates a route table for the public subnet
 
 PublicSubnetRouteTableAssociation:
   Type: AWS::EC2::SubnetRouteTableAssociation
   Properties:
     SubnetId: !Ref PublicSubnet
     RouteTableId: !Ref PublicRouteTable
+  # Associates the public subnet with the public route table
+
+PrivateSubnet:
+  Type: AWS::EC2::Subnet
+  Properties:
+    VpcId: !Ref MainVPC
+    CidrBlock: ${self:custom.PrivateSubnet.cidr}
+    AvailabilityZone: ${self:custom.PrivateSubnet.availabilityZone}
+    MapPublicIpOnLaunch: false
+    Tags:
+      - Key: Name
+        Value: !Sub "${self:custom.base}-private-subnet"
+  # Defines a private subnet without public IP addresses
+
+PrivateRouteTable:
+  Type: AWS::EC2::RouteTable
+  Properties:
+    VpcId: !Ref MainVPC
+    Tags:
+      - Key: Name
+        Value: !Sub "${self:custom.base}-private-route-table"
+  # Creates a route table for the private subnet
+
+PrivateSubnetRouteTableAssociation:
+  Type: AWS::EC2::SubnetRouteTableAssociation
+  Properties:
+    SubnetId: !Ref PrivateSubnet
+    RouteTableId: !Ref PrivateRouteTable
+  # Associates the private subnet with the private route table
+
+ElasticIP:
+  Type: AWS::EC2::EIP
+  # Allocates an Elastic IP for the NAT Gateway
 
 NATGateway:
   Type: AWS::EC2::NatGateway
   Properties:
     AllocationId: !GetAtt ElasticIP.AllocationId
     SubnetId: !Ref PublicSubnet
+  # Creates a NAT Gateway in the public subnet for private subnet outbound traffic
 
-ElasticIP:
-  Type: AWS::EC2::EIP
+PublicRoute:
+  Type: AWS::EC2::Route
+  Properties:
+    RouteTableId: !Ref PublicRouteTable
+    DestinationCidrBlock: 0.0.0.0/0
+    GatewayId: !Ref InternetGateway
+  # Routes outbound traffic from the public subnet to the Internet Gateway
 
 PrivateRoute:
   Type: AWS::EC2::Route
@@ -72,3 +105,5 @@ PrivateRoute:
     RouteTableId: !Ref PrivateRouteTable
     DestinationCidrBlock: 0.0.0.0/0
     NatGatewayId: !Ref NATGateway
+  # Routes outbound traffic from the private subnet to the NAT Gateway
+

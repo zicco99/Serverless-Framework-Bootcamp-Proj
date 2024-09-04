@@ -28,13 +28,24 @@ resources:
     #- Networking
     # Contains the VPC, subnets, and security groups (Networking stuff)
     MainVPC: ${file(resources/vpc.yml):MainVPC}
-    PrivateSubnet: ${file(resources/vpc.yml):PrivateSubnet}
+
+    InternetGateway: ${file(resources/vpc.yml):InternetGateway}
+    AttachInternetGateway: ${file(resources/vpc.yml):AttachInternetGateway}
+
     PublicSubnet: ${file(resources/vpc.yml):PublicSubnet}
-    PrivateRouteTable: ${file(resources/vpc.yml):PrivateRouteTable}
     PublicRouteTable: ${file(resources/vpc.yml):PublicRouteTable}
-    NATGateway: ${file(resources/vpc.yml):NATGateway}
+    PublicSubnetRouteTableAssociation: ${file(resources/vpc.yml):PublicSubnetRouteTableAssociation}
+
+    PrivateSubnet: ${file(resources/vpc.yml):PrivateSubnet}
+    PrivateRouteTable: ${file(resources/vpc.yml):PrivateRouteTable}
+    PrivateSubnetRouteTableAssociation: ${file(resources/vpc.yml):PrivateSubnetRouteTableAssociation}
+
     ElasticIP: ${file(resources/vpc.yml):ElasticIP}
+    NATGateway: ${file(resources/vpc.yml):NATGateway}
+    PublicRoute: ${file(resources/vpc.yml):PublicRoute}
     PrivateRoute: ${file(resources/vpc.yml):PrivateRoute}
+
+
     #----
 
     # Elastic Cache
