@@ -18,11 +18,3 @@ BotStateCluster:
     VpcSecurityGroupIds:
       - !GetAtt BotStateSG.GroupId
     Port: !Sub ${self:custom.BotState.fromPort}
-
-
-BotStateLambdaIAM:
-  Effect: Allow
-  Action:
-    - "elasticache:DescribeCacheClusters"
-  Resource:
-    - ${self:custom.BotStateCluster.arn}

@@ -103,7 +103,7 @@ custom:
     name: ${self:custom.base}-bot-state-cluster
     arn: !Sub "arn:aws:elasticache:${AWS::Region}:${AWS::AccountId}:cluster/${self:custom.BotStateCluster.name}"
     address: !GetAtt BotStateCluster.RedisEndpoint.Address
-    id: !GetAtt BotStateCluster.Id
+    id: !Ref BotStateCluster
 
   UsersTable:
     name: ${self:custom.base}-users-table
