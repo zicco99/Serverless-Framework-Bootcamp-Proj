@@ -31,10 +31,9 @@ class AppService {
     
     this.redis = new Cluster([{ host, port }],{
       dnsLookup: (address, callback) => callback(null, address),
+      slotsRefreshTimeout: 2000,
       redisOptions: {
-        tls: {
-          rejectUnauthorized: false
-        }
+        tls: {}
       },
     });
 
