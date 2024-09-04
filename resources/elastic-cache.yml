@@ -27,7 +27,7 @@ BotStateLambdaIAM:
   Action:
     - "elasticache:DescribeCacheClusters"
     - "elasticache:Connect"
-  Resource: "*"
+  Resource: !Ref BotStateCluster
 
 
 
