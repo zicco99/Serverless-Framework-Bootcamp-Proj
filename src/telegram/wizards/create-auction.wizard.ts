@@ -173,16 +173,17 @@ class AuctionWizard {
       local timestamp = ARGV[2]
       local intentExtra = ARGV[3]
   
-      redis.call('HSET', key, 'last_intent', intent)
-      redis.call('HSET', key, 'last_intent_timestamp', timestamp)
-      redis.call('HSET', key, 'last_intent_extra', intentExtra)
+      redis.call('SET', key .. ':last_intent', intent)
+      redis.call('SET', key .. ':last_intent_timestamp', timestamp)
+      redis.call('SET', key .. ':last_intent_extra', intentExtra)
+
   
       return {intent, timestamp, intentExtra}
     `;
   
-    // Convert arguments to strings
+    
     const timestamp = new Date().toISOString();
-    const intentStr = String(intent); // Ensure intent is a string
+    const intentStr = String(intent);
   
     let lastIntentExtra = '{}';
     if (intentExtra) {
