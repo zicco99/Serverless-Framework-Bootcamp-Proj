@@ -121,21 +121,23 @@ class AuctionWizard {
       if (step) {
         
         if(is_cache_restore === true){
-          await ctx.reply(escapeMarkdown(`We were talking about creating an auction, actually I got this data:
-            - idUser: ${JSON.stringify(data.idUser)},
-            - auction data: ${JSON.stringify(intentExtra.data)}`));
+          console.log("The intent has been restored from cache! ");
+          await ctx.reply(escapeMarkdown(`We were talking about creating an auction, actually I got this data User: ${JSON.stringify(data.idUser)} Auction data: ${JSON.stringify(intentExtra.data)}`));
+          await ctx.reply(`Next, please provide the ${steps[stepIndex + 1].key}\\.`);
           return;
         }
         else {
-
-          if(!messageText){
+          if (!messageText || stepIndex === 0) {
+            console.log(`[${userId}][${intent}] -- User started intent`, intent);
+            await ctx.reply(`🧙‍♂️ - Welcome to the auction wizard\\! I'll guide to create an auction.\\. Hum ... 📝, let's start by its ${steps[stepIndex + 1].key}\\.`);
             return;
           }
 
           if(messageText === 'cancel'){
-            await ctx.reply('Operation cancelled');
+            await ctx.reply('🧙‍♂️ - Operation cancelled, cya buddy');
             return;
           }
+
           await this.validateAndUpdateField(ctx, messageText, step.key, step.isDate, data, step.nextStep);
 
           if (stepIndex < steps.length - 1) {
