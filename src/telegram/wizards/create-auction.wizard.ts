@@ -13,10 +13,10 @@ interface CreateAuctionIntentExtra extends IntentExtra {
   data: Partial<CreateAuctionDto>;
 }
 
+const prefixIntentData = 'data';
+
 @Injectable()
 class AuctionWizard {
-
-  private readonly prefixIntentData = 'data';
 
   constructor(private readonly auctions: AuctionsService, private readonly redisService: BotStateService) {
   }
@@ -127,12 +127,12 @@ class AuctionWizard {
           }
 
           if(messageText === 'cancel'){
+            await this.setLastIntent(userId, Intent.NONE);
             await ctx.reply('🧙‍♂️ - Operation cancelled, cya buddy');
-            this.setLastIntent(userId, Intent.NONE);
             return;
           }
 
-          await this.validateAndUpdateField(ctx, messageText, this.prefixIntentData, step.key, step.isDate, data, step.nextStep);
+          await this.validateAndUpdateField(ctx, messageText, prefixIntentData, step.key, step.isDate, data, step.nextStep);
           if (stepIndex < steps.length - 1) {
             intentExtra.stepIndex = stepIndex + 1;
             await this.setLastIntent(userId, intent, intentExtra);
@@ -161,7 +161,7 @@ class AuctionWizard {
 
 
   public async setLastIntent(userId: number, intent: Intent, intentExtra?: IntentExtra): Promise<void> {
-    const redisKey = `user_session:${userId}`;
+    const redisKey = `user_session:${userId}:${prefixIntentData}`;
 
     const pipeline = (await this.redisService.getRedis())[0].pipeline();
     pipeline.hset(redisKey, 'last_intent', intent);
@@ -183,9 +183,10 @@ class AuctionWizard {
     }
 
     try {
-      await pipeline.exec();
+      const result = await pipeline.exec();
+      console.log(`Redis pipeline result: ${JSON.stringify(result)}`);
     } catch (error) {
-      console.error('Error setting last intent:', error);
+      console.log('Error setting last intent:', error);
       throw error;
     }
   }
