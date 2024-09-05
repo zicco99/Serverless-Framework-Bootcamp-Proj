@@ -164,8 +164,8 @@ class AuctionWizard {
     intentExtra?: CreateAuctionIntentExtra
   ): Promise<void> {
     console.log("Setting last intent for user", userId, intent, intentExtra);
-    
-    const redisKey = `user_session:${userId}`;
+
+    const redisKey = `user:${userId}`;
     const redis = (await this.redisService.getRedis())[0];
   
     const timestamp = new Date().toISOString();
