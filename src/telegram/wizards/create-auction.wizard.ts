@@ -166,22 +166,6 @@ class AuctionWizard {
     const redisKey = `user_session:${userId}`;
     const redis = (await this.redisService.getRedis())[0];
   
-    // Prepare Lua script
-    const script = `
-      local key = KEYS[1]
-      local intent = ARGV[1]
-      local timestamp = ARGV[2]
-      local intentExtra = ARGV[3]
-  
-      redis.call('SET', key .. ':last_intent', intent)
-      redis.call('SET', key .. ':last_intent_timestamp', timestamp)
-      redis.call('SET', key .. ':last_intent_extra', intentExtra)
-
-  
-      return {intent, timestamp, intentExtra}
-    `;
-  
-    
     const timestamp = new Date().toISOString();
     const intentStr = String(intent);
   
@@ -201,14 +185,26 @@ class AuctionWizard {
     }
   
     try {
-      // Execute Lua script
-      const result = await redis.eval(script, 1, redisKey, intentStr, timestamp, lastIntentExtra);
-      console.log(`Lua script result: ${JSON.stringify(result)}`);
+      const currentSessionStr = await redis.get(redisKey);
+      let currentSession: Record<string, any> = {};
+  
+      if (currentSessionStr) {
+        currentSession = JSON.parse(currentSessionStr);
+      }
+  
+      currentSession.last_intent = intentStr;
+      currentSession.last_intent_timestamp = timestamp;
+      currentSession.last_intent_extra = lastIntentExtra;
+  
+      await redis.set(redisKey, JSON.stringify(currentSession));
+  
+      console.log(`Successfully updated session for user ${userId}`);
     } catch (error) {
-      console.error('Error executing Lua script:', error);
+      console.error('Error updating session:', error);
       throw error;
     }
   }
+  
   
 }  
 
