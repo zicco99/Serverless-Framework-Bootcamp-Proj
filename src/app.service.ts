@@ -191,9 +191,6 @@ class AppService {
       await ctx.reply('Unable to identify you. Please try again.');
       return;
     }
-
-    process.exit(0);
-
     await ctx.reply('Need help? Use the buttons to manage auctions or type commands to interact.');
   }
 

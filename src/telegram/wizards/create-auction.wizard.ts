@@ -54,7 +54,8 @@ class AuctionWizard {
     return async (ctx: BotContext, messageText: string, session: Partial<CreateAuctionDto>) => {
   
       if (!messageText) {
-        ctx.reply('❗ Please provide the date in the format YYYY-MM-DD.');
+        await ctx.reply(`❗ Please provide auction's ${key}`);
+        
         return;
       }
   
