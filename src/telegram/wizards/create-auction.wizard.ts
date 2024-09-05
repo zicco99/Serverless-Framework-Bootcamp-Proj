@@ -75,7 +75,7 @@ class AuctionWizard {
   private askDate(key: string, nextInfo: string) {
     return async (ctx: BotContext, messageText: string, session: Partial<CreateAuctionDto>) => {
       if (!messageText) {
-        ctx.reply('❗ Please provide the date in the format YYYY-MM-DD.');
+        ctx.reply('❗ Please provide auction\'s ' + key + ' in the format YYYY-MM-DD.');
         return;
       }
       const parsedDate = parseISO(messageText);
@@ -127,8 +127,20 @@ class AuctionWizard {
     messageText: string
   ): Promise<void> {
     switch (intent) {
+      //Here a lock would be at its best, redis handles it
       case Intent.CREATE_AUCTION:
-        let stepIndex = intentExtra.stepIndex || 0;
+        if(!intentExtra.stepIndex){
+          intentExtra.stepIndex = 0;
+          intentExtra.data = {};
+          console.log("User [" + userId + "] just landed on the create auction wizard");
+          ctx.telegram.sendMessage(userId, "Give me the name of your auction:");
+          const firstStep = this.createAuctionSteps[0];
+          await firstStep(ctx, messageText, intentExtra.data);
+          return
+        }
+
+        console.log("User was creating an auction, he stopped at step:", intentExtra.stepIndex);
+        let stepIndex = intentExtra.stepIndex;
         try {
           const currentStep = this.createAuctionSteps[stepIndex];
           await currentStep(ctx, messageText, intentExtra.data);

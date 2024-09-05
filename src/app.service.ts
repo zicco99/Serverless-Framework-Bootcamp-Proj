@@ -209,13 +209,18 @@ class AppService {
       return;
     }
 
-    this.logger.log(`[${userId}][/start] -- Creating auction -> Checking if last intent is NONE: `, session_space);
+    this.logger.log(`[${userId}][/start] -- User clicked Create Auction in Menù -> Checking if last intent is NONE: `, session_space);
     if (session_space.last_intent === Intent.NONE) {
+
       this.logger.log(`[${userId}][/start] -- No intent -> Creating auction: `, session_space);
+      this.logger.log("Last intent extra: ", session_space.last_intent_extra);
       await this.auctionWizard.handleMessage(userId, Intent.CREATE_AUCTION, session_space.last_intent_extra as CreateAuctionIntentExtra, ctx, '');
+
     } else {
+
       this.logger.log(`[${userId}][/start] -- Found intent -> Restoring session: `, session_space);
       await this.restoreSession(session_space, ctx, userId, '📦 Create Auction');
+
     }
   }
 
