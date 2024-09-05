@@ -53,7 +53,9 @@ class AppService {
         this.redis = new Redis({
           host,
           port,
+          // tls: {}, 
         });
+        //If both Lambda function and ElastiCache are in private subnets, using TLS can indeed be unnecessary overhead. (latency performance gain)
 
         this.redis.on('error', (err) => this.logger.error('Redis error:', err));
         this.redis.on('connect', () => {
