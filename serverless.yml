@@ -101,9 +101,9 @@ custom:
 
   BotStateCluster:
     name: ${self:custom.base}-bot-state-cluster
-    arn: !Sub "arn:aws:elasticache:${AWS::Region}:${AWS::AccountId}:cluster:${self:custom.BotStateCluster.name}"
-    address: !GetAtt BotStateCluster.RedisEndpoint.Address
-    port: !GetAtt BotStateCluster.RedisEndpoint.Port
+    arn: !Sub "arn:aws:elasticache:${AWS::Region}:${AWS::AccountId}:cluster/${self:custom.BotStateCluster.name}"
+    address: !GetAtt BotStateCluster.ConfigurationEndpoint.Address
+    port: !GetAtt BotStateCluster.ConfigurationEndpoint.Port
     id: !Ref BotStateCluster
 
   UsersTable:
