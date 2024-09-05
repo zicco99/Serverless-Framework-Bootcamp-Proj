@@ -155,7 +155,6 @@ class AppService implements OnModuleInit {
       return;
     }
 
-    //Lock user session space until message is processed
     this.redisService.handleWithLock(userId,this.sessionSpaceLock, async () => {
       const { session_space } = await this.getUserStateOrInit(userId, ctx);
 

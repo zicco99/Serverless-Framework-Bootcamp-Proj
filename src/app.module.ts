@@ -5,6 +5,7 @@ import { AuctionsModule } from './auctions/auctions.module';
 import { Context } from 'telegraf';
 import { SessionSpace } from './users/models/user.model';
 import { AuctionWizard } from './telegram/wizards/create-auction.wizard';
+import { BotStateService } from './services/redis/bot-state.service';
 
 interface BotContext extends Context {
   session_space: SessionSpace;
@@ -13,6 +14,7 @@ interface BotContext extends Context {
 @Module({
   imports: [
     AuctionsModule,
+    BotStateService,
     TelegrafModule.forRoot({
       token: process.env.BOT_TELEGRAM_KEY || '',
       launchOptions: {
