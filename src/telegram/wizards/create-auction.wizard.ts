@@ -3,9 +3,10 @@ import { AuctionsService } from 'src/auctions/auctions.service';
 import { CreateAuctionDto } from 'src/auctions/dtos/create-auction.dto';
 import { BotContext } from 'src/app.module';
 import { parseISO, isValid } from 'date-fns';
-import { Intent, IntentExtra } from 'src/users/models/user.model';
+import { Intent, IntentExtra, resetLastIntent } from 'src/users/models/user.model';
 import { Redis } from 'ioredis';
 import { BotStateService } from 'src/services/redis/bot-state.service';
+import { escapeMarkdown } from '../messages/.utils';
 
 interface CreateAuctionIntentExtra extends IntentExtra {
   stepIndex: number;
@@ -88,6 +89,7 @@ class AuctionWizard {
     }
   }
 
+  // Action trigger + User input trigger
   async handleMessage(
     userId: number,
     intent: Intent,
@@ -96,31 +98,36 @@ class AuctionWizard {
     messageText?: string,
     is_cache_restore: boolean = false
   ): Promise<void> {
-
-    console.log(`[${userId}][${intent}] -- Received message: ${messageText}`);
-
-    const { stepIndex = 0, data = {} } = intentExtra;
-
-    const steps = [
-      { key: 'name', nextStep: 'description', isDate: false },
-      { key: 'description', nextStep: 'startDate', isDate: false },
-      { key: 'startDate', nextStep: 'endDate', isDate: true },
-      { key: 'endDate', nextStep: '', isDate: true },
-      { key: '', nextStep: '', isDate: false }
-    ];
-
     try {
+
+      if (!messageText) {
+        console.log(`[${userId}][${intent}] -- User triggered an action button with intent`, intent);
+      } else{
+        console.log(`[${userId}][${intent}] -- User input with intent: ${intent}, message: ${messageText}`);
+      }
+
+      const { stepIndex = 0, data = {} } = intentExtra;
+
+      const steps = [
+        { key: 'name', nextStep: 'description', isDate: false },
+        { key: 'description', nextStep: 'startDate', isDate: false },
+        { key: 'startDate', nextStep: 'endDate', isDate: true },
+        { key: 'endDate', nextStep: '', isDate: true },
+        { key: '', nextStep: '', isDate: false }
+      ];
+      
       const step = steps[stepIndex];
       console.log(`[${userId}][${intent}] -- Step: ${stepIndex}, Key: ${step?.key}, NextStep: ${step?.nextStep}, IsDate: ${step?.isDate}`);
       if (step) {
-
+        
         if(is_cache_restore === true){
-          await ctx.reply(`We were talking about creating an auction, actually I got this data:
+          await ctx.reply(escapeMarkdown(`We were talking about creating an auction, actually I got this data:
             - idUser: ${JSON.stringify(data.idUser)},
-            - auction data: ${JSON.stringify(intentExtra.data)}`);
+            - auction data: ${JSON.stringify(intentExtra.data)}`));
           return;
         }
-        else{
+        else {
+
           if(!messageText){
             return;
           }
@@ -146,6 +153,8 @@ class AuctionWizard {
     } catch (error) {
       console.error('Error during auction creation:', error);
       await ctx.reply('⚠️ An unexpected error occurred. Please try again later.');
+      resetLastIntent(userId, (await this.redisService.getRedis())[0]);
+      await ctx.reply('Type /menu to go back');
     }
   }
 

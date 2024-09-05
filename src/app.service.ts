@@ -77,8 +77,9 @@ export class AppService {
   async createAuction(ctx: BotContext) {
     await this.gateway(ctx, async (userId, session_space) => {
       console.log("Gateway Passed");
+
       console.log(`User ${userId} - Session: ${JSON.stringify(session_space)}`);
-      await this.auctionWizard.handleMessage(userId, Intent.CREATE_AUCTION, session_space?.last_intent_extra as CreateAuctionIntentExtra, ctx);
+      await this.auctionWizard.handleMessage(userId, Intent.CREATE_AUCTION, session_space?.last_intent_extra as CreateAuctionIntentExtra, ctx, undefined, false);
     });
   }
 
@@ -127,6 +128,7 @@ export class AppService {
           }
         } else {
           await resetLastIntent(userId, (await this.botStateService.getRedis())[0]);
+          
           await ctx.reply("Session has timed out. Cleaning up 🧹.");
           await new Promise(resolve => setTimeout(resolve, 1000));
           await ctx.reply("Type /menu to get started.");
