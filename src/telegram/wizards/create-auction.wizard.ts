@@ -139,17 +139,20 @@ class AuctionWizard {
           }
 
           await this.validateAndUpdateField(ctx, messageText, step.key, step.isDate, data, step.nextStep);
-
           if (stepIndex < steps.length - 1) {
+
             intentExtra.stepIndex = stepIndex + 1;
+            await this.setLastIntent(userId, intent, intentExtra);
             await ctx.reply(`🧙‍♂️ Let's continue our journey, now i need a ${steps[stepIndex + 1].key}`);
+
           } else {
+
             await this.finalizeAuctionCreation(ctx, data);
             await this.resetLastIntent(userId, data);
             await ctx.reply('🎉 Your auction has been created successfully!');
             await ctx.reply('🧙‍♂️ Well done, peace out\\!');
+          }
         }
-      }
       } else {
         await ctx.reply('⚠️ Invalid step index.');
       }
@@ -179,6 +182,33 @@ class AuctionWizard {
       throw error; 
     }
   }
+
+  public async setLastIntent(userId: number, intent: Intent, intentExtra?: IntentExtra): Promise<void> {
+    const redisKey = `user_session:${userId}`;
+
+    const pipeline = this.redis.pipeline();
+    pipeline.hset(redisKey, 'last_intent', intent);
+    pipeline.hset(redisKey, 'last_intent_timestamp', new Date().toISOString());
+
+    if (intentExtra) {
+      pipeline.hset(redisKey, 'last_intent_extra', JSON.stringify(intentExtra));
+    } 
+    else {
+      switch(intent) {
+        case Intent.CREATE_AUCTION:
+          pipeline.hset(redisKey, 'last_intent_extra', JSON.stringify({ stepIndex : 0, data : {}}));
+          break;
+      }
+    }
+
+    try {
+      await pipeline.exec();
+    } catch (error) {
+      console.error('Error setting last intent:', error);
+      throw error;
+    }
+  }
+
 }
 
 export { AuctionWizard, CreateAuctionIntentExtra };

@@ -84,6 +84,33 @@ async function resetLastIntent(userId: number, redisClient: any): Promise<void> 
     }
   }
 
+  async function setLastIntent(userId: number, intent: Intent, intentExtra: IntentExtra, redisClient: any): Promise<void> {
+    const redisKey = `user_session:${userId}`;
+
+    const pipeline = redisClient.pipeline();
+    pipeline.hset(redisKey, 'last_intent', intent);
+    pipeline.hset(redisKey, 'last_intent_timestamp', new Date().toISOString());
+
+    if (intentExtra) {
+      pipeline.hset(redisKey, 'last_intent_extra', JSON.stringify(intentExtra));
+    } 
+    else {
+      switch(intent) {
+        case Intent.CREATE_AUCTION:
+          pipeline.hset(redisKey, 'last_intent_extra', JSON.stringify({ stepIndex : 0, data : {}}));
+          break;
+      }
+    }
+
+    try {
+      await pipeline.exec();
+    } catch (error) {
+      console.error('Error setting last intent:', error);
+      throw error;
+    }
+  }
+
+
 
 
 
