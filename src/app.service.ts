@@ -64,9 +64,11 @@ class AppService {
         this.logger.log(`Redis endpoint: ${host}:${port}`);
       } else {
         this.logger.error('No cache node endpoint found.');
+        process.exit(1);
       }
     } catch (err) {
       this.logger.error('Error fetching cache cluster info:', err);
+      process.exit(1);
     }
   }
 
