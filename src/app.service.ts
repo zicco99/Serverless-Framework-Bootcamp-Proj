@@ -11,17 +11,17 @@ import { auctionListMessage } from './telegram/messages/auction';
 import { InlineKeyboardMarkup } from 'telegraf/typings/core/types/typegram';
 import { escapeMarkdown } from './telegram/messages/.utils';
 import { BotContext, SessionSpace } from './app.module';
-import { Intent, showSessionSpace, IntentExtra } from './users/models/user.model';
+import { Intent, showSessionSpace, getOrInitUserSessionSpace, resetLastIntent } from './users/models/user.model';
 import { BotStateService } from './services/redis/bot-state.service';
 
 @Update()
 @Injectable()
 class AppService implements OnModuleInit {
-  private readonly logger = new Logger(AppService.name);
-  private redisClients: Redis[] = [];
-  private auctionsCounts: number;
-  private readonly intentTTL = parseInt(process.env.INTENT_TTL_!, 3600*1000);
-  private readonly sessionSpaceLock = parseInt(process.env.SESSION_SPACE_LOCK!, 1000);
+  private readonly log = new Logger(AppService.name);
+  private redis: Redis[] = [];
+  private auctionCount: number;
+  private readonly intentTTL = parseInt(process.env.INTENT_TTL_!) || 3600 * 1000;
+  private readonly lockTTL = parseInt(process.env.SESSION_SPACE_LOCK!) || 1 * 1000;
 
   constructor(
     @InjectBot() private readonly bot: Telegraf<BotContext>,
@@ -31,182 +31,131 @@ class AppService implements OnModuleInit {
   ) {}
 
   async onModuleInit() {
-    this.redisClients = await this.redisService.getRedis();
-    await this.setupBotCommands();
+    this.redis = await this.redisService.getRedis();
+    await this.setupCommands();
   }
-  async setupBotCommands() {
-    this.logger.log('Setting up bot commands...');
+
+  private async setupCommands() {
+    this.log.log('Setting up commands...');
     await this.bot.telegram.setMyCommands([
       { command: 'start', description: 'Start the bot' },
       { command: 'help', description: 'Get help' },
     ]);
   }
 
-  private async getUserSessionSpace(userId: number): Promise<SessionSpace | null> {
-    const sessionSpace = await this.redisClients[0].get(`user:${userId}`);
-    return sessionSpace ? JSON.parse(sessionSpace) : null;
-  }
-
-  private async setUserSessionSpace(userId: number, sessionSpace: SessionSpace): Promise<void> {
-    await this.redisClients[0].set(`user:${userId}`, JSON.stringify(sessionSpace));
-  }
-
-  private async resetLastIntent(userId: number): Promise<void> {
-    const redisKey = `user_session:${userId}`;
-
-    const pipeline = this.redisClients[0].pipeline();
-    pipeline.hset(redisKey, 'last_intent', Intent.NONE);
-    pipeline.hset(redisKey, 'last_intent_timestamp', new Date().toISOString());
-    pipeline.hset(redisKey, 'last_intent_extra', JSON.stringify({}));
-
-    try {
-      await pipeline.exec();
-    } catch (error) {
-      this.logger.error('Error resetting last intent:', error);
-      throw error;
-    }
-  }
-  
   @Start()
-  async startCommand(ctx: BotContext) {
-    const userId = ctx.from?.id;
-    if (!userId) {
-      await ctx.reply('Unable to identify you. Please try again.');
-      return;
-    }
+  async start(ctx: BotContext) {
+    await this.gateway(ctx, async (userId, session_space) => {
+      const message = session_space
+        ? `👋 Welcome back! Here is your user: \n${escapeMarkdown(showSessionSpace(userId, session_space))}`
+        : '👋 👋 You are new here!';
+      
+      await ctx.reply(message);
 
-    this.logger.log(`[${userId}][/start] -- User started the bot`);
-    const { session_space, session_newly_created } = await this.getUserStateOrInit(userId, ctx);
+      this.auctionCount ??= (await this.auctions.findAll()).length;
 
-    if (!session_space) {
-      await ctx.reply('Unable to identify you. Please try again.');
-      return;
-    }
+      const inlineKeyboard: InlineKeyboardMarkup = Markup.inlineKeyboard([
+        [Markup.button.callback('📦 Create Auction', Intent.CREATE_AUCTION)],
+        [Markup.button.callback('🔍 View Auctions', Intent.VIEW_AUCTIONS)],
+      ]).reply_markup as InlineKeyboardMarkup;
 
-    if (!session_newly_created) {
       await ctx.reply(
-        `👋 Welcome back buddy, right to the auction bot! Here is your user: \n${escapeMarkdown(showSessionSpace(userId, session_space))}`,
-        { parse_mode: 'MarkdownV2' }
+        welcomeMessage(ctx.from?.first_name || 'Buddy', this.auctionCount),
+        { parse_mode: 'MarkdownV2', reply_markup: inlineKeyboard }
       );
-    } else {
-      await ctx.reply(`👋 👋 You are new here!`, { parse_mode: 'MarkdownV2' });
-    }
-
-    this.auctionsCounts ??= (await this.auctions.findAll()).length;
-
-    const inlineKeyboard: InlineKeyboardMarkup = Markup.inlineKeyboard([
-      [Markup.button.callback('📦 Create Auction', Intent.CREATE_AUCTION)],
-      [Markup.button.callback('🔍 View Auctions', Intent.VIEW_AUCTIONS)],
-    ]).reply_markup as InlineKeyboardMarkup;
-
-    await ctx.reply(
-      welcomeMessage(ctx.from?.first_name || 'Buddy', this.auctionsCounts),
-      { parse_mode: 'MarkdownV2', reply_markup: inlineKeyboard }
-    );
+    });
   }
 
   @Help()
-  async helpCommand(ctx: BotContext) {
-    const userId = ctx.from?.id;
-    if (!userId) {
-      await ctx.reply('Unable to identify you. Please try again.');
-      return;
-    }
+  async help(ctx: BotContext) {
     await ctx.reply('Need help? Use the buttons to manage auctions or type commands to interact.');
   }
 
   @Action(Intent.CREATE_AUCTION)
-  async onCreateAuction(ctx: BotContext) {
-    const userId = ctx.from?.id;
-    if (!userId) {
-      await ctx.reply('Unable to identify you. Please try again.');
-      return;
-    }
-
-    const { session_space } = await this.getUserStateOrInit(userId, ctx);
-
-    if (!session_space) {
-      await ctx.reply('Unable to identify you. Please try again.');
-      return;
-    }
-
-    if (session_space.last_intent === Intent.NONE) {
-      await this.auctionWizard.handleMessage(userId, Intent.CREATE_AUCTION, session_space.last_intent_extra as CreateAuctionIntentExtra, ctx, '');
-    } else {
-      await this.restoreSession(session_space, ctx, userId, '📦 Create Auction');
-    }
+  async createAuction(ctx: BotContext) {
+    await this.gateway(ctx, async (userId, session_space) => {
+      await this.auctionWizard.handleMessage(userId, Intent.CREATE_AUCTION, session_space?.last_intent_extra as CreateAuctionIntentExtra, ctx);
+    });
   }
 
   @Action(Intent.VIEW_AUCTIONS)
-  async onViewAuctions(ctx: BotContext) {
+  async viewAuctions(ctx: BotContext) {
     try {
       const auctions: Auction[] = await this.auctions.findAll();
-      this.auctionsCounts = auctions.length;
-
+      this.auctionCount = auctions.length;
       const msg = auctionListMessage(auctions);
       await ctx.reply(msg, { parse_mode: 'MarkdownV2' });
     } catch (error) {
-      this.logger.error('Error retrieving auctions:', error);
+      this.log.error('Error retrieving auctions:', error);
       await ctx.reply('Failed to retrieve auctions. Please try again later.');
     }
   }
 
+  // Triggered on message
+
   @Hears(/.*/)
   async onText(@Context() ctx: BotContext, @Message('text') message: string) {
+    await this.gateway(ctx, async (userId, session_space) => {
+      return
+
+    });
+  }
+
+  //-------- GATEWAY -----------
+
+  private async gateway(ctx: BotContext, action: (userId: number, session_space: SessionSpace | null) => Promise<void>) {
+    //Authenticate user
     const userId = ctx.from?.id;
-    if (!userId) {
-      await ctx.reply('Unable to identify you. Please try again.');
-      return;
-    }
+    if (!userId) return ctx.reply('Unable to identify you\\. Please try again\\.', { parse_mode: 'MarkdownV2' });
 
-    this.redisService.handleWithLock(userId,this.sessionSpaceLock, async () => {
-      const { session_space } = await this.getUserStateOrInit(userId, ctx);
+    //Lock session space to block concurrent lambdas to avoid race conditions (consecutive messages from the same user)
+    this.redisService.handleWithLock(userId, this.lockTTL, async () => {
+      const { session_space } = await getOrInitUserSessionSpace(userId, ctx, this.getSession, this.setSession);
 
-    if (session_space?.last_intent === Intent.CREATE_AUCTION) {
-      const isSessionExpired = (new Date().getTime() - new Date(session_space.last_intent_timestamp).getTime()) > this.intentTTL;
-      if (isSessionExpired) {
-        await this.resetLastIntent(userId);
-        await ctx.reply("Session has timed out. Wait a second, cleaning around 🧹.");
-      } else {
-        await this.auctionWizard.handleMessage(userId, session_space.last_intent, session_space.last_intent_extra as CreateAuctionIntentExtra, ctx, message);
+      if(!session_space) {
+        ctx.telegram.sendMessage(userId,"No session found\\. Please try again\\.",{parse_mode: 'MarkdownV2'});
+        return;
       }
-    }
-    })
+
+      //If session exists, restore it (last intent)
+      if(session_space.last_intent !== Intent.NONE) {
+        //Check last intent
+        const isExpired = (Date.now() - new Date(session_space.last_intent_timestamp).getTime()) > this.intentTTL;
+        if (!isExpired) {
+          //Restore last intent 
+          switch (session_space.last_intent) {
+            case Intent.CREATE_AUCTION:
+              await this.auctionWizard.handleMessage(userId, session_space.last_intent, session_space.last_intent_extra as CreateAuctionIntentExtra, ctx, '');
+              return;
+            case Intent.VIEW_AUCTIONS:
+              await this.viewAuctions(ctx);
+              return;
+          }
+        } 
+        else {
+          await resetLastIntent(userId, this.redis[0]);
+          await ctx.reply("Session has timed out\\. Cleaning up 🧹\\.");
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          await ctx.reply("Type /menu to get started.\\.");
+          return;
+        }
+      }
+      //Execute user action
+      await action(userId, session_space);
+    });
   }
 
-  private async getUserStateOrInit(userId: number, ctx: BotContext): Promise<{ session_space: SessionSpace | null, session_newly_created: boolean }> {
-    let session_space = await this.getUserSessionSpace(userId);
-    const session_newly_created = session_space === null;
 
-    if (!session_space) {
-      session_space = {
-        chatId: ctx.chat?.id || 0,
-        firstName: ctx.from?.first_name || '',
-        lastName: ctx.from?.last_name || '',
-        firstInteraction: new Date().toISOString(),
-        languageCode: ctx.from?.language_code || '',
-        last_intent: Intent.NONE,
-        last_intent_extra: {} as IntentExtra,
-        last_intent_timestamp: "",
-        initialContext: JSON.stringify({
-          chat: ctx.chat,
-          message: ctx.message,
-          from: ctx.from,
-        }),
-      };
 
-      await this.setUserSessionSpace(userId, session_space);
-    }
+  //-------- HELPERS -----------
 
-    return { session_space, session_newly_created };
+  private async getSession(userId: number): Promise<SessionSpace | null> {
+    const session = await this.redis[0].get(`user:${userId}`);
+    return session ? JSON.parse(session) : null;
   }
 
-  private async restoreSession(session_space: SessionSpace, ctx: BotContext, userId: number, message: string): Promise<void> {
-    if (session_space.last_intent === Intent.CREATE_AUCTION) {
-      await this.auctionWizard.handleMessage(userId, session_space.last_intent, session_space.last_intent_extra as CreateAuctionIntentExtra, ctx, message);
-    } else {
-      await ctx.reply("Your session has expired or is not valid. Please start over.");
-    }
+  private async setSession(userId: number, session: SessionSpace): Promise<void> {
+    await this.redis[0].set(`user:${userId}`, JSON.stringify(session));
   }
 }
 

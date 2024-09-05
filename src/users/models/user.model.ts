@@ -1,3 +1,5 @@
+import { BotContext } from "src/app.module";
+
 interface SessionSpace {
     username?: string;            
     firstName: string;            // The user's first name
@@ -40,5 +42,51 @@ function showSessionSpace(userId: number, user: SessionSpace) : string {
            `  Content Language: ${user.preferences?.contentLanguage}\n`;
 }
 
+async function getOrInitUserSessionSpace(userId: number, ctx: BotContext, getSessionSpace : (userId: number) => Promise<SessionSpace | null>, setSessionSpace : (userId: number, session_space: SessionSpace) => Promise<void>): Promise<{ session_space: SessionSpace | null, session_newly_created: boolean }> {
+    let session_space = await getSessionSpace(userId);
+    const session_newly_created = session_space === null;
 
-export { SessionSpace, Preferences, Intent, IntentExtra,showSessionSpace };
+    if (!session_space) {
+      session_space = {
+        chatId: ctx.chat?.id || 0,
+        firstName: ctx.from?.first_name || '',
+        lastName: ctx.from?.last_name || '',
+        firstInteraction: new Date().toISOString(),
+        languageCode: ctx.from?.language_code || '',
+        last_intent: Intent.NONE,
+        last_intent_extra: {} as IntentExtra,
+        last_intent_timestamp: "",
+        initialContext: JSON.stringify({
+          chat: ctx.chat,
+          message: ctx.message,
+          from: ctx.from,
+        }),
+      };
+
+      await setSessionSpace(userId, session_space);
+    }
+    return { session_space, session_newly_created };
+}
+
+async function resetLastIntent(userId: number, redisClient: any): Promise<void> {
+    const redisKey = `user_session:${userId}`;
+
+    const pipeline = redisClient.pipeline();
+    pipeline.hset(redisKey, 'last_intent', Intent.NONE);
+    pipeline.hset(redisKey, 'last_intent_timestamp', new Date().toISOString());
+    pipeline.hset(redisKey, 'last_intent_extra', JSON.stringify({}));
+
+    try {
+      await pipeline.exec();
+    } catch (error) {
+      console.error('Error resetting last intent:', error);
+      throw error;
+    }
+  }
+
+
+
+
+
+
+export { SessionSpace, Preferences, Intent, IntentExtra, showSessionSpace, getOrInitUserSessionSpace, resetLastIntent };

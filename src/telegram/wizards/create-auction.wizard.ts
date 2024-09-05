@@ -93,7 +93,7 @@ class AuctionWizard {
     intent: Intent,
     intentExtra: CreateAuctionIntentExtra,
     ctx: BotContext,
-    messageText: string
+    messageText: string = ''
   ): Promise<void> {
 
     console.log(`[${userId}][${intent}] -- Received message: ${messageText}`);
