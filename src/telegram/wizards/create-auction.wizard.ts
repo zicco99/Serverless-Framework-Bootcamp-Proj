@@ -159,56 +159,55 @@ class AuctionWizard {
   }
 
   public async setLastIntent(
-  userId: number, 
-  intent: Intent, 
-  intentExtra?: CreateAuctionIntentExtra
-): Promise<void> {
-  const redisKey = `user_session:${userId}`;
-  const redis = (await this.redisService.getRedis())[0];
-
-  // Prepare Lua script
-  const script = `
-    local key = ARGV[1]
-    local intent = ARGV[2]
-    local timestamp = ARGV[3]
-    local intentExtra = ARGV[4]
-
-    redis.call('HSET', key, 'last_intent', intent)
-    redis.call('HSET', key, 'last_intent_timestamp', timestamp)
-    redis.call('HSET', key, 'last_intent_extra', intentExtra)
-
-    return {intent, timestamp, intentExtra}
-  `;
-
-  // Convert arguments to strings
-  const timestamp = new Date().toISOString();
-  const intentStr = String(intent); // Ensure intent is a string
-
-  let lastIntentExtra = '{}';
-  if (intentExtra) {
-    lastIntentExtra = JSON.stringify(intentExtra);
-  } else {
-    switch (intent) {
-      case Intent.CREATE_AUCTION:
-        lastIntentExtra = JSON.stringify({ stepIndex: 0, data: {} });
-        break;
-      case Intent.NONE:
-      default:
-        lastIntentExtra = "{}";
-        break;
+    userId: number, 
+    intent: Intent, 
+    intentExtra?: CreateAuctionIntentExtra
+  ): Promise<void> {
+    const redisKey = `user_session:${userId}`;
+    const redis = (await this.redisService.getRedis())[0];
+  
+    // Prepare Lua script
+    const script = `
+      local key = KEYS[1]
+      local intent = ARGV[1]
+      local timestamp = ARGV[2]
+      local intentExtra = ARGV[3]
+  
+      redis.call('HSET', key, 'last_intent', intent)
+      redis.call('HSET', key, 'last_intent_timestamp', timestamp)
+      redis.call('HSET', key, 'last_intent_extra', intentExtra)
+  
+      return {intent, timestamp, intentExtra}
+    `;
+  
+    // Convert arguments to strings
+    const timestamp = new Date().toISOString();
+    const intentStr = String(intent); // Ensure intent is a string
+  
+    let lastIntentExtra = '{}';
+    if (intentExtra) {
+      lastIntentExtra = JSON.stringify(intentExtra);
+    } else {
+      switch (intent) {
+        case Intent.CREATE_AUCTION:
+          lastIntentExtra = JSON.stringify({ stepIndex: 0, data: {} });
+          break;
+        case Intent.NONE:
+        default:
+          lastIntentExtra = "{}";
+          break;
+      }
+    }
+  
+    try {
+      // Execute Lua script
+      const result = await redis.eval(script, 1, redisKey, intentStr, timestamp, lastIntentExtra);
+      console.log(`Lua script result: ${JSON.stringify(result)}`);
+    } catch (error) {
+      console.error('Error executing Lua script:', error);
+      throw error;
     }
   }
-
-  try {
-    // Execute Lua script
-    const result = await redis.eval(script, 1, redisKey, intentStr, timestamp, lastIntentExtra);
-    console.log(`Lua script result: ${JSON.stringify(result)}`);
-  } catch (error) {
-    console.error('Error executing Lua script:', error);
-    throw error;
-  }
-}
-
   
 }  
 
