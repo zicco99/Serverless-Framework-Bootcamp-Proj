@@ -159,37 +159,45 @@ class AuctionWizard {
   }
 
 
-  public async setLastIntent(userId: number, intent: Intent, intentExtra?: IntentExtra): Promise<void> {
-    const redisKey = `user_session:${userId}:${prefixIntentData}`;
-
-    const pipeline = (await this.redisService.getRedis())[0].pipeline();
-    pipeline.hset(redisKey, 'last_intent', intent);
-    pipeline.hset(redisKey, 'last_intent_timestamp', new Date().toISOString());
-
-    if (intentExtra) {
-      pipeline.hset(redisKey, 'last_intent_extra', JSON.stringify(intentExtra));
-    } 
-    else {
-      //Init
-      switch(intent) {
-        case Intent.CREATE_AUCTION:
-          pipeline.hset(redisKey, 'last_intent_extra', JSON.stringify({ stepIndex : 0, data : {}}));
-          break;
-        case Intent.NONE:
-          pipeline.hset(redisKey, 'last_intent_extra', "{}");
-          break;
-      }
-    }
-
+  public async setLastIntent(
+    userId: number, 
+    intent: Intent, 
+    intentExtra: CreateAuctionIntentExtra = { stepIndex: 0, data: {} }
+  ): Promise<void> {
+    const redisKey = `user_session:${userId}`;
+    const redis = (await this.redisService.getRedis())[0];
+  
     try {
-      const result = await pipeline.exec();
-      console.log(`Redis pipeline result: ${JSON.stringify(result)}`);
+      // Prepare transaction
+      const transaction = redis.multi();
+      transaction.hset(redisKey, 'last_intent', intent);
+      transaction.hset(redisKey, 'last_intent_timestamp', new Date().toISOString());
+  
+      // Determine and set intent extra
+      let lastIntentExtra: string;
+      if (intentExtra) {
+        lastIntentExtra = JSON.stringify(intentExtra);
+      } else {
+        switch (intent) {
+          case Intent.CREATE_AUCTION:
+            lastIntentExtra = JSON.stringify({ stepIndex: 0, data: {} });
+            break;
+          case Intent.NONE:
+          default:
+            lastIntentExtra = "{}";
+            break;
+        }
+      }
+      transaction.hset(redisKey, 'last_intent_extra', lastIntentExtra);
+  
+      // Execute transaction
+      const result = await transaction.exec();
+      console.log(`Redis transaction result: ${JSON.stringify(result)}`);
     } catch (error) {
-      console.log('Error setting last intent:', error);
+      console.error('Error setting last intent:', error);
       throw error;
     }
   }
-
-}
+}  
 
 export { AuctionWizard, CreateAuctionIntentExtra };
