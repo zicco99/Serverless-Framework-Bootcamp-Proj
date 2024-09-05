@@ -50,7 +50,16 @@ class AuctionWizard {
     }
   }
 
-  private askString(key: string, nextInfo: string) {
+  private askString(key: string, nextInfo: string = '') {
+    if (!nextInfo) {
+      nextInfo = '';
+    }
+
+    if (!messageText) {
+      ctx.reply('❗ Please provide the date in the format YYYY-MM-DD.');
+      return;
+    }
+
     return async (ctx: BotContext, messageText: string, session: Partial<CreateAuctionDto>) => {
       const userId = session.idUser;
       if (userId) {
@@ -67,6 +76,10 @@ class AuctionWizard {
 
   private askDate(key: string, nextInfo: string) {
     return async (ctx: BotContext, messageText: string, session: Partial<CreateAuctionDto>) => {
+      if (!messageText) {
+        ctx.reply('❗ Please provide the date in the format YYYY-MM-DD.');
+        return;
+      }
       const parsedDate = parseISO(messageText);
       if (isValid(parsedDate)) {
         const userId = session.idUser;
@@ -115,11 +128,6 @@ class AuctionWizard {
     ctx: BotContext,
     messageText: string
   ): Promise<void> {
-    if (!messageText) {
-      await ctx.reply("🤔 It looks like you didn't enter any text. Please try again.");
-      return;
-    }
-
     switch (intent) {
       case Intent.CREATE_AUCTION:
         let stepIndex = intentExtra.stepIndex || 0;

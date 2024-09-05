@@ -192,6 +192,8 @@ class AppService {
       return;
     }
 
+    process.exit(0);
+
     await ctx.reply('Need help? Use the buttons to manage auctions or type commands to interact.');
   }
 
