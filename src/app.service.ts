@@ -244,10 +244,11 @@ class AppService {
       return;
     }
 
-    if (!message) {
-      await ctx.reply("🤔 I didn't receive any input. Please try again.");
-      return;
+    if(!message) {
+      console.log(`[${userId}][/text] -- Empty message`);
     }
+
+    console.log(`[${userId}][/text] -- Received message: ${message}`);
 
     const { session_space } = await this.getUserStateOrInit(userId, ctx);
     if (!session_space) {
