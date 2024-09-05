@@ -5,7 +5,6 @@ import Redlock from 'redlock';
 
 @Injectable()
 export class BotStateService implements OnModuleInit, OnModuleDestroy {
-  private readonly logger = new Logger(BotStateService.name);
   private redisClients: Redis[] = [];
   private redlock: Redlock;
   private readonly awsRegion = process.env.AWS_REGION;
@@ -17,7 +16,7 @@ export class BotStateService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async initializeRedis() {
-    this.logger.log('Connecting to AWS ElastiCache Redis Cluster...');
+    console.log('Connecting to AWS ElastiCache Redis Cluster...');
     const elastiCache = new AWS.ElastiCache({ region: this.awsRegion });
 
     try {
@@ -43,17 +42,17 @@ export class BotStateService implements OnModuleInit, OnModuleDestroy {
         });
 
         this.redisClients.forEach(redis => {
-          redis.on('error', (err) => this.logger.error('Redis error:', err));
-          redis.on('connect', () => this.logger.log('Connected to Redis'));
+          redis.on('error', (err) => console.error('Redis error:', err));
+          redis.on('connect', () => console.log('Connected to Redis'));
         });
 
-        this.logger.log(`Redis nodes connected: ${this.redisClients.map(redis => `${redis.options.host}:${redis.options.port}`).join(', ')}`);
+        console.log(`Redis nodes connected: ${this.redisClients.map(redis => `${redis.options.host}:${redis.options.port}`).join(', ')}`);
       } else {
-        this.logger.error('No cache node endpoint found.');
+        console.error('No cache node endpoint found.');
         process.exit(1);
       }
     } catch (err) {
-      this.logger.error('Error fetching cache cluster info:', err);
+      console.error('Error fetching cache cluster info:', err);
       process.exit(1);
     }
   }
@@ -69,24 +68,28 @@ export class BotStateService implements OnModuleInit, OnModuleDestroy {
   }
 
   public async handleWithLock(userId: number, ttl: number, action: () => Promise<void>) {
+    console.log(`User ${userId} acquiring lock for ${ttl} ms...`)
     const lockKey = `user_session:${userId}`;
     let lockAcquired = false;
 
     for (let retries = 0; retries < 10; retries++) {
       try {
         const lock = await this.redlock.acquire([lockKey], ttl);
+        console.log(`Lock acquired`)
         lockAcquired = true;
 
         try {
           await action();
         } finally {
+          console.log("Lock releasing")
           await lock.release();
+          console.log("Lock released")
         }
 
         break;
       } catch (error) {
         if (retries === 9) {
-          this.logger.error('Error acquiring lock:', error);
+          console.error('Error acquiring lock:', error);
           throw error;
         }
         await new Promise((resolve) => setTimeout(resolve, 200));
