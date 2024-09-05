@@ -127,7 +127,7 @@ class AuctionWizard {
           return;
         }
         else {
-          if (!messageText || stepIndex === 0) {
+          if (!messageText) {
             console.log(`[${userId}][${intent}] -- User started intent`, intent);
             await ctx.reply(`🧙‍♂️ - Welcome to the auction wizard\\! I'll guide to create an auction.\\. Hum ... 📝, let's start by its ${steps[stepIndex + 1].key}\\.`);
             return;
@@ -142,19 +142,20 @@ class AuctionWizard {
 
           if (stepIndex < steps.length - 1) {
             intentExtra.stepIndex = stepIndex + 1;
-            await ctx.reply(`Next, please provide the ${steps[stepIndex + 1].key}.`);
+            await ctx.reply(`🧙‍♂️ Let's continue our journey, now i need a ${steps[stepIndex + 1].key}`);
           } else {
             await this.finalizeAuctionCreation(ctx, data);
             await this.resetLastIntent(userId, data);
             await ctx.reply('🎉 Your auction has been created successfully!');
+            await ctx.reply('🧙‍♂️ Well done, peace out\\!');
         }
       }
       } else {
         await ctx.reply('⚠️ Invalid step index.');
       }
     } catch (error) {
-      console.error('Error during auction creation:', error);
-      await ctx.reply('⚠️ An unexpected error occurred. Please try again later.');
+      console.log('Error during auction creation:', error);
+      await ctx.reply('An unexpected error occurred. Please try again later\\.');
       resetLastIntent(userId, (await this.redisService.getRedis())[0]);
       await ctx.reply('Type /menu to go back');
     }
