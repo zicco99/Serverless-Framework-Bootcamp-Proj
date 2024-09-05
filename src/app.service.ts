@@ -95,9 +95,15 @@ export class AppService {
 
   @Hears(/.*/)
   async onText(@Context() ctx: BotContext, @Message('text') message: string) {
-    ctx.telegram.sendMessage(ctx.from?.id || 0, `AHHHH :O : ${message}`);
     await this.gateway(ctx, async (userId, session_space, message) => {
-      // Handle text messages here
+      switch(session_space?.last_intent){
+        case Intent.CREATE_AUCTION:
+          await this.auctionWizard.handleMessage(userId, Intent.CREATE_AUCTION, session_space?.last_intent_extra as CreateAuctionIntentExtra, ctx, message);
+          break;
+        case Intent.NONE:
+          ctx.telegram.sendMessage(ctx.from?.id || 0, `AHHHH :O : ${message}`);
+          break;
+      }
     });
   }
 
