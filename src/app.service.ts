@@ -157,7 +157,7 @@ class AppService {
       return;
     }
 
-    if (session_newly_created) {
+    if (!session_newly_created) {
       await ctx.reply(
         `👋 Welcome back buddy, right to the auction bot\\! Here is your user: \n${escapeMarkdown(showSessionSpace(userId, session_space))}`,
         { parse_mode: 'MarkdownV2' }
