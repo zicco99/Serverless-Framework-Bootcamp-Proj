@@ -5,5 +5,4 @@ ElasticCacheLambdaIAM:
     - "elasticache:Connect" 
   Resource:
     - ${self:custom.BotStateCluster.arn}
-    
 

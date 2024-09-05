@@ -13,7 +13,7 @@ BotStateCluster:
     CacheNodeType: cache.t3.micro
     Engine: redis
     NumCacheNodes: 1
-    ClusterName: !Sub ${self:custom.BotStateCluster.name}
+    ClusterName: ${self:custom.BotStateCluster.name}
     CacheSubnetGroupName: !Ref BotStateSubnetGroup
     VpcSecurityGroupIds:
       - !GetAtt BotStateSG.GroupId
