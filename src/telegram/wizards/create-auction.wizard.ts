@@ -96,10 +96,6 @@ class AuctionWizard {
     ctx: BotContext,
     messageText: string
   ): Promise<void> {
-    if (intent !== Intent.CREATE_AUCTION) {
-      await ctx.reply("⚠️ I don't recognize that command. Please use the correct one.");
-      return;
-    }
 
     const { stepIndex = 0, data = {} } = intentExtra;
 
