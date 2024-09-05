@@ -153,8 +153,7 @@ class AuctionWizard {
     } catch (error) {
       console.log('Error during auction creation:', error);
       await ctx.reply('An unexpected error occurred. Please try again later\\.');
-      // Reset last intent
-      this.setLastIntent(userId, Intent.CREATE_AUCTION);
+      this.setLastIntent(userId, Intent.NONE);
       await ctx.reply('Type /menu to go back');
     }
   }
