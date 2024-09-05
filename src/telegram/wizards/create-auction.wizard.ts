@@ -15,24 +15,16 @@ interface CreateAuctionIntentExtra extends IntentExtra {
 
 @Injectable()
 class AuctionWizard {
-  redis: Redis;
+
+  private readonly prefixIntentData = 'data';
 
   constructor(private readonly auctions: AuctionsService, private readonly redisService: BotStateService) {
-  }
-
-
-  private async updateRedisField(userId: string, key: string, value: any): Promise<void> {
-    try {
-      const redisKey = `user_session:${userId}`;
-      await this.redis.hset(redisKey, `data:${key}`, JSON.stringify(value));
-    } catch (error) {
-      console.error('Error updating Redis:', error);
-    }
   }
 
   private async validateAndUpdateField(
     ctx: BotContext,
     messageText: string,
+    prefix: string,
     key: string,
     isDate: boolean,
     session: Partial<CreateAuctionDto>,
@@ -55,7 +47,7 @@ class AuctionWizard {
   
     const userId = session.idUser;
     if (userId) {
-      await this.updateRedisField(userId, key, messageText);
+      await this.redisService.getRedis().then(([redis]) => redis.hset(`user_session:${userId}:${prefix}`, key, messageText));
       await ctx.reply(`📝 Your ${key} has been set to "${messageText}".`);
       if (nextStep) {
         await ctx.reply(`Next, please provide the ${nextStep}.`);
@@ -140,7 +132,7 @@ class AuctionWizard {
             return;
           }
 
-          await this.validateAndUpdateField(ctx, messageText, step.key, step.isDate, data, step.nextStep);
+          await this.validateAndUpdateField(ctx, messageText, this.prefixIntentData, step.key, step.isDate, data, step.nextStep);
           if (stepIndex < steps.length - 1) {
             intentExtra.stepIndex = stepIndex + 1;
             await this.setLastIntent(userId, intent, intentExtra);
@@ -171,7 +163,7 @@ class AuctionWizard {
   public async setLastIntent(userId: number, intent: Intent, intentExtra?: IntentExtra): Promise<void> {
     const redisKey = `user_session:${userId}`;
 
-    const pipeline = this.redis.pipeline();
+    const pipeline = (await this.redisService.getRedis())[0].pipeline();
     pipeline.hset(redisKey, 'last_intent', intent);
     pipeline.hset(redisKey, 'last_intent_timestamp', new Date().toISOString());
 
