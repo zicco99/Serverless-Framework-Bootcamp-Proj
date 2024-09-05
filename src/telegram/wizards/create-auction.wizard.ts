@@ -130,11 +130,13 @@ class AuctionWizard {
           if (!messageText) {
             console.log(`[${userId}][${intent}] -- User started intent`, intent);
             await ctx.reply(`🧙‍♂️ - Welcome to the auction wizard\\! I'll guide to create an auction.\\. Hum ... 📝, let's start by its ${steps[stepIndex + 1].key}\\.`);
+            await this.setLastIntent(userId, intent, intentExtra);
             return;
           }
 
           if(messageText === 'cancel'){
             await ctx.reply('🧙‍♂️ - Operation cancelled, cya buddy');
+            resetLastIntent(userId, (await this.redisService.getRedis())[0]);
             return;
           }
 
