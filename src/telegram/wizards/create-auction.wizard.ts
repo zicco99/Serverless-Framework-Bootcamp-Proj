@@ -103,7 +103,7 @@ class AuctionWizard {
         console.log(`[${userId}][${intent}] -- User input with intent: ${intent}, message: ${messageText}`);
       }
 
-      let { stepIndex = 0, data = {} } = intentExtra;
+      let { stepIndex, data } = intentExtra;
 
       const steps = [
         { key: 'name', nextStep: 'description', isDate: false },
@@ -113,8 +113,10 @@ class AuctionWizard {
         { key: '', nextStep: '', isDate: false }
       ];
 
+
       const step = steps[stepIndex];
       console.log(`[${userId}][${intent}] -- Step: ${stepIndex}, Key: ${step?.key}, NextStep: ${step?.nextStep}, IsDate: ${step?.isDate}`);
+      
       if (step) {
         if (is_cache_restore === true) {
           console.log("The intent has been restored from cache!");
@@ -135,15 +137,13 @@ class AuctionWizard {
             return;
           }
 
-          await this.validateAndUpdateField(ctx, messageText, prefixIntentData, step.key, step.isDate, data, step.nextStep);
           if (stepIndex < steps.length - 1) {
-            intentExtra.stepIndex = stepIndex + 1;
-            await this.setLastIntent(userId, intent, intentExtra);
+            await this.validateAndUpdateField(ctx, messageText, prefixIntentData, step.key, step.isDate, data, step.nextStep);
+            await this.setLastIntent(userId, intent, { stepIndex: stepIndex + 1, data});
             await ctx.reply(escapeMarkdown(`🧙‍♂️ Let's continue. Now I need a ${steps[stepIndex + 1].key}.`));
           } else {
             await this.finalizeAuctionCreation(ctx, data);
-            // Reset last intent
-            await this.setLastIntent(userId, Intent.CREATE_AUCTION);
+            await this.setLastIntent(userId, Intent.NONE);
             await ctx.reply(escapeMarkdown('🧙‍♂️ 🎉 Your auction has been created successfully!'));
             await ctx.reply(escapeMarkdown('🧙‍♂️ Well done, peace out!'));
           }
