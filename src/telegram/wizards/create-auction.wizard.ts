@@ -166,42 +166,46 @@ class AuctionWizard {
     const redisKey = `user_session:${userId}`;
     const redis = (await this.redisService.getRedis())[0];
   
-    try {
-      // Prepare transaction
-      const transaction = redis.multi();
-      console.log(`Setting last_intent to ${intent}`);
-      transaction.hset(redisKey, 'last_intent', intent);
-
-      const timestamp = new Date().toISOString();
-      console.log(`Setting last_intent_timestamp to ${timestamp}`);
-      transaction.hset(redisKey, 'last_intent_timestamp', timestamp);
+    const script = `
+      local key = ARGV[1]
+      local intent = ARGV[2]
+      local timestamp = ARGV[3]
+      local intentExtra = ARGV[4]
+      
+      redis.call('HSET', key, 'last_intent', intent)
+      redis.call('HSET', key, 'last_intent_timestamp', timestamp)
+      redis.call('HSET', key, 'last_intent_extra', intentExtra)
+      
+      return {intent, timestamp, intentExtra}
+    `;
   
-      // Determine and set intent extra
-      let lastIntentExtra: string;
-      if (intentExtra) {
-        lastIntentExtra = JSON.stringify(intentExtra);
-        console.log(`Setting last_intent_extra to ${lastIntentExtra}`);
-      } else {
-        switch (intent) {
-          case Intent.CREATE_AUCTION:
-            lastIntentExtra = JSON.stringify({ stepIndex: 0, data: {} });
-            break;
-          case Intent.NONE:
-          default:
-            lastIntentExtra = "{}";
-            break;
-        }
+    const timestamp = new Date().toISOString();
+    let lastIntentExtra: string;
+    
+    if (intentExtra) {
+      lastIntentExtra = JSON.stringify(intentExtra);
+    } else {
+      switch (intent) {
+        case Intent.CREATE_AUCTION:
+          lastIntentExtra = JSON.stringify({ stepIndex: 0, data: {} });
+          break;
+        case Intent.NONE:
+        default:
+          lastIntentExtra = "{}";
+          break;
       }
-      transaction.hset(redisKey, 'last_intent_extra', lastIntentExtra);
+    }
   
-      // Execute transaction
-      const result = await transaction.exec();
-      console.log(`Redis transaction result: ${JSON.stringify(result)}`);
+    try {
+      // Execute Lua script
+      const result = await redis.eval(script, 1, redisKey, intent, timestamp, lastIntentExtra);
+      console.log(`Lua script result: ${JSON.stringify(result)}`);
     } catch (error) {
-      console.error('Error setting last intent:', error);
+      console.error('Error executing Lua script:', error);
       throw error;
     }
   }
+  
 }  
 
 export { AuctionWizard, CreateAuctionIntentExtra };
