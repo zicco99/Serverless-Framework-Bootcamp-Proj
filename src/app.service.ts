@@ -122,9 +122,11 @@ async gateway(ctx: BotContext, post: (userId: number, session_space: SessionSpac
 
       //If session exists, restore it (last intent)
       if(session_space.last_intent !== Intent.NONE) {
+        console.log(`Last intent: ${session_space.last_intent}`);
         //Check last intent
         const isExpired = (Date.now() - new Date(session_space.last_intent_timestamp).getTime()) > this.intentTTL;
         if (!isExpired) {
+          console.log("Last intent is not expired -> Restoring last intent");
           //Restore last intent 
           switch (session_space.last_intent) {
             case Intent.CREATE_AUCTION:

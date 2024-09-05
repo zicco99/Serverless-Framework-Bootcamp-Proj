@@ -93,7 +93,8 @@ class AuctionWizard {
     intent: Intent,
     intentExtra: CreateAuctionIntentExtra,
     ctx: BotContext,
-    messageText: string = ''
+    messageText?: string,
+    is_cache_restore: boolean = false
   ): Promise<void> {
 
     console.log(`[${userId}][${intent}] -- Received message: ${messageText}`);
@@ -112,16 +113,34 @@ class AuctionWizard {
       const step = steps[stepIndex];
       console.log(`[${userId}][${intent}] -- Step: ${stepIndex}, Key: ${step?.key}, NextStep: ${step?.nextStep}, IsDate: ${step?.isDate}`);
       if (step) {
-        await this.validateAndUpdateField(ctx, messageText, step.key, step.isDate, data, step.nextStep);
 
-        if (stepIndex < steps.length - 1) {
-          intentExtra.stepIndex = stepIndex + 1;
-          await ctx.reply(`Next, please provide the ${steps[stepIndex + 1].key}.`);
-        } else {
-          await this.finalizeAuctionCreation(ctx, data);
-          await this.resetLastIntent(userId, data);
-          await ctx.reply('🎉 Your auction has been created successfully!');
+        if(is_cache_restore) {
+          await ctx.reply(`We were talking about creating an auction, actually I got this data:
+            - idUser: ${JSON.stringify(data.idUser)},
+            - auction data: ${JSON.stringify(intentExtra.data)}`);
+          return;
         }
+        else{
+
+          if(!messageText){
+            return;
+          }
+
+          if(messageText === 'cancel'){
+            await ctx.reply('Operation cancelled');
+            return;
+          }
+          await this.validateAndUpdateField(ctx, messageText, step.key, step.isDate, data, step.nextStep);
+
+          if (stepIndex < steps.length - 1) {
+            intentExtra.stepIndex = stepIndex + 1;
+            await ctx.reply(`Next, please provide the ${steps[stepIndex + 1].key}.`);
+          } else {
+            await this.finalizeAuctionCreation(ctx, data);
+            await this.resetLastIntent(userId, data);
+            await ctx.reply('🎉 Your auction has been created successfully!');
+        }
+      }
       } else {
         await ctx.reply('⚠️ Invalid step index.');
       }
