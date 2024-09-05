@@ -102,6 +102,7 @@ class AuctionWizard {
       }
 
       let { stepIndex, data } = intentExtra;
+      console.log(`[${userId}][${intent}] -- Intent Extra: ${JSON.stringify(intentExtra)}`);
 
       const steps = [
         { key: 'name', nextStep: 'description', isDate: false },
