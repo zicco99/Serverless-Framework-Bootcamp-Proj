@@ -35,7 +35,11 @@ class AppService implements OnModuleInit {
     this.setupBotCommands();
   }
   setupBotCommands() {
-    throw new Error('Method not implemented.');
+    this.logger.log('Setting up bot commands...');
+    this.bot.telegram.setMyCommands([
+      { command: 'start', description: 'Start the bot' },
+      { command: 'help', description: 'Get help' },
+    ]);
   }
 
   private async getUserSessionSpace(userId: number): Promise<SessionSpace | null> {

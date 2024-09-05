@@ -16,7 +16,7 @@ interface CreateAuctionIntentExtra extends IntentExtra {
 class AuctionWizard {
   redis: Redis;
 
-  constructor(private readonly auctions: AuctionsService) {
+  constructor(private readonly auctions: AuctionsService, private readonly redisService: BotStateService) {
   }
 
 
