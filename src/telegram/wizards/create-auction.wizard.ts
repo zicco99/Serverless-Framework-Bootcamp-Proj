@@ -162,7 +162,7 @@ class AuctionWizard {
   public async setLastIntent(
     userId: number, 
     intent: Intent, 
-    intentExtra: CreateAuctionIntentExtra = { stepIndex: 0, data: {} }
+    intentExtra?: CreateAuctionIntentExtra
   ): Promise<void> {
     const redisKey = `user_session:${userId}`;
     const redis = (await this.redisService.getRedis())[0];
