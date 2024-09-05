@@ -5,6 +5,7 @@ import { BotContext } from 'src/app.module';
 import { parseISO, isValid } from 'date-fns';
 import { Intent, IntentExtra } from 'src/users/models/user.model';
 import { Redis } from 'ioredis';
+import { BotStateService } from 'src/services/redis/bot-state.service';
 
 interface CreateAuctionIntentExtra extends IntentExtra {
   stepIndex: number;
@@ -13,13 +14,11 @@ interface CreateAuctionIntentExtra extends IntentExtra {
 
 @Injectable()
 class AuctionWizard {
-  private redis: Redis;
+  redis: Redis;
 
-  constructor(private readonly auctions: AuctionsService) {}
-
-  setRedis(redis: Redis) {
-    this.redis = redis;
+  constructor(private readonly auctions: AuctionsService) {
   }
+
 
   private async updateRedisField(userId: string, key: string, value: any): Promise<void> {
     try {

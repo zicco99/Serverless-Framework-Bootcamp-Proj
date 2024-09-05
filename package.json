@@ -36,6 +36,7 @@
     "mysql": "^2.17.1",
     "nestjs-config": "^1.4.4",
     "nestjs-telegraf": "^2.8.1",
+    "redlock": "^5.0.0-beta.2",
     "reflect-metadata": "^0.1.12",
     "rimraf": "^2.6.2",
     "rxjs": "^7.2.0",
