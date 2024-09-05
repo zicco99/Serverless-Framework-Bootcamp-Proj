@@ -51,16 +51,13 @@ class AuctionWizard {
   }
 
   private askString(key: string, nextInfo: string = '') {
-    if (!nextInfo) {
-      nextInfo = '';
-    }
-
-    if (!messageText) {
-      ctx.reply('❗ Please provide the date in the format YYYY-MM-DD.');
-      return;
-    }
-
     return async (ctx: BotContext, messageText: string, session: Partial<CreateAuctionDto>) => {
+  
+      if (!messageText) {
+        ctx.reply('❗ Please provide the date in the format YYYY-MM-DD.');
+        return;
+      }
+  
       const userId = session.idUser;
       if (userId) {
         await this.updateRedisField(userId, key, messageText);
