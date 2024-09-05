@@ -147,6 +147,7 @@ class AuctionWizard {
         await stepFunction(ctx, messageText, data);
         if (stepIndex < this.steps.size - 1) {
           intentExtra.stepIndex = stepIndex + 1;
+          await this.handleMessage(userId, intent, intentExtra, ctx, ''); // Proceed to the next step
         } else {
           await this.finalizeAuctionCreation(ctx, '', data);
         }
