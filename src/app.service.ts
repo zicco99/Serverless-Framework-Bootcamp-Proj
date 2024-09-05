@@ -159,12 +159,12 @@ class AppService {
 
     if (session_newly_created) {
       await ctx.reply(
-        `👋 Welcome back buddy, right to the auction bot! Here is your user: \n${escapeMarkdown(showSessionSpace(userId, session_space))}`,
+        `👋 Welcome back buddy, right to the auction bot\\! Here is your user: \n${escapeMarkdown(showSessionSpace(userId, session_space))}`,
         { parse_mode: 'MarkdownV2' }
       );
     } else {
       await ctx.reply(
-        `👋 👋 You are new here! Welcome buddy :)`,
+        `👋 👋 You are new here\\!`,
         { parse_mode: 'MarkdownV2' }
       );
       this.logger.log(`[${userId}][/start] -- New user session created: `, session_space);
