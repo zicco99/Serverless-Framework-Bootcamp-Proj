@@ -18,8 +18,10 @@ const prefixIntentData = 'data';
 @Injectable()
 class AuctionWizard {
 
-  constructor(private readonly auctions: AuctionsService, private readonly redisService: BotStateService) {
-  }
+  constructor(
+    private readonly auctions: AuctionsService, 
+    private readonly redisService: BotStateService
+  ) {}
 
   private async validateAndUpdateField(
     ctx: BotContext,
@@ -30,37 +32,42 @@ class AuctionWizard {
     session: Partial<CreateAuctionDto>,
     nextStep: string = ''
   ): Promise<void> {
-
     if (!messageText) {
-      await ctx.reply(`❗ Please provide the auction's ${key}.`);
+      await ctx.reply(escapeMarkdown(`🧙‍♂️ ❗ Please provide the auction's ${key}.`));
       return;
     }
-  
+
     if (isDate) {
       const parsedDate = parseISO(messageText);
       if (!isValid(parsedDate)) {
-        await ctx.reply(`❗ Invalid date format for ${key}. Use YYYY-MM-DD format.`);
+        await ctx.reply(escapeMarkdown(`🧙‍♂️ ❗ Invalid date format for ${key}. Use YYYY-MM-DD format.`));
         return;
       }
       messageText = parsedDate.toISOString();
     }
-  
+
     const userId = session.idUser;
     if (userId) {
-      await this.redisService.getRedis().then(([redis]) => redis.hset(`user_session:${userId}:${prefix}`, key, messageText));
-      await ctx.reply(`📝 Your ${key} has been set to "${messageText}".`);
-      if (nextStep) {
-        await ctx.reply(`Next, please provide the ${nextStep}.`);
+      try {
+        const redis = (await this.redisService.getRedis())[0];
+        await redis.hset(`user_session:${userId}:${prefix}`, key, messageText);
+        await ctx.reply(escapeMarkdown(`🧙‍♂️ 📝 Your ${key} has been set to "${messageText}".`));
+        if (nextStep) {
+          await ctx.reply(escapeMarkdown(`🧙‍♂️ Next, please provide the ${nextStep}.`));
+        }
+      } catch (error) {
+        console.error('Error updating field in Redis:', error);
+        await ctx.reply(escapeMarkdown('🧙‍♂️ ⚠️ There was an issue updating the field. Please try again later.'));
       }
     } else {
-      await ctx.reply('❗ User ID not found. Unable to update session.');
+      await ctx.reply(escapeMarkdown('🧙‍♂️ ❗ User ID not found. Unable to update session.'));
     }
   }
-  
+
   private async finalizeAuctionCreation(ctx: BotContext, session: Partial<CreateAuctionDto>): Promise<void> {
     const { idUser, name, description, startDate, endDate } = session;
     if (!idUser || !name || !description || !startDate || !endDate) {
-      await ctx.reply('⚠️ Incomplete auction details. Please provide all required information and try again.');
+      await ctx.reply(escapeMarkdown('🧙‍♂️ ⚠️ Incomplete auction details. Please provide all required information and try again.'));
       return;
     }
 
@@ -74,14 +81,13 @@ class AuctionWizard {
 
     try {
       const auction = await this.auctions.createAuction(createAuctionDto);
-      await ctx.reply(`🎉 Your auction has been created successfully! 🆔 ID: ${auction.id}`);
+      await ctx.reply(escapeMarkdown(`🧙‍♂️ 🎉 Your auction has been created successfully! 🆔 ID: ${auction.id}`));
     } catch (error) {
       console.error('Error creating auction:', error);
-      await ctx.reply('🚨 There was an issue creating the auction. Please try again later.');
+      await ctx.reply(escapeMarkdown('🧙‍♂️ 🚨 There was an issue creating the auction. Please try again later.'));
     }
   }
 
-  // Action trigger + User input trigger
   async handleMessage(
     userId: number,
     intent: Intent,
@@ -91,14 +97,13 @@ class AuctionWizard {
     is_cache_restore: boolean = false
   ): Promise<void> {
     try {
-
       if (!messageText) {
         console.log(`[${userId}][${intent}] -- User triggered an action button with intent`, intent);
-      } else{
+      } else {
         console.log(`[${userId}][${intent}] -- User input with intent: ${intent}, message: ${messageText}`);
       }
 
-      const { stepIndex = 0, data = {} } = intentExtra;
+      let { stepIndex = 0, data = {} } = intentExtra;
 
       const steps = [
         { key: 'name', nextStep: 'description', isDate: false },
@@ -107,28 +112,26 @@ class AuctionWizard {
         { key: 'endDate', nextStep: '', isDate: true },
         { key: '', nextStep: '', isDate: false }
       ];
-      
+
       const step = steps[stepIndex];
       console.log(`[${userId}][${intent}] -- Step: ${stepIndex}, Key: ${step?.key}, NextStep: ${step?.nextStep}, IsDate: ${step?.isDate}`);
       if (step) {
-        
-        if(is_cache_restore === true){
-          console.log("The intent has been restored from cache! ");
-          await ctx.reply(escapeMarkdown(`We were talking about creating an auction, actually I got this data User: ${JSON.stringify(data.idUser)} Auction data: ${JSON.stringify(intentExtra.data)}`));
-          await ctx.reply(`Next, please provide the ${steps[stepIndex + 1].key}\\.`);
+        if (is_cache_restore === true) {
+          console.log("The intent has been restored from cache!");
+          await ctx.reply(escapeMarkdown(`🧙‍♂️ We were talking about creating an auction. User: ${JSON.stringify(data.idUser)}, Auction data: ${JSON.stringify(intentExtra.data)}`));
+          await ctx.reply(escapeMarkdown(`🧙‍♂️ Next, please provide the ${steps[stepIndex + 1].key}.`));
           return;
-        }
-        else {
+        } else {
           if (!messageText) {
             console.log(`[${userId}][${intent}] -- User started intent`, intent);
             await this.setLastIntent(userId, intent, intentExtra);
-            await ctx.reply(`🧙‍♂️ - Welcome to the auction wizard\\! I'll guide to create an auction.\\. Hum ... 📝, let's start by its ${steps[stepIndex + 1].key}\\.`);
+            await ctx.reply(escapeMarkdown(`🧙‍♂️ Welcome to the auction wizard! I'll guide you to create an auction. 📝 Let's start by providing the ${steps[stepIndex + 1].key}.`));
             return;
           }
 
-          if(messageText === 'cancel'){
+          if (messageText === 'cancel') {
             await this.setLastIntent(userId, Intent.NONE);
-            await ctx.reply('🧙‍♂️ - Operation cancelled, cya buddy');
+            await ctx.reply(escapeMarkdown('🧙‍♂️ Operation cancelled. See you next time!'));
             return;
           }
 
@@ -136,28 +139,25 @@ class AuctionWizard {
           if (stepIndex < steps.length - 1) {
             intentExtra.stepIndex = stepIndex + 1;
             await this.setLastIntent(userId, intent, intentExtra);
-            await ctx.reply(`🧙‍♂️ Let's continue our journey, now i need a ${steps[stepIndex + 1].key}`);
-
+            await ctx.reply(escapeMarkdown(`🧙‍♂️ Let's continue. Now I need a ${steps[stepIndex + 1].key}.`));
           } else {
-
             await this.finalizeAuctionCreation(ctx, data);
             // Reset last intent
             await this.setLastIntent(userId, Intent.CREATE_AUCTION);
-            await ctx.reply('🎉 Your auction has been created successfully!');
-            await ctx.reply('🧙‍♂️ Well done, peace out\\!');
+            await ctx.reply(escapeMarkdown('🧙‍♂️ 🎉 Your auction has been created successfully!'));
+            await ctx.reply(escapeMarkdown('🧙‍♂️ Well done, peace out!'));
           }
         }
       } else {
-        await ctx.reply('⚠️ Invalid step index.');
+        await ctx.reply(escapeMarkdown('🧙‍♂️ ⚠️ Invalid step index.'));
       }
     } catch (error) {
-      console.log('Error during auction creation:', error);
-      await ctx.reply('An unexpected error occurred. Please try again later\\.');
-      this.setLastIntent(userId, Intent.NONE);
-      await ctx.reply('Type /menu to go back');
+      console.error('Error during auction creation:', error);
+      await ctx.reply(escapeMarkdown('🧙‍♂️ An unexpected error occurred. Please try again later.'));
+      await this.setLastIntent(userId, Intent.NONE);
+      await ctx.reply(escapeMarkdown('🧙‍♂️ Type /menu to go back.'));
     }
   }
-
 
   public async setLastIntent(
     userId: number, 
@@ -170,13 +170,18 @@ class AuctionWizard {
     try {
       // Prepare transaction
       const transaction = redis.multi();
+      console.log(`Setting last_intent to ${intent}`);
       transaction.hset(redisKey, 'last_intent', intent);
-      transaction.hset(redisKey, 'last_intent_timestamp', new Date().toISOString());
+
+      const timestamp = new Date().toISOString();
+      console.log(`Setting last_intent_timestamp to ${timestamp}`);
+      transaction.hset(redisKey, 'last_intent_timestamp', timestamp);
   
       // Determine and set intent extra
       let lastIntentExtra: string;
       if (intentExtra) {
         lastIntentExtra = JSON.stringify(intentExtra);
+        console.log(`Setting last_intent_extra to ${lastIntentExtra}`);
       } else {
         switch (intent) {
           case Intent.CREATE_AUCTION:
