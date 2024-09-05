@@ -115,9 +115,9 @@ class AppService {
 
   private async getUserStateOrInit(userId: number, ctx: BotContext): Promise<{ session_space: SessionSpace | null, session_newly_created: boolean }> {
     let session_space = await this.getUserSessionSpace(userId);
-    const session_newly_created = !session_space;
+    const session_newly_created = session_space === null;
 
-    if (!session_space) {
+    if (session_space === null) {
       session_space = {
         chatId: ctx.chat?.id || 0,
         firstName: ctx.from?.first_name || '',
