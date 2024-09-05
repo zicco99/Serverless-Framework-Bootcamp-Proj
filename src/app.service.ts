@@ -32,11 +32,11 @@ class AppService implements OnModuleInit {
 
   async onModuleInit() {
     this.redisClients = await this.redisService.getRedis();
-    this.setupBotCommands();
+    await this.setupBotCommands();
   }
-  setupBotCommands() {
+  async setupBotCommands() {
     this.logger.log('Setting up bot commands...');
-    this.bot.telegram.setMyCommands([
+    await this.bot.telegram.setMyCommands([
       { command: 'start', description: 'Start the bot' },
       { command: 'help', description: 'Get help' },
     ]);
