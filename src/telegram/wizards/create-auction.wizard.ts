@@ -114,7 +114,7 @@ class AuctionWizard {
       console.log(`[${userId}][${intent}] -- Step: ${stepIndex}, Key: ${step?.key}, NextStep: ${step?.nextStep}, IsDate: ${step?.isDate}`);
       if (step) {
 
-        if(is_cache_restore) {
+        if(is_cache_restore === true){
           await ctx.reply(`We were talking about creating an auction, actually I got this data:
             - idUser: ${JSON.stringify(data.idUser)},
             - auction data: ${JSON.stringify(intentExtra.data)}`);

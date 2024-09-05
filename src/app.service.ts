@@ -117,7 +117,7 @@ export class AppService {
         if (!isExpired) {
           switch (session_space.last_intent) {
             case Intent.CREATE_AUCTION:
-              await this.auctionWizard.handleMessage(userId, session_space.last_intent, session_space.last_intent_extra as CreateAuctionIntentExtra, ctx, message);
+              await this.auctionWizard.handleMessage(userId, session_space.last_intent, session_space.last_intent_extra as CreateAuctionIntentExtra, ctx, message, true);
               return;
             case Intent.VIEW_AUCTIONS:
               await this.viewAuctions(ctx);
