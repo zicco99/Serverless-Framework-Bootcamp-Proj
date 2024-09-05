@@ -117,7 +117,7 @@ class AppService {
     let session_space = await this.getUserSessionSpace(userId);
     const session_newly_created = !session_space;
 
-    if (session_newly_created) {
+    if (!session_space) {
       session_space = {
         chatId: ctx.chat?.id || 0,
         firstName: ctx.from?.first_name || '',
