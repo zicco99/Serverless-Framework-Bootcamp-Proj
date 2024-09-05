@@ -121,8 +121,8 @@ class AuctionWizard {
         else {
           if (!messageText) {
             console.log(`[${userId}][${intent}] -- User started intent`, intent);
-            await ctx.reply(`🧙‍♂️ - Welcome to the auction wizard\\! I'll guide to create an auction.\\. Hum ... 📝, let's start by its ${steps[stepIndex + 1].key}\\.`);
             await this.setLastIntent(userId, intent, intentExtra);
+            await ctx.reply(`🧙‍♂️ - Welcome to the auction wizard\\! I'll guide to create an auction.\\. Hum ... 📝, let's start by its ${steps[stepIndex + 1].key}\\.`);
             return;
           }
 
