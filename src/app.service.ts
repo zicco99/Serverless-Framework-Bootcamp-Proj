@@ -82,8 +82,7 @@ export class AppService {
 
       console.log(`User ${userId} - Session: ${JSON.stringify(session_space)}`);
 
-      // Start the create-auction wizard
-      const starting_create_auction_extra = { stepIndex: 0, data: {} } as CreateAuctionIntentExtra;
+      const starting_create_auction_extra : CreateAuctionIntentExtra = { stepIndex: 0, data: {} };
       await this.auctionWizard.handleMessage(userId, Intent.CREATE_AUCTION, starting_create_auction_extra, ctx, undefined, false);
     });
   }

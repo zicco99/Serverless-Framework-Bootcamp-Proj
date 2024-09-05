@@ -4,7 +4,6 @@ import { CreateAuctionDto } from 'src/auctions/dtos/create-auction.dto';
 import { BotContext } from 'src/app.module';
 import { parseISO, isValid } from 'date-fns';
 import { Intent, IntentExtra } from 'src/users/models/user.model';
-import { Redis } from 'ioredis';
 import { BotStateService } from 'src/services/redis/bot-state.service';
 import { escapeMarkdown } from '../messages/.utils';
 
