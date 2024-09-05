@@ -53,7 +53,6 @@ class AppService {
         this.redis = new Redis({
           host,
           port,
-          tls: {}, // Enable TLS if required
         });
 
         this.redis.on('error', (err) => this.logger.error('Redis error:', err));
