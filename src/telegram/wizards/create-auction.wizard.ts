@@ -97,6 +97,8 @@ class AuctionWizard {
     messageText: string
   ): Promise<void> {
 
+    console.log(`[${userId}][${intent}] -- Received message: ${messageText}`);
+
     const { stepIndex = 0, data = {} } = intentExtra;
 
     const steps = [
@@ -109,6 +111,7 @@ class AuctionWizard {
 
     try {
       const step = steps[stepIndex];
+      console.log(`[${userId}][${intent}] -- Step: ${stepIndex}, Key: ${step?.key}, NextStep: ${step?.nextStep}, IsDate: ${step?.isDate}`);
       if (step) {
         await this.validateAndUpdateField(ctx, messageText, step.key, step.isDate, data, step.nextStep);
 
