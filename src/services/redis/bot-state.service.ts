@@ -5,18 +5,18 @@ import Redlock from 'redlock';
 
 @Injectable()
 export class BotStateService implements OnModuleInit, OnModuleDestroy {
+  private readonly log = new Logger(BotStateService.name);
   private redisClients: Redis[] = [];
   private redlock: Redlock;
   private readonly awsRegion = process.env.AWS_REGION;
   private readonly redisClusterId = process.env.BOT_STATE_REDIS_CLUSTER_ID;
-  private readonly redisConnectionPromise: Promise<void>;
 
-  constructor() {
-    this.redisConnectionPromise = this.initializeRedis();
+  async onModuleInit() {
+    await this.initializeRedis();
   }
 
   private async initializeRedis() {
-    console.log('Connecting to AWS ElastiCache Redis Cluster...');
+    this.log.log('Connecting to AWS ElastiCache Redis Cluster...');
     const elastiCache = new AWS.ElastiCache({ region: this.awsRegion });
 
     try {
@@ -42,69 +42,59 @@ export class BotStateService implements OnModuleInit, OnModuleDestroy {
         });
 
         this.redisClients.forEach(redis => {
-          redis.on('error', (err) => console.error('Redis error:', err));
-          redis.on('connect', () => console.log('Connected to Redis'));
+          redis.on('error', (err) => this.log.error('Redis error:', err));
+          redis.on('connect', () => this.log.log('Connected to Redis'));
         });
 
-        console.log(`Redis nodes connected: ${this.redisClients.map(redis => `${redis.options.host}:${redis.options.port}`).join(', ')}`);
+        this.log.log(`Redis nodes connected: ${this.redisClients.map(redis => `${redis.options.host}:${redis.options.port}`).join(', ')}`);
       } else {
-        console.error('No cache node endpoint found.');
-        process.exit(1);
+        this.log.error('No cache node endpoint found.');
+        throw new Error('No cache node endpoint found.');
       }
     } catch (err) {
-      console.error('Error fetching cache cluster info:', err);
-      process.exit(1);
+      this.log.error('Error fetching cache cluster info:', err);
+      throw err;
     }
   }
 
-  public async getRedis() {
-    await this.redisConnectionPromise;
+  async getRedis() {
+    if (this.redisClients.length === 0) {
+      await this.initializeRedis();
+    }
     return this.redisClients;
   }
 
-  public async getRedlock() {
-    await this.redisConnectionPromise;
+  async getRedlock() {
+    if (!this.redlock) {
+      await this.initializeRedis();
+    }
     return this.redlock;
   }
 
-  public async handleWithLock(userId: number, ttl: number, authAndSessionCheck: () => Promise<void>) {
-    console.log(`User ${userId} acquiring lock for ${ttl} ms...`)
+  async handleWithLock(userId: number, ttl: number, authAndSessionCheck: () => Promise<void>) {
+    this.log.log(`User ${userId} acquiring lock for ${ttl} ms...`);
     const lockKey = `user_session:${userId}`;
-    let lockAcquired = false;
 
-    for (let retries = 0; retries < 10; retries++) {
+    const redlock = await this.getRedlock();
+    try {
+      const lock = await redlock.acquire([lockKey], ttl);
+      this.log.log('Lock acquired');
+
       try {
-        const lock = await this.redlock.acquire([lockKey], ttl);
-        console.log(`Lock acquired`)
-        lockAcquired = true;
-
-        try {
-          console.log("Lock acquired, checking auth and session...")
-          await authAndSessionCheck();
-        }catch (error) {
-          console.error("Error in auth and session check:", error)
-        }finally {
-          console.log("Lock releasing")
-          await lock.release();
-          console.log("Lock released")
-        }
-
-        break;
+        await authAndSessionCheck();
       } catch (error) {
-        if (retries === 9) {
-          console.error('Error acquiring lock:', error);
-          throw error;
-        }
-        await new Promise((resolve) => setTimeout(resolve, 200));
+        this.log.error('Error in auth and session check:', error);
+      } finally {
+        await lock.release();
+        this.log.log('Lock released');
       }
+    } catch (error) {
+      this.log.error('Error acquiring lock:', error);
+      throw error;
     }
   }
 
   onModuleDestroy() {
     this.redisClients.forEach(redis => redis.quit());
-  }
-
-  async onModuleInit() {
-    await this.redisConnectionPromise;
   }
 }

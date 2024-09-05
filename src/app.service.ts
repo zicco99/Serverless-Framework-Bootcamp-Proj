@@ -1,8 +1,7 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Hears, Help, Start, Update, Action, InjectBot, Message, Context } from 'nestjs-telegraf';
 import { Markup, Telegraf } from 'telegraf';
-import { Redis } from 'ioredis';
-import Redlock from 'redlock';
+import { BotStateService } from './services/redis/bot-state.service';
 import { AuctionWizard, CreateAuctionIntentExtra } from './telegram/wizards/create-auction.wizard';
 import { AuctionsService } from './auctions/auctions.service';
 import { Auction } from './auctions/models/auction.model';
@@ -12,13 +11,11 @@ import { InlineKeyboardMarkup } from 'telegraf/typings/core/types/typegram';
 import { escapeMarkdown } from './telegram/messages/.utils';
 import { BotContext, SessionSpace } from './app.module';
 import { Intent, showSessionSpace, getOrInitUserSessionSpace, resetLastIntent } from './users/models/user.model';
-import { BotStateService } from './services/redis/bot-state.service';
 
-@Update()
 @Injectable()
-class AppService implements OnModuleInit {
+@Update()
+export class AppService {
   private readonly log = new Logger(AppService.name);
-  private redis: Redis[] = [];
   private auctionCount: number;
   private readonly intentTTL = parseInt(process.env.INTENT_TTL_!) || 3600 * 1000;
   private readonly lockTTL = parseInt(process.env.SESSION_SPACE_LOCK!) || 1 * 1000;
@@ -27,20 +24,23 @@ class AppService implements OnModuleInit {
     @InjectBot() private readonly bot: Telegraf<BotContext>,
     private readonly auctionWizard: AuctionWizard,
     private readonly auctions: AuctionsService,
-    private readonly redisService: BotStateService
+    private readonly botStateService: BotStateService
   ) {}
 
   async onModuleInit() {
-    this.redis = await this.redisService.getRedis();
     await this.setupCommands();
   }
 
   private async setupCommands() {
     this.log.log('Setting up commands...');
-    await this.bot.telegram.setMyCommands([
-      { command: 'start', description: 'Start the bot' },
-      { command: 'help', description: 'Get help' },
-    ]);
+    try {
+      await this.bot.telegram.setMyCommands([
+        { command: 'start', description: 'Start the bot' },
+        { command: 'help', description: 'Get help' },
+      ]);
+    } catch (error) {
+      this.log.error('Failed to set up commands:', error);
+    }
   }
 
   @Start()
@@ -48,11 +48,9 @@ class AppService implements OnModuleInit {
     console.log(`User ${ctx.from?.id} started the bot at ${new Date()}`);
 
     await this.gateway(ctx, async (userId, session_space) => {
-      console.log("Auth passed, session loaded without any intent");
-
       const message = session_space
-        ? `👋 Welcome back\\! Here is your user: \n${escapeMarkdown(showSessionSpace(userId, session_space))}`
-        : '👋 👋 You are new here\\!';
+        ? `👋 Welcome back! Here is your user: \n${escapeMarkdown(showSessionSpace(userId, session_space))}`
+        : '👋 👋 You are new here!';
       
       await ctx.reply(message);
 
@@ -69,7 +67,6 @@ class AppService implements OnModuleInit {
       );
     });
   }
-
 
   @Help()
   async help(ctx: BotContext) {
@@ -96,42 +93,28 @@ class AppService implements OnModuleInit {
     }
   }
 
-  // Triggered whenever user sends a message
-
   @Hears(/.*/)
   async onText(@Context() ctx: BotContext, @Message('text') message: string) {
     ctx.telegram.sendMessage(ctx.from?.id || 0, `AHHHH :O : ${message}`);
     await this.gateway(ctx, async (userId, session_space, message) => {
-      
-      
+      // Handle text messages here
     });
   }
 
-  //-------- GATEWAY -----------
-
-async gateway(ctx: BotContext, post: (userId: number, session_space: SessionSpace | null, message?: string) => Promise<void>, message?: string){
-
-    //Authenticate user
+  private async gateway(ctx: BotContext, post: (userId: number, session_space: SessionSpace | null, message?: string) => Promise<void>, message?: string) {
     const userId = ctx.from?.id;
-    if (!userId) return ctx.reply('Unable to identify you\\. Please try again\\.', { parse_mode: 'MarkdownV2' });
+    if (!userId) return ctx.reply('Unable to identify you. Please try again.', { parse_mode: 'MarkdownV2' });
 
-    //Lock session space to block concurrent lambdas to avoid race conditions (consecutive messages from the same user)
-    this.redisService.handleWithLock(userId, this.lockTTL, async () => {
-
-      const { session_space } = await getOrInitUserSessionSpace(userId, ctx, this.getSession, this.setSession);
-      if(!session_space) {
-        ctx.telegram.sendMessage(userId,"No session found\\. Please try again\\.",{parse_mode: 'MarkdownV2'});
+    await this.botStateService.handleWithLock(userId, this.lockTTL, async () => {
+      const { session_space } = await getOrInitUserSessionSpace(userId, ctx, this.getSession.bind(this), this.setSession.bind(this));
+      if (!session_space) {
+        await ctx.telegram.sendMessage(userId, "No session found. Please try again.", { parse_mode: 'MarkdownV2' });
         return;
       }
 
-      //If session exists, restore it (last intent)
-      if(session_space.last_intent !== Intent.NONE) {
-        console.log(`Last intent: ${session_space.last_intent}`);
-        //Check last intent
+      if (session_space.last_intent !== Intent.NONE) {
         const isExpired = (Date.now() - new Date(session_space.last_intent_timestamp).getTime()) > this.intentTTL;
         if (!isExpired) {
-          console.log("Last intent is not expired -> Restoring last intent");
-          //Restore last intent 
           switch (session_space.last_intent) {
             case Intent.CREATE_AUCTION:
               await this.auctionWizard.handleMessage(userId, session_space.last_intent, session_space.last_intent_extra as CreateAuctionIntentExtra, ctx, message);
@@ -140,33 +123,27 @@ async gateway(ctx: BotContext, post: (userId: number, session_space: SessionSpac
               await this.viewAuctions(ctx);
               return;
           }
-        } 
-        else {
-          await resetLastIntent(userId, this.redis[0]);
-          await ctx.reply("Session has timed out\\. Cleaning up 🧹\\.");
+        } else {
+          await resetLastIntent(userId, (await this.botStateService.getRedis())[0]);
+          await ctx.reply("Session has timed out. Cleaning up 🧹.");
           await new Promise(resolve => setTimeout(resolve, 1000));
-          await ctx.reply("Type /menu to get started.\\.");
+          await ctx.reply("Type /menu to get started.");
           return;
         }
       }
 
-      //Execute post function
       await post(userId, session_space, message);
     });
   }
 
-
-
-  //-------- HELPERS -----------
-
   private async getSession(userId: number): Promise<SessionSpace | null> {
-    const session = await this.redis[0].get(`user:${userId}`);
+    const redis = (await this.botStateService.getRedis())[0];
+    const session = await redis.get(`user:${userId}`);
     return session ? JSON.parse(session) : null;
   }
 
   private async setSession(userId: number, session: SessionSpace): Promise<void> {
-    await this.redis[0].set(`user:${userId}`, JSON.stringify(session));
+    const redis = (await this.botStateService.getRedis())[0];
+    await redis.set(`user:${userId}`, JSON.stringify(session));
   }
 }
-
-export { AppService };
