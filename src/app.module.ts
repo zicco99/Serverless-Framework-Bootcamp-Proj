@@ -14,7 +14,6 @@ interface BotContext extends Context {
 @Module({
   imports: [
     AuctionsModule,
-    BotStateService,
     TelegrafModule.forRoot({
       token: process.env.BOT_TELEGRAM_KEY || '',
       launchOptions: {
@@ -41,7 +40,7 @@ interface BotContext extends Context {
     } as TelegrafModuleOptions),
   ],
   controllers: [],
-  providers: [AppService, AuctionWizard],
+  providers: [AppService, AuctionWizard, BotStateService],
 })
 export class AppModule {}
 
