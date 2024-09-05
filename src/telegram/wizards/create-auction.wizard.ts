@@ -42,6 +42,7 @@ class AuctionWizard {
       }
       messageText = parsedDate.toISOString();
     }
+    
 
     const userId = session.idUser;
     if (userId) {
