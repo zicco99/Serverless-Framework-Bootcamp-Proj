@@ -1,7 +1,9 @@
 ElasticCacheLambdaIAM:
   Effect: Allow
   Action:
-    - elasticache:DescribeCacheClusters
+    - "elasticache:DescribeCacheClusters"
+    - "elasticache:Connect" 
   Resource:
     - ${self:custom.BotStateCluster.arn}
+    
 
