@@ -10,7 +10,7 @@ import { auctionListMessage } from './telegram/messages/auction';
 import { InlineKeyboardMarkup } from 'telegraf/typings/core/types/typegram';
 import { escapeMarkdown } from './telegram/messages/.utils';
 import { BotContext, SessionSpace } from './app.module';
-import { Intent, showSessionSpace, getOrInitUserSessionSpace, resetLastIntent } from './users/models/user.model';
+import { Intent, showSessionSpace, getOrInitUserSessionSpace} from './users/models/user.model';
 
 @Injectable()
 @Update()
@@ -134,11 +134,8 @@ export class AppService {
               return;
           }
         } else {
-          await resetLastIntent(userId, (await this.botStateService.getRedis())[0]);
-          
+          await this.auctionWizard.setLastIntent(userId, Intent.NONE);
           await ctx.reply("Session has timed out. Cleaning up 🧹.");
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          await ctx.reply("Type /menu to get started.");
           return;
         }
       }
