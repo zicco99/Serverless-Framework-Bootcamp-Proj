@@ -163,6 +163,8 @@ class AuctionWizard {
     intent: Intent, 
     intentExtra?: CreateAuctionIntentExtra
   ): Promise<void> {
+    console.log("Setting last intent for user", userId, intent, intentExtra);
+    
     const redisKey = `user_session:${userId}`;
     const redis = (await this.redisService.getRedis())[0];
   
@@ -186,6 +188,7 @@ class AuctionWizard {
   
     try {
       const currentSessionStr = await redis.get(redisKey);
+      console.log(`Current session for user ${userId}: ${currentSessionStr}`);
       let currentSession: Record<string, any> = {};
   
       if (currentSessionStr) {
