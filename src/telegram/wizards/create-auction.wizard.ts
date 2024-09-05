@@ -13,7 +13,6 @@ interface CreateAuctionIntentExtra extends IntentExtra {
   data: Partial<CreateAuctionDto>;
 }
 
-const prefixIntentData = 'data';
 
 @Injectable()
 class AuctionWizard {
@@ -26,7 +25,6 @@ class AuctionWizard {
   private async validateAndUpdateField(
     ctx: BotContext,
     messageText: string,
-    prefix: string,
     key: string,
     isDate: boolean,
     session: Partial<CreateAuctionDto>,
@@ -50,7 +48,7 @@ class AuctionWizard {
     if (userId) {
       try {
         const redis = (await this.redisService.getRedis())[0];
-        await redis.hset(`user_session:${userId}:${prefix}`, key, messageText);
+        await redis.hset(`user_session:${userId}`, key, messageText);
         await ctx.reply(escapeMarkdown(`🧙‍♂️ 📝 Your ${key} has been set to "${messageText}".`));
         if (nextStep) {
           await ctx.reply(escapeMarkdown(`🧙‍♂️ Next, please provide the ${nextStep}.`));
@@ -138,7 +136,7 @@ class AuctionWizard {
           }
 
           if (stepIndex < steps.length - 1) {
-            await this.validateAndUpdateField(ctx, messageText, prefixIntentData, step.key, step.isDate, data, step.nextStep);
+            await this.validateAndUpdateField(ctx, messageText, step.key, step.isDate, data, step.nextStep);
             await this.setLastIntent(userId, intent, { stepIndex: stepIndex + 1, data});
             await ctx.reply(escapeMarkdown(`🧙‍♂️ Let's continue. Now I need a ${steps[stepIndex + 1].key}.`));
           } else {
