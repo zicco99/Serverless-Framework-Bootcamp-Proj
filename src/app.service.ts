@@ -77,6 +77,8 @@ export class AppService {
   async createAuction(ctx: BotContext) {
     await this.gateway(ctx, async (userId, session_space) => {
       console.log("Gateway Passed");
+      console.log("Current Intent: " + session_space?.last_intent);
+      console.log("Current Intent Extra: " + JSON.stringify(session_space?.last_intent_extra));
 
       console.log(`User ${userId} - Session: ${JSON.stringify(session_space)}`);
       await this.auctionWizard.handleMessage(userId, Intent.CREATE_AUCTION, session_space?.last_intent_extra as CreateAuctionIntentExtra, ctx, undefined, false);
@@ -100,6 +102,8 @@ export class AppService {
   async onText(@Context() ctx: BotContext, @Message('text') message: string) {
     await this.gateway(ctx, async (userId, session_space, message) => { // Post-gateway function : No pending intent in cache + user authenticated
       console.log("Gateway Passed");
+      console.log("Current Intent: " + session_space?.last_intent);
+      console.log("Current Intent Extra: " + JSON.stringify(session_space?.last_intent_extra));
       ctx.telegram.sendMessage(ctx.from?.id || 0, `GW PASSED AHHHH :O : ${message}`);
     }, message);
   }
