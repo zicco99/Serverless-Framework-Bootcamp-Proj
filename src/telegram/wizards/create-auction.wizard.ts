@@ -100,7 +100,7 @@ class AuctionWizard {
         console.log(`[${userId}][${intent}] -- User input with intent: ${intent}, message: ${messageText}`);
       }
 
-      let { stepIndex, data } = intentExtra;
+      const { stepIndex, data } = intentExtra;
       console.log(`[${userId}][${intent}] -- Intent Extra: ${JSON.stringify(intentExtra)}`);
 
       const steps = [
