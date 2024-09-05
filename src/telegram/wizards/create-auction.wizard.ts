@@ -142,7 +142,6 @@ class AuctionWizard {
 
           await this.validateAndUpdateField(ctx, messageText, step.key, step.isDate, data, step.nextStep);
           if (stepIndex < steps.length - 1) {
-
             intentExtra.stepIndex = stepIndex + 1;
             await this.setLastIntent(userId, intent, intentExtra);
             await ctx.reply(`🧙‍♂️ Let's continue our journey, now i need a ${steps[stepIndex + 1].key}`);
@@ -150,7 +149,8 @@ class AuctionWizard {
           } else {
 
             await this.finalizeAuctionCreation(ctx, data);
-            await this.resetLastIntent(userId, data);
+            // Reset last intent
+            await this.setLastIntent(userId, Intent.CREATE_AUCTION);
             await ctx.reply('🎉 Your auction has been created successfully!');
             await ctx.reply('🧙‍♂️ Well done, peace out\\!');
           }
@@ -161,29 +161,12 @@ class AuctionWizard {
     } catch (error) {
       console.log('Error during auction creation:', error);
       await ctx.reply('An unexpected error occurred. Please try again later\\.');
-      resetLastIntent(userId, (await this.redisService.getRedis())[0]);
+      // Reset last intent
+      this.setLastIntent(userId, Intent.CREATE_AUCTION);
       await ctx.reply('Type /menu to go back');
     }
   }
 
-
-  public async resetLastIntent(userId: number, data: Partial<CreateAuctionDto>): Promise<void> {
-    const redisKey = `user_session:${userId}`;
-
-    // Pipeline to gain atomicity
-    const pipeline = this.redis.pipeline();
-    
-    pipeline.hset(redisKey, 'last_intent', Intent.NONE);
-    pipeline.hset(redisKey, 'last_intent_timestamp', new Date().toISOString());
-    pipeline.hset(redisKey, 'last_intent_extra', JSON.stringify({ stepIndex: 0, data }));
-    
-    try {
-      await pipeline.exec(); 
-    } catch (error) {
-      console.error('Error resetting last intent:', error);
-      throw error; 
-    }
-  }
 
   public async setLastIntent(userId: number, intent: Intent, intentExtra?: IntentExtra): Promise<void> {
     const redisKey = `user_session:${userId}`;
@@ -196,6 +179,7 @@ class AuctionWizard {
       pipeline.hset(redisKey, 'last_intent_extra', JSON.stringify(intentExtra));
     } 
     else {
+      //Init
       switch(intent) {
         case Intent.CREATE_AUCTION:
           pipeline.hset(redisKey, 'last_intent_extra', JSON.stringify({ stepIndex : 0, data : {}}));
