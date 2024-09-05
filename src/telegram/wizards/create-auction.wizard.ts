@@ -3,7 +3,7 @@ import { AuctionsService } from 'src/auctions/auctions.service';
 import { CreateAuctionDto } from 'src/auctions/dtos/create-auction.dto';
 import { BotContext } from 'src/app.module';
 import { parseISO, isValid } from 'date-fns';
-import { Intent, IntentExtra, resetLastIntent } from 'src/users/models/user.model';
+import { Intent, IntentExtra } from 'src/users/models/user.model';
 import { Redis } from 'ioredis';
 import { BotStateService } from 'src/services/redis/bot-state.service';
 import { escapeMarkdown } from '../messages/.utils';
@@ -136,7 +136,7 @@ class AuctionWizard {
 
           if(messageText === 'cancel'){
             await ctx.reply('🧙‍♂️ - Operation cancelled, cya buddy');
-            resetLastIntent(userId, (await this.redisService.getRedis())[0]);
+            this.setLastIntent(userId, Intent.NONE);
             return;
           }
 
@@ -183,6 +183,9 @@ class AuctionWizard {
       switch(intent) {
         case Intent.CREATE_AUCTION:
           pipeline.hset(redisKey, 'last_intent_extra', JSON.stringify({ stepIndex : 0, data : {}}));
+          break;
+        case Intent.NONE:
+          pipeline.hset(redisKey, 'last_intent_extra', "{}");
           break;
       }
     }
