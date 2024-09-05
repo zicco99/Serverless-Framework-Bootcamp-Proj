@@ -67,7 +67,7 @@ export class BotStateService implements OnModuleInit, OnModuleDestroy {
     return this.redlock;
   }
 
-  public async handleWithLock(userId: number, ttl: number, action: () => Promise<void>) {
+  public async handleWithLock(userId: number, ttl: number, authAndSessionCheck: () => Promise<void>) {
     console.log(`User ${userId} acquiring lock for ${ttl} ms...`)
     const lockKey = `user_session:${userId}`;
     let lockAcquired = false;
@@ -79,8 +79,11 @@ export class BotStateService implements OnModuleInit, OnModuleDestroy {
         lockAcquired = true;
 
         try {
-          await action();
-        } finally {
+          console.log("Lock acquired, checking auth and session...")
+          await authAndSessionCheck();
+        }catch (error) {
+          console.error("Error in auth and session check:", error)
+        }finally {
           console.log("Lock releasing")
           await lock.release();
           console.log("Lock released")

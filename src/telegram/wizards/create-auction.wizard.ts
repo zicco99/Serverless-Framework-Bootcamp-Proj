@@ -121,7 +121,6 @@ class AuctionWizard {
           return;
         }
         else{
-
           if(!messageText){
             return;
           }

@@ -48,9 +48,11 @@ class AppService implements OnModuleInit {
     console.log(`User ${ctx.from?.id} started the bot at ${new Date()}`);
 
     await this.gateway(ctx, async (userId, session_space) => {
+      console.log("Auth passed, session loaded without any intent");
+
       const message = session_space
-        ? `👋 Welcome back! Here is your user: \n${escapeMarkdown(showSessionSpace(userId, session_space))}`
-        : '👋 👋 You are new here!';
+        ? `👋 Welcome back\\! Here is your user: \n${escapeMarkdown(showSessionSpace(userId, session_space))}`
+        : '👋 👋 You are new here\\!';
       
       await ctx.reply(message);
 
@@ -101,20 +103,22 @@ class AppService implements OnModuleInit {
     ctx.telegram.sendMessage(ctx.from?.id || 0, `AHHHH :O : ${message}`);
     await this.gateway(ctx, async (userId, session_space, message) => {
       
+      
     });
   }
 
   //-------- GATEWAY -----------
 
 async gateway(ctx: BotContext, post: (userId: number, session_space: SessionSpace | null, message?: string) => Promise<void>, message?: string){
+
     //Authenticate user
     const userId = ctx.from?.id;
     if (!userId) return ctx.reply('Unable to identify you\\. Please try again\\.', { parse_mode: 'MarkdownV2' });
 
     //Lock session space to block concurrent lambdas to avoid race conditions (consecutive messages from the same user)
     this.redisService.handleWithLock(userId, this.lockTTL, async () => {
-      const { session_space } = await getOrInitUserSessionSpace(userId, ctx, this.getSession, this.setSession);
 
+      const { session_space } = await getOrInitUserSessionSpace(userId, ctx, this.getSession, this.setSession);
       if(!session_space) {
         ctx.telegram.sendMessage(userId,"No session found\\. Please try again\\.",{parse_mode: 'MarkdownV2'});
         return;
@@ -145,7 +149,8 @@ async gateway(ctx: BotContext, post: (userId: number, session_space: SessionSpac
           return;
         }
       }
-      //Execute user action
+
+      //Execute post function
       await post(userId, session_space, message);
     });
   }
