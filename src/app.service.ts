@@ -76,12 +76,15 @@ export class AppService {
   @Action(Intent.CREATE_AUCTION)
   async createAuction(ctx: BotContext) {
     await this.gateway(ctx, async (userId, session_space) => {
-      console.log("Gateway Passed");
+      console.log("Gateway Passed: User Autorization Successful and No Intent Pending");
       console.log("Current Intent: " + session_space?.last_intent);
       console.log("Current Intent Extra: " + JSON.stringify(session_space?.last_intent_extra));
 
       console.log(`User ${userId} - Session: ${JSON.stringify(session_space)}`);
-      await this.auctionWizard.handleMessage(userId, Intent.CREATE_AUCTION, session_space?.last_intent_extra as CreateAuctionIntentExtra, ctx, undefined, false);
+
+      // Start the create-auction wizard
+      const starting_create_auction_extra = { stepIndex: 0, data: {} } as CreateAuctionIntentExtra;
+      await this.auctionWizard.handleMessage(userId, Intent.CREATE_AUCTION, starting_create_auction_extra, ctx, undefined, false);
     });
   }
 
@@ -101,10 +104,10 @@ export class AppService {
   @Hears(/.*/)
   async onText(@Context() ctx: BotContext, @Message('text') message: string) {
     await this.gateway(ctx, async (userId, session_space, message) => { // Post-gateway function : No pending intent in cache + user authenticated
-      console.log("Gateway Passed");
+      console.log("Gateway Passed: User Autorization Successful and No Intent Pending");
       console.log("Current Intent: " + session_space?.last_intent);
       console.log("Current Intent Extra: " + JSON.stringify(session_space?.last_intent_extra));
-      ctx.telegram.sendMessage(ctx.from?.id || 0, `GW PASSED AHHHH :O : ${message}`);
+      ctx.telegram.sendMessage(userId, `GW PASSED AHHHH :O : ${message}`);
     }, message);
   }
 
