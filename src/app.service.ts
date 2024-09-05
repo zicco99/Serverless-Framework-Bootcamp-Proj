@@ -45,6 +45,8 @@ class AppService implements OnModuleInit {
 
   @Start()
   async start(ctx: BotContext) {
+    console.log(`User ${ctx.from?.id} started the bot at ${new Date()}`);
+
     await this.gateway(ctx, async (userId, session_space) => {
       const message = session_space
         ? `👋 Welcome back! Here is your user: \n${escapeMarkdown(showSessionSpace(userId, session_space))}`
@@ -65,6 +67,7 @@ class AppService implements OnModuleInit {
       );
     });
   }
+
 
   @Help()
   async help(ctx: BotContext) {
@@ -91,19 +94,19 @@ class AppService implements OnModuleInit {
     }
   }
 
-  // Triggered on message
+  // Triggered whenever user sends a message
 
   @Hears(/.*/)
   async onText(@Context() ctx: BotContext, @Message('text') message: string) {
-    await this.gateway(ctx, async (userId, session_space) => {
-      return
-
+    ctx.telegram.sendMessage(ctx.from?.id || 0, `AHHHH :O : ${message}`);
+    await this.gateway(ctx, async (userId, session_space, message) => {
+      
     });
   }
 
   //-------- GATEWAY -----------
 
-  private async gateway(ctx: BotContext, action: (userId: number, session_space: SessionSpace | null) => Promise<void>) {
+async gateway(ctx: BotContext, post: (userId: number, session_space: SessionSpace | null, message?: string) => Promise<void>, message?: string){
     //Authenticate user
     const userId = ctx.from?.id;
     if (!userId) return ctx.reply('Unable to identify you\\. Please try again\\.', { parse_mode: 'MarkdownV2' });
@@ -125,7 +128,7 @@ class AppService implements OnModuleInit {
           //Restore last intent 
           switch (session_space.last_intent) {
             case Intent.CREATE_AUCTION:
-              await this.auctionWizard.handleMessage(userId, session_space.last_intent, session_space.last_intent_extra as CreateAuctionIntentExtra, ctx, '');
+              await this.auctionWizard.handleMessage(userId, session_space.last_intent, session_space.last_intent_extra as CreateAuctionIntentExtra, ctx, message);
               return;
             case Intent.VIEW_AUCTIONS:
               await this.viewAuctions(ctx);
@@ -141,7 +144,7 @@ class AppService implements OnModuleInit {
         }
       }
       //Execute user action
-      await action(userId, session_space);
+      await post(userId, session_space, message);
     });
   }
 
