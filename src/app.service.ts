@@ -273,8 +273,8 @@ class AppService {
 
     const isSessionExpired = (new Date().getTime() - new Date(session_space.last_intent_timestamp).getTime()) > this.intentTTL;
     if (session_space.last_intent === Intent.CREATE_AUCTION && isSessionExpired) {
-      await this.resetLastIntent(userId);
       await ctx.reply("Session has timed out. Wait a second, cleaning around 🧹 \\.");
+      await this.resetLastIntent(userId);
     } else {  
       await this.auctionWizard.handleMessage(userId, session_space.last_intent, session_space.last_intent_extra as CreateAuctionIntentExtra, ctx, message);
     }
