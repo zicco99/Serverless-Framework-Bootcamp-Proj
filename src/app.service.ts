@@ -91,11 +91,22 @@ class AppService {
     await this.redis.set(`user:${userId}`, JSON.stringify(sessionSpace));
   }
 
-  private async resetLastIntent(userId: number, sessionSpace: SessionSpace): Promise<void> {
-    sessionSpace.last_intent = Intent.NONE;
-    sessionSpace.last_intent_timestamp = new Date().toISOString();
-    sessionSpace.last_intent_extra = {} as IntentExtra;
-    await this.setUserSessionSpace(userId, sessionSpace);
+  private async resetLastIntent(userId: number): Promise<void> {
+    const redisKey = `user_session:${userId}`;
+
+    // Pipeline to gain atomicity
+    const pipeline = this.redis.pipeline();
+
+    pipeline.hset(redisKey, 'last_intent', Intent.NONE);
+    pipeline.hset(redisKey, 'last_intent_timestamp', new Date().toISOString());
+    pipeline.hset(redisKey, 'last_intent_extra', JSON.stringify({}));
+
+    try {
+      await pipeline.exec();
+    } catch (error) {
+      this.logger.error('Error resetting last intent:', error);
+      throw error;
+    }
   }
 
   private async restoreSession(session_space: SessionSpace, ctx: BotContext, userId: number, message: string): Promise<void> {
@@ -248,7 +259,7 @@ class AppService {
       return;
     }
 
-    if(!message) {
+    if (!message) {
       console.log(`[${userId}][/text] -- Empty message`);
     }
 
@@ -260,17 +271,17 @@ class AppService {
       return;
     }
 
+    const isSessionExpired = (new Date().getTime() - new Date(session_space.last_intent_timestamp).getTime()) > this.intentTTL;
+    if (session_space.last_intent === Intent.CREATE_AUCTION && isSessionExpired) {
+      await this.resetLastIntent(userId);
+      await ctx.reply("Session has timed out. Wait a second, cleaning around 🧹 \\.");
+    } else {  
+      await this.auctionWizard.handleMessage(userId, session_space.last_intent, session_space.last_intent_extra as CreateAuctionIntentExtra, ctx, message);
+    }
+
     if (session_space.last_intent === Intent.NONE) {
       await ctx.reply("You are fresh and clean, type '/show' to see cool stuff.");
       return;
-    }
-
-    const isSessionExpired = (new Date().getTime() - new Date(session_space.last_intent_timestamp).getTime()) > this.intentTTL;
-    if (session_space.last_intent === Intent.CREATE_AUCTION && isSessionExpired) {
-      await this.resetLastIntent(userId, session_space);
-      await ctx.reply("Session has timed out. Please start the process again.");
-    } else {
-      await this.auctionWizard.handleMessage(userId, session_space.last_intent, session_space.last_intent_extra as CreateAuctionIntentExtra, ctx, message);
     }
   }
 }

@@ -11,24 +11,11 @@ interface CreateAuctionIntentExtra extends IntentExtra {
   data: Partial<CreateAuctionDto>;
 }
 
-interface StepFunction {
-  (ctx: BotContext, messageText: string, session: Partial<CreateAuctionDto>): Promise<void>;
-}
-
 @Injectable()
 class AuctionWizard {
   private redis: Redis;
-  private readonly steps: Map<number, StepFunction>;
 
-  constructor(private readonly auctions: AuctionsService) {
-    this.steps = new Map<number, StepFunction>([
-      [0, this.askFor('name', 'description')],
-      [1, this.askFor('description', 'startDate')],
-      [2, this.askForDate('startDate', 'endDate')],
-      [3, this.askForDate('endDate', '')],
-      [4, this.finalizeAuctionCreation.bind(this)],
-    ]);
-  }
+  constructor(private readonly auctions: AuctionsService) {}
 
   setRedis(redis: Redis) {
     this.redis = redis;
@@ -43,62 +30,42 @@ class AuctionWizard {
     }
   }
 
-  private async getRedisField(userId: string, key: string): Promise<string | null> {
-    try {
-      const redisKey = `user_session:${userId}`;
-      return await this.redis.hget(redisKey, `data:${key}`) || null;
-    } catch (error) {
-      console.error('Error getting Redis field:', error);
-      return null;
+  private async validateAndUpdateField(
+    ctx: BotContext,
+    messageText: string,
+    key: string,
+    isDate: boolean,
+    session: Partial<CreateAuctionDto>,
+    nextStep: string = ''
+  ): Promise<void> {
+
+    if (!messageText) {
+      await ctx.reply(`❗ Please provide the auction's ${key}.`);
+      return;
+    }
+  
+    if (isDate) {
+      const parsedDate = parseISO(messageText);
+      if (!isValid(parsedDate)) {
+        await ctx.reply(`❗ Invalid date format for ${key}. Use YYYY-MM-DD format.`);
+        return;
+      }
+      messageText = parsedDate.toISOString();
+    }
+  
+    const userId = session.idUser;
+    if (userId) {
+      await this.updateRedisField(userId, key, messageText);
+      await ctx.reply(`📝 Your ${key} has been set to "${messageText}".`);
+      if (nextStep) {
+        await ctx.reply(`Next, please provide the ${nextStep}.`);
+      }
+    } else {
+      await ctx.reply('❗ User ID not found. Unable to update session.');
     }
   }
-
-  private askFor(key: string, nextInfo: string = ''): StepFunction {
-    return async (ctx: BotContext, messageText: string, session: Partial<CreateAuctionDto>) => {
-      if (!messageText) {
-        await ctx.reply(`❗ Please provide the auction's ${key}.`);
-        return;
-      }
-
-      const userId = session.idUser;
-      if (userId) {
-        await this.updateRedisField(userId, key, messageText);
-        await ctx.reply(`📝 Your ${key} has been set to "${messageText}".`);
-        if (nextInfo) {
-          await ctx.reply(`Next, please provide the ${nextInfo}.`);
-        }
-      } else {
-        await ctx.reply('❗ User ID not found. Unable to update session.');
-      }
-    };
-  }
-
-  private askForDate(key: string, nextInfo: string): StepFunction {
-    return async (ctx: BotContext, messageText: string, session: Partial<CreateAuctionDto>) => {
-      if (!messageText) {
-        await ctx.reply('❗ Please provide a valid date for ' + key + ' (YYYY-MM-DD).');
-        return;
-      }
-
-      const parsedDate = parseISO(messageText);
-      if (isValid(parsedDate)) {
-        const userId = session.idUser;
-        if (userId) {
-          await this.updateRedisField(userId, key, parsedDate.toISOString());
-          await ctx.reply(`📅 Your ${key} has been set to "${parsedDate.toISOString()}".`);
-          if (nextInfo) {
-            await ctx.reply(`Next, please provide the ${nextInfo}.`);
-          }
-        } else {
-          await ctx.reply('❗ User ID not found. Unable to update session.');
-        }
-      } else {
-        await ctx.reply(`❗ Invalid date format for ${key}. Use YYYY-MM-DD format.`);
-      }
-    };
-  }
-
-  private async finalizeAuctionCreation(ctx: BotContext, _: string, session: Partial<CreateAuctionDto>): Promise<void> {
+  
+  private async finalizeAuctionCreation(ctx: BotContext, session: Partial<CreateAuctionDto>): Promise<void> {
     const { idUser, name, description, startDate, endDate } = session;
     if (!idUser || !name || !description || !startDate || !endDate) {
       await ctx.reply('⚠️ Incomplete auction details. Please provide all required information and try again.');
@@ -135,21 +102,27 @@ class AuctionWizard {
     }
 
     const { stepIndex = 0, data = {} } = intentExtra;
-    if (stepIndex === 0) {
-      console.log(`User [${userId}] started the auction creation wizard.`);
-      await ctx.telegram.sendMessage(userId, "Give me the name of your auction:");
-    }
 
-    console.log(`Processing auction creation, step: ${stepIndex}`);
+    const steps = [
+      { key: 'name', nextStep: 'description', isDate: false },
+      { key: 'description', nextStep: 'startDate', isDate: false },
+      { key: 'startDate', nextStep: 'endDate', isDate: true },
+      { key: 'endDate', nextStep: '', isDate: true },
+      { key: '', nextStep: '', isDate: false }
+    ];
+
     try {
-      const stepFunction = this.steps.get(stepIndex);
-      if (stepFunction) {
-        await stepFunction(ctx, messageText, data);
-        if (stepIndex < this.steps.size - 1) {
+      const step = steps[stepIndex];
+      if (step) {
+        await this.validateAndUpdateField(ctx, messageText, step.key, step.isDate, data, step.nextStep);
+
+        if (stepIndex < steps.length - 1) {
           intentExtra.stepIndex = stepIndex + 1;
-          await this.handleMessage(userId, intent, intentExtra, ctx, '');
+          await ctx.reply(`Next, please provide the ${steps[stepIndex + 1].key}.`);
         } else {
-          await this.finalizeAuctionCreation(ctx, '', data);
+          await this.finalizeAuctionCreation(ctx, data);
+          await this.resetLastIntent(userId, data);
+          await ctx.reply('🎉 Your auction has been created successfully!');
         }
       } else {
         await ctx.reply('⚠️ Invalid step index.');
@@ -157,6 +130,25 @@ class AuctionWizard {
     } catch (error) {
       console.error('Error during auction creation:', error);
       await ctx.reply('⚠️ An unexpected error occurred. Please try again later.');
+    }
+  }
+
+
+  public async resetLastIntent(userId: number, data: Partial<CreateAuctionDto>): Promise<void> {
+    const redisKey = `user_session:${userId}`;
+
+    // Pipeline to gain atomicity
+    const pipeline = this.redis.pipeline();
+    
+    pipeline.hset(redisKey, 'last_intent', Intent.NONE);
+    pipeline.hset(redisKey, 'last_intent_timestamp', new Date().toISOString());
+    pipeline.hset(redisKey, 'last_intent_extra', JSON.stringify({ stepIndex: 0, data }));
+    
+    try {
+      await pipeline.exec(); 
+    } catch (error) {
+      console.error('Error resetting last intent:', error);
+      throw error; 
     }
   }
 }
