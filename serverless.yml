@@ -62,7 +62,8 @@ resources:
 functions:
   main:
     handler: src/main.handler
-    memorySize: 1024 
+    memorySize: 1024
+    timeout: 40
     events:
       - http:
           method: any

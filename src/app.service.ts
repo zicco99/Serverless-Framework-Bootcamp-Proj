@@ -11,7 +11,6 @@ import { InlineKeyboardMarkup } from 'telegraf/typings/core/types/typegram';
 import { escapeMarkdown } from './telegram/messages/.utils';
 import { BotContext, SessionSpace } from './app.module';
 import { Intent, showSessionSpace, getOrInitUserSessionSpace } from './users/models/user.model';
-import { initial } from 'lodash';
 
 @Injectable()
 @Update()
