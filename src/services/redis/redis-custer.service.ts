@@ -94,7 +94,7 @@ export class RedisClusterService {
 
   async handleWithLock(userId: number, ttl: number, authAndSessionCheck: () => Promise<void>){
     this.log.log(`User ${userId} acquiring lock for ${ttl} ms...`);
-    const lockKey = `user:${userId}`;
+    const lockKey = `lock:${userId}`;
 
     const redlock = await this.getRedlock();
     try {
