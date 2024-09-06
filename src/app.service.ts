@@ -111,6 +111,26 @@ export class AppService {
     }
   }
 
+  @Hears(/.*/)
+  async onText(@Context() ctx: BotContext, @Message('text') message: string) {
+    console.log(" - All text handler received a message: ", message);
+    
+    await this.gateway(ctx, async (userId, session_space, message) => {
+      console.log("Out of gateway");
+
+      if (session_space?.last_intent === Intent.CREATE_AUCTION) {
+        const currentStep = (session_space.last_intent_extra as CreateAuctionIntentExtra).stepIndex || 0;
+
+        ctx.wizard.selectStep(currentStep + 1);
+
+        await this.auctionWizard.updateSessionSpaceIntentExtra(ctx.from?.id!, { stepIndex: currentStep + 1 });
+        
+      } else {
+        await ctx.telegram.sendMessage(userId, `Received your message: ${message}`);
+      }
+    }, message);
+  }
+
 
   private async gateway(ctx: BotContext, post: (userId: number, session_space: SessionSpace | null, message?: string) => Promise<void>, message?: string) {
     const userId = ctx.from?.id;
