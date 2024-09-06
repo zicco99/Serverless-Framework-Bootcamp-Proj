@@ -52,6 +52,7 @@ export class AuctionWizard {
       return;
     }
 
+    //Use redis to retrieve current step
     const stepIndex = await this.getCurrentStepIndex(userId);
     const handler = this.stepHandlers[stepIndex];
 
@@ -63,10 +64,6 @@ export class AuctionWizard {
     }
   }
 
-  @On('message')
-  async onMessage(@Ctx() ctx: BotContext): Promise<void> {
-    ctx.scene.reenter();
-  }
 
   private async handleStep1(ctx: BotContext, message: string) {
     const auctionName = message.trim();
