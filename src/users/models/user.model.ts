@@ -43,8 +43,8 @@ function showSessionSpace(userId: number, user: SessionSpace) : string {
            `  Content Language: ${user.preferences?.contentLanguage}\n`;
 }
 
-async function getOrInitUserSessionSpace(userId: number, ctx: BotContext, getSessionSpace : (userId: number) => Promise<SessionSpace | null>, setSessionSpace : (userId: number, session_space: SessionSpace) => Promise<void>): Promise<{ session_space: SessionSpace | null, session_newly_created: boolean }> {
-    let session_space = await getSessionSpace(userId);
+async function getOrInitUserSessionSpace(userId: number, ctx: BotContext, getSessionSpaceBind : (userId: number) => Promise<SessionSpace | null>, setSessionSpaceBind : (userId: number, session_space: SessionSpace) => Promise<void>): Promise<{ session_space: SessionSpace | null, session_newly_created: boolean }> {
+    let session_space = await getSessionSpaceBind (userId);
     const session_newly_created = session_space === null;
 
     if (!session_space) {
@@ -64,7 +64,7 @@ async function getOrInitUserSessionSpace(userId: number, ctx: BotContext, getSes
         }),
       };
 
-      await setSessionSpace(userId, session_space);
+      await setSessionSpaceBind(userId, session_space);
     }
     return { session_space, session_newly_created };
 }

@@ -159,9 +159,20 @@ export class AuctionWizard {
   async getSessionSpace(userId: number): Promise<SessionSpace | null> {
     const redis = await this.redisService.getRedis();
     const sessionStr = await redis.get(`user:${userId}`);
-    console.log("Session: ", sessionStr);
-    return sessionStr ? JSON.parse(sessionStr) : null;
+
+    if (sessionStr) {
+      try{
+        return JSON.parse(sessionStr) as SessionSpace
+      } catch (error) {
+        console.log("Error parsing session: ", error)
+      }
+    }
+    else console.log(`No session found for user ${userId}`);
+
+    return null;
   }
+
+
   async setSessionSpace(userId: number, session: SessionSpace): Promise<void> {
       const redis = await this.redisService.getRedis();
       await redis.set(`user:${userId}`, JSON.stringify(session));
