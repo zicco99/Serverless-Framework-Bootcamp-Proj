@@ -17,7 +17,7 @@ import { Intent, showSessionSpace, getOrInitUserSessionSpace } from './users/mod
 export class AppService {
   private readonly log = new Logger(AppService.name);
   private auctionCount: number;
-  private readonly intentTTL = parseInt(process.env.INTENT_TTL_!) || 3600 * 1000;
+  private readonly intentTTL = 3600 * 1000;
   private readonly maxLockTTL = parseInt(process.env.SESSION_SPACE_LOCK!) || 2 * 1000;
   private lastUpdateRedis: number;
   private updateRedisInterval: number = 3 * 60 * 1000;
