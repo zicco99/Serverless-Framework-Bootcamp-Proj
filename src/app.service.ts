@@ -91,10 +91,10 @@ export class AppService {
 
     await this.gateway(ctx, async (userId, session_space) => {
       console.log("Out of gateway");
-      //User authenticated and no intent in session_space
 
-      //Get in the auction_wizard scene
+      console.log("Scene joining..")
       await ctx.scene.enter('auction-wizard');
+      console.log("Scene joined!")
     });
   }
 
@@ -113,6 +113,7 @@ export class AppService {
 
   @Hears(/.*/)
   async onText(@Context() ctx: BotContext, @Message('text') message: string) {
+    console.log(" - All text received message: ", message);
     await this.gateway(ctx, async (userId, session_space, message) => {
       console.log("Out of gateway");
       if (session_space?.last_intent === Intent.CREATE_AUCTION) {
