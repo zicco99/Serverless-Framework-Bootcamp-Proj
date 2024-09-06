@@ -11,7 +11,6 @@ export class RedisClusterService {
   private readonly log = new Logger(RedisClusterService.name);
   private readonly awsRegion = process.env.AWS_REGION;
   private readonly redisClusterId = process.env.BOT_STATE_REDIS_CLUSTER_ID;
-  private refreshInterval: NodeJS.Timeout | null = null;
 
   public async initializeRedis() {
     this.log.log('Refreshing Redis Cluster nodes...');
@@ -68,6 +67,8 @@ export class RedisClusterService {
         retryDelay: 500,   
         retryJitter: 200,
       });
+
+      
     } catch (error) {
       this.log.error('Error refreshing Redis nodes:', error);
       throw error;
@@ -112,11 +113,5 @@ export class RedisClusterService {
       this.log.error('Error acquiring lock:', error);
       throw error;
     }
-  }
-  onModuleDestroy() {
-    if (this.refreshInterval) {
-      clearInterval(this.refreshInterval);
-    }
-    redisClients.forEach(redis => redis.quit());
   }
 }
