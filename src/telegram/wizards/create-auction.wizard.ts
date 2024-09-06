@@ -1,4 +1,4 @@
-import { Scene, SceneEnter, On, Ctx, Message } from 'nestjs-telegraf';
+import { Scene, SceneEnter, On, Ctx, Message, SceneLeave } from 'nestjs-telegraf';
 import { AuctionsService } from 'src/auctions/auctions.service';
 import { CreateAuctionDto } from 'src/auctions/dtos/create-auction.dto';
 import { BotContext } from 'src/app.module';
@@ -54,15 +54,37 @@ export class AuctionWizard {
   async onText(@Ctx() ctx: BotContext, @Message('text') message: string) {
     const userId = ctx.from?.id;
 
+    if (!message) {
+      await this.sendError(ctx, '🧙‍♂️ Please provide a valid text.');
+      return;
+    }
+
+    if (message === 'cancel') {
+      await ctx.reply(escapeMarkdown('🧙‍♂️ Auction creation canceled.'));
+      ctx.scene.leave();
+      return;
+    }
+
     if (!userId) {
       await this.sendError(ctx, '🧙‍♂️ Please provide a valid user ID.');
       return;
     }
 
     logWithPrefix('auction-wizard', userId, `Received text: ${message}`);
-    
-    // Use Redis to retrieve the current step
-    const stepIndex = await this.getCurrentStepIndex(userId);
+
+    let session = await this.getSessionSpace(userId);
+
+    if (!session) {
+      await this.sendError(ctx, '🧙‍♂️ Session not found. Please try again.');
+      return;
+    }
+
+    const { stepIndex } = session.last_intent_extra as CreateAuctionIntentExtra;
+
+    if(stepIndex === 5) {
+      await this.finalizeAuctionCreation(ctx, session.last_intent_extra as CreateAuctionIntentExtra);
+    }
+
     const handler = this.stepHandlers[stepIndex];
 
     if (handler) {
@@ -72,6 +94,8 @@ export class AuctionWizard {
       ctx.scene.leave();
     }
   }
+
+
 
   private async handleStep1(ctx: BotContext, message: string) {
     const auctionName = message.trim();
@@ -151,8 +175,13 @@ export class AuctionWizard {
       }
       };
 
-      await this.finalizeAuctionCreation(ctx, last_intent_extra);
-      await ctx.reply(escapeMarkdown('🧙‍♂️ 🎉 Auction creation complete!'));
+      console.log()
+
+      if(await this.finalizeAuctionCreation(ctx, last_intent_extra)) {
+        await ctx.reply(escapeMarkdown('🧙‍♂️ 🎉 Auction creation complete!'));
+        ctx.scene.leave();
+      }
+
 
       ctx.scene.leave();
     } else {
@@ -163,7 +192,7 @@ export class AuctionWizard {
   private async finalizeAuctionCreation(
     ctx: BotContext,
     session: CreateAuctionIntentExtra,
-  ): Promise<void> {
+  ): Promise<boolean> {
     const { name, description, startDate, endDate } = session.data;
     const userId = ctx.from?.id;
     
@@ -171,7 +200,7 @@ export class AuctionWizard {
     
     if (!name || !description || !startDate || !endDate) {
       await this.sendError(ctx, '🧙‍♂️ Missing required fields to create the auction.');
-      return;
+      return false;
     }
 
     const createAuctionDto: CreateAuctionDto = {
@@ -186,9 +215,11 @@ export class AuctionWizard {
       const auction = await this.auctions.createAuction(createAuctionDto);
       await ctx.reply(escapeMarkdown(`🧙‍♂️ Auction created! ID: ${auction.id}`));
       logWithPrefix('auction-wizard', userId, `Auction created with ID: ${auction.id}`);
+      return true;
     } catch (error: any) {
       logWithPrefix('auction-wizard', userId, `Error creating auction: ${error.message}`, 'error');
       await this.sendError(ctx, '🧙‍♂️ Failed to create the auction. Please try again later.');
+      return false;
     }
   }
 
@@ -223,13 +254,6 @@ export class AuctionWizard {
 
     currentSession.last_intent_timestamp = new Date().toISOString();
     await redis.set(redisKey, JSON.stringify(currentSession));
-  }
-
-  private async getCurrentStepIndex(userId: number): Promise<number> {
-    const session = await this.getSessionSpace(userId);
-    const extra = session?.last_intent_extra as CreateAuctionIntentExtra;
-    logWithPrefix('auction-wizard', userId, `Getting current step index: ${extra?.stepIndex || 0}`);
-    return extra?.stepIndex || 0;
   }
 
   public async getSessionSpace(userId: number): Promise<SessionSpace | null> {
