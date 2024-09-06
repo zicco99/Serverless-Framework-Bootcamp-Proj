@@ -5,7 +5,7 @@ import { AuctionsModule } from './auctions/auctions.module';
 import { Context, Scenes } from 'telegraf';
 import { SessionSpace } from './users/models/user.model';
 import { AuctionWizard } from './telegram/wizards/create-auction.wizard';
-import { RedisClusterService } from './services/redis/bot-state.service';
+import { RedisClusterService } from 'src/services/redis/redis-custer.service';
 
 interface BotContext extends Context, Scenes.WizardContext {
   session_space: SessionSpace;

@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Hears, Help, Start, Update, Action, InjectBot, Message, Context } from 'nestjs-telegraf';
 import { Markup, Telegraf } from 'telegraf';
-import { RedisClusterService } from './services/redis/bot-state.service';
+import { RedisClusterService } from 'src/services/redis/redis-custer.service';
 import { AuctionWizard } from './telegram/wizards/create-auction.wizard';
 import { AuctionsService } from './auctions/auctions.service';
 import { Auction } from './auctions/models/auction.model';
