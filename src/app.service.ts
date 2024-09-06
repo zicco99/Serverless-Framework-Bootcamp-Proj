@@ -19,12 +19,7 @@ export class AppService {
   private readonly log = new Logger(AppService.name);
   private auctionCount: number;
   private readonly intentTTL = parseInt(process.env.INTENT_TTL_!) || 3600 * 1000;
-  private readonly lockTTL = parseInt(process.env.SESSION_SPACE_LOCK!) || 0.1 * 1000;
-
-  private redis = async () => {
-    return this.redisService.getRedis();
-  }
-
+  private readonly maxLockTTL = parseInt(process.env.SESSION_SPACE_LOCK!) || 1 * 1000;
 
   constructor(
     @InjectBot() private readonly bot: Telegraf<BotContext>,
@@ -124,7 +119,7 @@ export class AppService {
     const userId = ctx.from?.id;
     if (!userId) return ctx.reply('Unable to identify you. Please try again.', { parse_mode: 'MarkdownV2' });
 
-    await this.redisService.handleWithLock(userId, this.lockTTL,
+    await this.redisService.handleWithLock(userId, this.maxLockTTL,
       //Auth and session check wrapper for gateway
       async () => {
         const { session_space } = await getOrInitUserSessionSpace(userId, ctx, this.auctionWizard.getSessionSpace.bind(this), this.auctionWizard.setSessionSpace.bind(this));
