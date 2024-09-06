@@ -6,7 +6,7 @@ import Redlock from 'redlock';
 let redisClients: Redis[] = [];
 let redlock: Redlock | null = null;
 let lastRefresh: number = 0;
-const REFRESH_INTERVAL = 3 * 60 * 1000; // Redis Cluster Node Refresh: A setInterval is used to refresh the Redis cluster nodes every 45 seconds, clients are kept up-to-date, especially in dynamic cloud environments like AWS ElastiCache.
+const REFRESH_INTERVAL = 3 * 60 * 1000; // Redis Cluster Node Refresh: A setInterval is used to refresh the Redis cluster nodes every 3 minutes.
 
 @Injectable()
 export class RedisClusterService {
@@ -61,7 +61,8 @@ export class RedisClusterService {
             try {
               await existingClient.ping();
               return existingClient;
-            } catch {
+            } catch (err: any) {
+              this.log.warn(`Existing Redis client failed to ping: ${err.message}`);
               return undefined;
             }
           } else {
@@ -99,7 +100,10 @@ export class RedisClusterService {
     if (!redlock) {
       await this.initializeRedis();
     }
-    return redlock!;
+    if (!redlock) {
+      throw new Error('Redlock is not initialized.');
+    }
+    return redlock;
   }
 
   async handleWithLock(userId: number, ttl: number, authAndSessionCheck: () => Promise<void>) {
