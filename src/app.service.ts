@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Hears, Help, Start, Update, Action, InjectBot, Message, Context } from 'nestjs-telegraf';
 import { Markup, Telegraf } from 'telegraf';
 import { RedisClusterService } from 'src/services/redis/redis-custer.service';
-import { AuctionWizard } from './telegram/wizards/create-auction.wizard';
+import { AuctionWizard, CreateAuctionIntentExtra } from './telegram/wizards/create-auction.wizard';
 import { AuctionsService } from './auctions/auctions.service';
 import { Auction } from './auctions/models/auction.model';
 import { welcomeMessage } from './telegram/messages/welcome';
@@ -111,18 +111,6 @@ export class AppService {
     }
   }
 
-  @Hears(/.*/)
-  async onText(@Context() ctx: BotContext, @Message('text') message: string) {
-    console.log(" - All text received message: ", message);
-    await this.gateway(ctx, async (userId, session_space, message) => {
-      console.log("Out of gateway");
-      if (session_space?.last_intent === Intent.CREATE_AUCTION) {
-        await ctx.scene.enter('auction-wizard');
-      } else {
-        ctx.telegram.sendMessage(userId, `Received your message: ${message}`);
-      }
-    }, message);
-  }
 
   private async gateway(ctx: BotContext, post: (userId: number, session_space: SessionSpace | null, message?: string) => Promise<void>, message?: string) {
     const userId = ctx.from?.id;

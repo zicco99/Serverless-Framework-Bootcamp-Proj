@@ -22,6 +22,8 @@ export class AuctionWizard {
     private readonly redisService: RedisClusterService,
   ) {}
 
+  
+
   @SceneEnter()
   @WizardStep(1)
   async step1(@Ctx() ctx: BotContext) {
@@ -137,7 +139,7 @@ export class AuctionWizard {
 
 
 
-  private async updateSessionSpaceIntentExtra(userId: number, extra: Partial<CreateAuctionIntentExtra>): Promise<void> {
+  public async updateSessionSpaceIntentExtra(userId: number, extra: Partial<CreateAuctionIntentExtra>): Promise<void> {
     const redis = await this.redisService.getRedis()
     const redisKey = `user:${userId}`;
     const currentSessionStr = await redis.get(redisKey);
