@@ -12,7 +12,6 @@ interface CreateAuctionIntentExtra extends IntentExtra {
   data: Partial<CreateAuctionDto>;
 }
 
-
 @Injectable()
 class AuctionWizard {
 
@@ -21,34 +20,72 @@ class AuctionWizard {
     private readonly redisService: BotStateService
   ) {}
 
+  private async getUserSession(userId: number): Promise<any> {
+    const redis = (await this.redisService.getRedis())[0];
+    const redisKey = `user:${userId}`;
+    try {
+      const sessionStr = await redis.get(redisKey);
+      return sessionStr ? JSON.parse(sessionStr) : {};
+    } catch (error) {
+      console.error('Error fetching user session:', error);
+      throw error;
+    }
+  }
+
+  private async setUserSessionExtraKey(
+    userId: number, 
+    extraKey: string, 
+    value: any
+  ): Promise<void> {
+    const redis = (await this.redisService.getRedis())[0];
+    const redisKey = `user:${userId}`;
+
+    try {
+      const currentSession = await this.getUserSession(userId);
+
+      if (!currentSession.last_intent_extra) {
+        currentSession.last_intent_extra = {};
+      }
+
+      currentSession.last_intent_extra[extraKey] = value;
+
+      await redis.set(redisKey, JSON.stringify(currentSession));
+      console.log(`Session updated for user ${userId}: ${extraKey} set to ${value}`);
+    } catch (error) {
+      console.error('Error updating user session:', error);
+      throw error;
+    }
+  }
+
   private async validateAndUpdateField(
     ctx: BotContext,
     messageText: string,
     key: string,
     isDate: boolean,
-    session: Partial<CreateAuctionDto>,
+    cached_data: Partial<CreateAuctionDto>,
     nextStep: string = ''
-  ): Promise<void> {
+  ): Promise<Partial<CreateAuctionDto>> {
+
     if (!messageText) {
       await ctx.reply(escapeMarkdown(`🧙‍♂️ ❗ Please provide the auction's ${key}.`));
-      return;
+      return cached_data; 
     }
-
+  
     if (isDate) {
       const parsedDate = parseISO(messageText);
       if (!isValid(parsedDate)) {
         await ctx.reply(escapeMarkdown(`🧙‍♂️ ❗ Invalid date format for ${key}. Use YYYY-MM-DD format.`));
-        return;
+        return cached_data; 
       }
       messageText = parsedDate.toISOString();
     }
-    
-
-    const userId = session.idUser;
+  
+    const updatedData = { ...cached_data, [key]: messageText };
+  
+    const userId = ctx.from?.id;
     if (userId) {
       try {
-        const redis = (await this.redisService.getRedis())[0];
-        await redis.hset(`user_session:${userId}`, key, messageText);
+        await this.setUserSessionExtraKey(userId, key, messageText);
         await ctx.reply(escapeMarkdown(`🧙‍♂️ 📝 Your ${key} has been set to "${messageText}".`));
         if (nextStep) {
           await ctx.reply(escapeMarkdown(`🧙‍♂️ Next, please provide the ${nextStep}.`));
@@ -60,8 +97,10 @@ class AuctionWizard {
     } else {
       await ctx.reply(escapeMarkdown('🧙‍♂️ ❗ User ID not found. Unable to update session.'));
     }
+  
+    return updatedData; 
   }
-
+  
   private async finalizeAuctionCreation(ctx: BotContext, session: Partial<CreateAuctionDto>): Promise<void> {
     const { idUser, name, description, startDate, endDate } = session;
     if (!idUser || !name || !description || !startDate || !endDate) {
@@ -112,7 +151,6 @@ class AuctionWizard {
         { key: '', nextStep: '', isDate: false }
       ];
 
-
       const step = steps[stepIndex];
       console.log(`[${userId}][${intent}] -- Step: ${stepIndex}, Key: ${step?.key}, NextStep: ${step?.nextStep}, IsDate: ${step?.isDate}`);
       
@@ -137,8 +175,8 @@ class AuctionWizard {
           }
 
           if (stepIndex < steps.length - 1) {
-            await this.validateAndUpdateField(ctx, messageText, step.key, step.isDate, data, step.nextStep);
-            await this.setLastIntent(userId, intent, { stepIndex: stepIndex + 1, data});
+            const new_intent_extra : CreateAuctionIntentExtra = { stepIndex: stepIndex + 1, data : await this.validateAndUpdateField(ctx, messageText, step.key, step.isDate, data, step.nextStep) };
+            await this.setLastIntent(userId, intent, new_intent_extra);
             await ctx.reply(escapeMarkdown(`🧙‍♂️ Let's continue. Now I need a ${steps[stepIndex + 1].key}.`));
           } else {
             await this.finalizeAuctionCreation(ctx, data);
@@ -207,8 +245,6 @@ class AuctionWizard {
       throw error;
     }
   }
-  
-  
-}  
+}
 
 export { AuctionWizard, CreateAuctionIntentExtra };

@@ -73,7 +73,7 @@ export class BotStateService implements OnModuleInit, OnModuleDestroy {
 
   async handleWithLock(userId: number, ttl: number, authAndSessionCheck: () => Promise<void>) {
     this.log.log(`User ${userId} acquiring lock for ${ttl} ms...`);
-    const lockKey = `user_session:${userId}`;
+    const lockKey = `user:${userId}`;
 
     const redlock = await this.getRedlock();
     try {
