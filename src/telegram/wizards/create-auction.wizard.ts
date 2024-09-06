@@ -1,5 +1,4 @@
-import { Injectable } from '@nestjs/common';
-import { Wizard, WizardStep, Ctx, Message, Scene, SceneEnter } from 'nestjs-telegraf';
+import { Scene, SceneEnter, On, Ctx, Message } from 'nestjs-telegraf';
 import { AuctionsService } from 'src/auctions/auctions.service';
 import { CreateAuctionDto } from 'src/auctions/dtos/create-auction.dto';
 import { BotContext } from 'src/app.module';
@@ -14,99 +13,126 @@ export interface CreateAuctionIntentExtra extends IntentExtra {
   data: Partial<CreateAuctionDto>;
 }
 
-@Injectable()
-@Scene('auction-wizard')
+const sceneOption = { 
+  ttl: 300,
+  handlers: [],
+  enterHandlers: [],
+  leaveHandlers: [],
+};
+
+@Scene('auction-wizard', sceneOption)
 export class AuctionWizard {
+  private stepHandlers: { [key: number]: (ctx: BotContext, message: string) => Promise<void> } = {};
+
   constructor(
     private readonly auctions: AuctionsService,
     private readonly redisService: RedisClusterService,
-  ) {}
-
-  
-
-  @SceneEnter()
-  @WizardStep(1)
-  async step1(@Ctx() ctx: BotContext) {
-    await ctx.reply(escapeMarkdown('🧙‍♂️ Welcome! Let’s create your auction. What’s the auction name?'));
-    await this.updateSessionSpaceIntentExtra(ctx.from?.id!, { stepIndex: 1 });
+  ) {
+    this.stepHandlers = {
+      1: this.handleStep1.bind(this),
+      2: this.handleStep2.bind(this),
+      3: this.handleStep3.bind(this),
+      4: this.handleStep4.bind(this)
+    };
   }
 
-  @WizardStep(2)
-  async step2(@Ctx() ctx: BotContext, @Message('text') message: string) {
-    const auctionName = message;
+  @SceneEnter()
+  async onSceneEnter(@Ctx() ctx: BotContext) {
+    await this.updateSession(ctx.from?.id!, { stepIndex: 1 });
+    await ctx.reply(escapeMarkdown('🧙‍♂️ Welcome! Let’s create your auction. What’s the auction name?'));
+  }
+
+  @On('text')
+  async onText(@Ctx() ctx: BotContext, @Message('text') message: string) {
+    const userId = ctx.from?.id;
+
+    if (!userId) {
+      await this.sendError(ctx, '🧙‍♂️ Please provide a valid user ID.');
+      return;
+    }
+
+    const stepIndex = await this.getCurrentStepIndex(userId);
+    const handler = this.stepHandlers[stepIndex];
+
+    if (handler) {
+      await handler(ctx, message);
+    } else {
+      await this.sendError(ctx, '🧙‍♂️ Invalid step. Please start over.');
+      ctx.scene.leave();
+    }
+  }
+
+  @On('message')
+  async onMessage(@Ctx() ctx: BotContext): Promise<void> {
+    ctx.scene.reenter();
+  }
+
+  private async handleStep1(ctx: BotContext, message: string) {
+    const auctionName = message.trim();
     const userId = ctx.from?.id;
 
     if (userId && auctionName) {
-      // Save the auction name in the session
-      await this.updateSessionSpaceIntentExtra(userId, { stepIndex: 2, data: { name: auctionName } });
+      await this.updateSession(userId, { stepIndex: 2, data: { name: auctionName } });
       await ctx.reply(escapeMarkdown(`🧙‍♂️ Auction name set to "${auctionName}". What’s the auction description?`));
-      ctx.wizard.next(); // Move to the next step
     } else {
-      await ctx.reply(escapeMarkdown('🧙‍♂️ Please provide a valid name.'));
+      await this.sendError(ctx, '🧙‍♂️ Please provide a valid name.');
     }
   }
 
-  @WizardStep(3)
-  async step3(@Ctx() ctx: BotContext, @Message('text') message: string) {
-    const description = message;
+  private async handleStep2(ctx: BotContext, message: string) {
+    const description = message.trim();
     const userId = ctx.from?.id;
 
     if (userId && description) {
-      // Save the description in the session
-      await this.updateSessionSpaceIntentExtra(userId, { stepIndex: 3, data: { description } });
-      await ctx.reply(escapeMarkdown(`🧙‍♂️ Description saved! When should the auction start? (YYYY-MM-DD)`));
-      ctx.wizard.next(); // Move to the next step
+      await this.updateSession(userId, { stepIndex: 3, data: { description } });
+      await ctx.reply(escapeMarkdown('🧙‍♂️ Description saved! When should the auction start? (YYYY-MM-DD)'));
     } else {
-      await ctx.reply(escapeMarkdown('🧙‍♂️ Please provide a valid description.'));
+      await this.sendError(ctx, '🧙‍♂️ Please provide a valid description.');
     }
   }
 
-  @WizardStep(4)
-  async step4(@Ctx() ctx: BotContext, @Message('text') message: string) {
-    const startDateStr = message;
+  private async handleStep3(ctx: BotContext, message: string) {
+    const startDateStr = message.trim();
     const userId = ctx.from?.id;
 
     if (userId && startDateStr) {
       const startDate = parseISO(startDateStr);
       if (!isValid(startDate)) {
-        await ctx.reply(escapeMarkdown('🧙‍♂️ Invalid date format! Please provide a valid date (YYYY-MM-DD).'));
+        await this.sendError(ctx, '🧙‍♂️ Invalid date format! Please provide a valid date (YYYY-MM-DD).');
         return;
       }
 
-      await this.updateSessionSpaceIntentExtra(userId, { stepIndex: 4, data: { startDate: startDate.toISOString() } });
+      await this.updateSession(userId, { stepIndex: 4, data: { startDate: startDate.toISOString() } });
       await ctx.reply(escapeMarkdown('🧙‍♂️ Start date saved! When should the auction end? (YYYY-MM-DD)'));
-      ctx.wizard.next(); // Move to the next step
     } else {
-      await ctx.reply(escapeMarkdown('🧙‍♂️ Please provide a valid date.'));
+      await this.sendError(ctx, '🧙‍♂️ Please provide a valid date.');
     }
   }
 
-  @WizardStep(5)
-  async step5(@Ctx() ctx: BotContext, @Message('text') message: string) {
-    const endDateStr = message;
+  private async handleStep4(ctx: BotContext, message: string) {
+    const endDateStr = message.trim();
     const userId = ctx.from?.id;
 
     if (userId && endDateStr) {
       const endDate = parseISO(endDateStr);
       if (!isValid(endDate)) {
-        await ctx.reply(escapeMarkdown('🧙‍♂️ Invalid date format! Please provide a valid date (YYYY-MM-DD).'));
+        await this.sendError(ctx, '🧙‍♂️ Invalid date format! Please provide a valid date (YYYY-MM-DD).');
         return;
       }
 
-      await this.updateSessionSpaceIntentExtra(userId, { stepIndex: 5, data: { endDate: endDate.toISOString() } });
+      await this.updateSession(userId, { stepIndex: 5, data: { endDate: endDate.toISOString() } });
       const session = await this.getSessionSpace(userId);
 
       if (!session) {
-        await ctx.reply(escapeMarkdown('🧙‍♂️ Session not found. Please try again.'));
+        await this.sendError(ctx, '🧙‍♂️ Session not found. Please try again.');
         return;
       }
 
       await this.finalizeAuctionCreation(ctx, session.last_intent_extra as CreateAuctionIntentExtra);
-
       await ctx.reply(escapeMarkdown('🧙‍♂️ 🎉 Auction creation complete!'));
-      ctx.scene.leave(); // End the wizard
+      ctx.scene.leave();
     } else {
-      await ctx.reply(escapeMarkdown('🧙‍♂️ Please provide a valid date.'));
+      await this.sendError(ctx, '🧙‍♂️ Please provide a valid date.');
     }
   }
 
@@ -116,7 +142,7 @@ export class AuctionWizard {
   ): Promise<void> {
     const { name, description, startDate, endDate } = session.data;
     if (!name || !description || !startDate || !endDate) {
-      await ctx.reply(escapeMarkdown('🧙‍♂️ Missing required fields to create the auction.'));
+      await this.sendError(ctx, '🧙‍♂️ Missing required fields to create the auction.');
       return;
     }
 
@@ -133,53 +159,60 @@ export class AuctionWizard {
       await ctx.reply(escapeMarkdown(`🧙‍♂️ Auction created! ID: ${auction.id}`));
     } catch (error) {
       console.error('Error creating auction:', error);
-      await ctx.reply(escapeMarkdown('🧙‍♂️ Failed to create the auction. Please try again later.'));
+      await this.sendError(ctx, '🧙‍♂️ Failed to create the auction. Please try again later.');
     }
   }
 
-
-
-  public async updateSessionSpaceIntentExtra(userId: number, extra: Partial<CreateAuctionIntentExtra>): Promise<void> {
-    const redis = await this.redisService.getRedis()
+  private async updateSession(userId: number, extra: Partial<CreateAuctionIntentExtra>): Promise<void> {
+    const redis = await this.redisService.getRedis();
     const redisKey = `user:${userId}`;
-    const currentSessionStr = await redis.get(redisKey);
 
-    if (!currentSessionStr) {
+    const currentSession = await this.getSessionSpace(userId);
+
+    if (!currentSession) {
       console.log(`No session found for user ${userId}`);
       return;
     }
 
-    const currentSession = JSON.parse(currentSessionStr);
+    currentSession.last_intent_extra = {
+      ...currentSession.last_intent_extra,
+      ...extra,
+    };
 
-    if (!currentSession.last_intent_extra) {
-      currentSession.last_intent_extra = {};
-    }
-
-    currentSession.last_intent_extra = { ...currentSession.last_intent_extra, ...extra };
+    currentSession.last_intent_timestamp = new Date().toISOString();
     await redis.set(redisKey, JSON.stringify(currentSession));
   }
 
-  async getSessionSpace(userId: number): Promise<SessionSpace | null> {
+  private async getCurrentStepIndex(userId: number): Promise<number> {
+    const session = await this.getSessionSpace(userId);
+    const extra = session?.last_intent_extra as CreateAuctionIntentExtra;
+
+    if (!extra) {
+      return 0;
+    }
+    
+    return extra.stepIndex || 0;
+
+  }
+
+  private async getSessionSpace(userId: number): Promise<SessionSpace | null> {
     const redis = await this.redisService.getRedis();
     const sessionStr = await redis.get(`user:${userId}`);
 
     if (sessionStr) {
-      try{
-        const session : SessionSpace = JSON.parse(sessionStr);
-        return session
+      try {
+        return JSON.parse(sessionStr) as SessionSpace;
       } catch (error) {
-        console.log("Error parsing session: ", error)
+        console.log("Error parsing session:", error);
       }
+    } else {
+      console.log(`No session found for user ${userId}`);
     }
-    else console.log(`No session found for user ${userId}`);
 
     return null;
   }
 
-
-  async setSessionSpace(userId: number, session: SessionSpace): Promise<void> {
-      const redis = await this.redisService.getRedis();
-      await redis.set(`user:${userId}`, JSON.stringify(session));
-    }
-
+  private async sendError(ctx: BotContext, message: string) {
+    await ctx.reply(escapeMarkdown(message));
+  }
 }
