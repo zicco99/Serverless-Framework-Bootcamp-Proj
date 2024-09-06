@@ -20,6 +20,8 @@ export class AppService {
   private auctionCount: number;
   private readonly intentTTL = parseInt(process.env.INTENT_TTL_!) || 3600 * 1000;
   private readonly maxLockTTL = parseInt(process.env.SESSION_SPACE_LOCK!) || 10 * 1000;
+  private lastUpdateRedis: number = 0;
+  private updateRedisInterval: number = 3 * 60 * 1000;
 
   constructor(
     @InjectBot() private readonly bot: Telegraf<BotContext>,
@@ -31,6 +33,13 @@ export class AppService {
 
   async onModuleInit() {
     await this.redisService.initializeRedis();
+    this.lastUpdateRedis = Date.now();
+
+    setInterval(async () => {
+      await this.redisService.initializeRedis();
+      this.lastUpdateRedis = Date.now();
+    }, this.updateRedisInterval);
+
     await this.redisService.getRedis();
     await this.setupCommands();
   }

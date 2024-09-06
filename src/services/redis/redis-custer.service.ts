@@ -13,13 +13,8 @@ export class RedisClusterService {
   private readonly redisClusterId = process.env.BOT_STATE_REDIS_CLUSTER_ID;
   private refreshInterval: NodeJS.Timeout | null = null;
 
-  public async initializeRedis(lastRefresh = 0, REFRESH_INTERVAL = 3 * 60 * 1000) {
+  public async initializeRedis() {
     this.log.log('Refreshing Redis Cluster nodes...');
-
-    const now = Date.now();
-    if (redisClients.length > 0 && (now - lastRefresh < REFRESH_INTERVAL)) {
-      return;
-    }
 
     const elastiCache = new AWS.ElastiCache({ region: this.awsRegion });
 
@@ -68,13 +63,11 @@ export class RedisClusterService {
       this.log.log(`Redis nodes connected: ${redisClients.map(redis => `${redis.options.host}:${redis.options.port}`).join(', ')}`);
 
       redlock = new Redlock(redisClients, {
-        driftFactor: 0.01,
-        retryCount: 10,
-        retryDelay: 200,
+        driftFactor: 0.01, 
+        retryCount: 20,   
+        retryDelay: 500,   
         retryJitter: 200,
       });
-
-      lastRefresh = Date.now();
     } catch (error) {
       this.log.error('Error refreshing Redis nodes:', error);
       throw error;
@@ -98,7 +91,7 @@ export class RedisClusterService {
     return redlock;
   }
 
-  async handleWithLock(userId: number, ttl: number, authAndSessionCheck: () => Promise<void>) {
+  async handleWithLock(userId: number, ttl: number, authAndSessionCheck: () => Promise<void>){
     this.log.log(`User ${userId} acquiring lock for ${ttl} ms...`);
     const lockKey = `user:${userId}`;
 
@@ -120,7 +113,6 @@ export class RedisClusterService {
       throw error;
     }
   }
-
   onModuleDestroy() {
     if (this.refreshInterval) {
       clearInterval(this.refreshInterval);
