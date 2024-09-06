@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Wizard, WizardStep, Ctx, Message } from 'nestjs-telegraf';
+import { Wizard, WizardStep, Ctx, Message, Scene, SceneEnter } from 'nestjs-telegraf';
 import { AuctionsService } from 'src/auctions/auctions.service';
 import { CreateAuctionDto } from 'src/auctions/dtos/create-auction.dto';
 import { BotContext } from 'src/app.module';
@@ -15,13 +15,14 @@ export interface CreateAuctionIntentExtra extends IntentExtra {
 }
 
 @Injectable()
-@Wizard('auction-wizard')
+@Scene('auction-wizard')
 export class AuctionWizard {
   constructor(
     private readonly auctions: AuctionsService,
     private readonly redisService: RedisClusterService,
   ) {}
 
+  @SceneEnter()
   @WizardStep(1)
   async step1(@Ctx() ctx: BotContext) {
     await ctx.reply(escapeMarkdown('🧙‍♂️ Welcome! Let’s create your auction. What’s the auction name?'));
