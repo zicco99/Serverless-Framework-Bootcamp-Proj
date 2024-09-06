@@ -22,7 +22,6 @@ export class AppService {
 
   constructor(
     @InjectBot() private readonly bot: Telegraf<BotContext>,
-    private readonly auctionWizard: AuctionWizard,
     private readonly auctions: AuctionsService,
     private readonly botStateService: RedisClusterService
   ) {}
@@ -111,7 +110,9 @@ export class AppService {
     const userId = ctx.from?.id;
     if (!userId) return ctx.reply('Unable to identify you. Please try again.', { parse_mode: 'MarkdownV2' });
 
-    await this.botStateService.handleWithLock(userId, this.lockTTL, async () => {
+    await this.botStateService.handleWithLock(userId, this.lockTTL,
+      //Auth and session check wrapper for gateway
+      async () => {
       const { session_space } = await getOrInitUserSessionSpace(userId, ctx, this.getSession.bind(this), this.setSession.bind(this));
       if (!session_space) {
         await ctx.telegram.sendMessage(userId, "No session found. Please try again.", { parse_mode: 'MarkdownV2' });
@@ -141,8 +142,9 @@ export class AppService {
 
   private async getSession(userId: number): Promise<SessionSpace | null> {
     const redis = (await this.botStateService.getRedis())[0];
-    const session = await redis.get(`user:${userId}`);
-    return session ? JSON.parse(session) : null;
+    const sessionStr = await redis.get(`user:${userId}`);
+    console.log("Session: ", sessionStr);
+    return sessionStr ? JSON.parse(sessionStr) : null;
   }
 
   private async setSession(userId: number, session: SessionSpace): Promise<void> {
