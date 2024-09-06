@@ -1,13 +1,14 @@
 import { BotContext } from "src/app.module";
+import { CreateAuctionIntentExtra } from "src/telegram/wizards/create-auction.wizard";
 
-interface SessionSpace {
+interface SessionSpace{
     username?: string;            
     firstName: string;            // The user's first name
     lastName?: string;            // The user's last name (optional)
     languageCode?: string;        // The user's preferred language code (optional)
     chatId: number;               // The unique identifier for the chat
     last_intent : Intent;
-    last_intent_extra : IntentExtra;
+    last_intent_extra : IntentExtra | CreateAuctionIntentExtra;
     last_intent_timestamp : string;
     firstInteraction: string;       // The timestamp of the user's first interaction with the bot
     initialContext?: string;      // Information about the initial context of the interaction (e.g., command used)

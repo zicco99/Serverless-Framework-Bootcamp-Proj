@@ -23,7 +23,8 @@ export class AppService {
   constructor(
     @InjectBot() private readonly bot: Telegraf<BotContext>,
     private readonly auctions: AuctionsService,
-    private readonly botStateService: RedisClusterService
+    private readonly botStateService: RedisClusterService,
+    private readonly auctionWizard: AuctionWizard
   ) {}
 
   async onModuleInit() {
@@ -113,42 +114,31 @@ export class AppService {
     await this.botStateService.handleWithLock(userId, this.lockTTL,
       //Auth and session check wrapper for gateway
       async () => {
-      const { session_space } = await getOrInitUserSessionSpace(userId, ctx, this.getSession.bind(this), this.setSession.bind(this));
-      if (!session_space) {
-        await ctx.telegram.sendMessage(userId, "No session found. Please try again.", { parse_mode: 'MarkdownV2' });
-        return;
-      }
-
-      if (session_space.last_intent !== Intent.NONE) {
-        const isExpired = (Date.now() - new Date(session_space.last_intent_timestamp).getTime()) > this.intentTTL;
-        if (!isExpired) {
-          switch (session_space.last_intent) {
-            case Intent.CREATE_AUCTION:
-              await ctx.scene.enter('auction-wizard');
-              return;
-            case Intent.VIEW_AUCTIONS:
-              await this.viewAuctions(ctx);
-              return;
-          }
-        } else {
-          await ctx.reply("Session has timed out. Cleaning up 🧹.");
+        const { session_space } = await getOrInitUserSessionSpace(userId, ctx, this.auctionWizard.getSessionSpace.bind(this), this.auctionWizard.setSessionSpace.bind(this));
+        if (!session_space) {
+          await ctx.telegram.sendMessage(userId, "No session found. Please try again.", { parse_mode: 'MarkdownV2' });
           return;
         }
-      }
 
-      await post(userId, session_space, message);
+        if (session_space.last_intent !== Intent.NONE) {
+          const isExpired = (Date.now() - new Date(session_space.last_intent_timestamp).getTime()) > this.intentTTL;
+          if (!isExpired) {
+            switch (session_space.last_intent) {
+              case Intent.CREATE_AUCTION:
+                await ctx.scene.enter('auction-wizard');
+                return;
+              case Intent.VIEW_AUCTIONS:
+                await this.viewAuctions(ctx);
+                return;
+            }
+          } else {
+            await ctx.reply("Session has timed out. Cleaning up 🧹.");
+            return;
+          }
+        }
+
+        await post(userId, session_space, message);
     });
   }
 
-  private async getSession(userId: number): Promise<SessionSpace | null> {
-    const redis = (await this.botStateService.getRedis())[0];
-    const sessionStr = await redis.get(`user:${userId}`);
-    console.log("Session: ", sessionStr);
-    return sessionStr ? JSON.parse(sessionStr) : null;
-  }
-
-  private async setSession(userId: number, session: SessionSpace): Promise<void> {
-    const redis = (await this.botStateService.getRedis())[0];
-    await redis.set(`user:${userId}`, JSON.stringify(session));
-  }
 }

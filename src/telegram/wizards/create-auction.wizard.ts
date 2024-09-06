@@ -6,10 +6,10 @@ import { BotContext } from 'src/app.module';
 import { RedisClusterService } from 'src/services/redis/redis-custer.service';
 import { escapeMarkdown } from '../messages/.utils';
 import { parseISO, isValid } from 'date-fns';
-import { IntentExtra } from 'src/users/models/user.model';
+import { IntentExtra, SessionSpace } from 'src/users/models/user.model';
 import { v4 as uuid } from 'uuid';
 
-interface CreateAuctionIntentExtra extends IntentExtra {
+export interface CreateAuctionIntentExtra extends IntentExtra {
   stepIndex: number;
   data: Partial<CreateAuctionDto>;
 }
@@ -25,7 +25,7 @@ export class AuctionWizard {
   @WizardStep(1)
   async step1(@Ctx() ctx: BotContext) {
     await ctx.reply(escapeMarkdown('🧙‍♂️ Welcome! Let’s create your auction. What’s the auction name?'));
-    await this.updateSession(ctx.from?.id!, { stepIndex: 1 });
+    await this.updateSessionSpaceIntentExtra(ctx.from?.id!, { stepIndex: 1 });
   }
 
   @WizardStep(2)
@@ -35,7 +35,7 @@ export class AuctionWizard {
 
     if (userId && auctionName) {
       // Save the auction name in the session
-      await this.updateSession(userId, { stepIndex: 2, data: { name: auctionName } });
+      await this.updateSessionSpaceIntentExtra(userId, { stepIndex: 2, data: { name: auctionName } });
       await ctx.reply(escapeMarkdown(`🧙‍♂️ Auction name set to "${auctionName}". What’s the auction description?`));
       ctx.wizard.next(); // Move to the next step
     } else {
@@ -50,7 +50,7 @@ export class AuctionWizard {
 
     if (userId && description) {
       // Save the description in the session
-      await this.updateSession(userId, { stepIndex: 3, data: { description } });
+      await this.updateSessionSpaceIntentExtra(userId, { stepIndex: 3, data: { description } });
       await ctx.reply(escapeMarkdown(`🧙‍♂️ Description saved! When should the auction start? (YYYY-MM-DD)`));
       ctx.wizard.next(); // Move to the next step
     } else {
@@ -70,7 +70,7 @@ export class AuctionWizard {
         return;
       }
 
-      await this.updateSession(userId, { stepIndex: 4, data: { startDate: startDate.toISOString() } });
+      await this.updateSessionSpaceIntentExtra(userId, { stepIndex: 4, data: { startDate: startDate.toISOString() } });
       await ctx.reply(escapeMarkdown('🧙‍♂️ Start date saved! When should the auction end? (YYYY-MM-DD)'));
       ctx.wizard.next(); // Move to the next step
     } else {
@@ -90,10 +90,15 @@ export class AuctionWizard {
         return;
       }
 
-      await this.updateSession(userId, { stepIndex: 5, data: { endDate: endDate.toISOString() } });
+      await this.updateSessionSpaceIntentExtra(userId, { stepIndex: 5, data: { endDate: endDate.toISOString() } });
+      const session = await this.getSessionSpace(userId);
 
-      const session = await this.getUserSession(userId);
-      await this.finalizeAuctionCreation(ctx, session.last_intent_extra?.data || {});
+      if (!session) {
+        await ctx.reply(escapeMarkdown('🧙‍♂️ Session not found. Please try again.'));
+        return;
+      }
+
+      await this.finalizeAuctionCreation(ctx, session.last_intent_extra as CreateAuctionIntentExtra);
 
       await ctx.reply(escapeMarkdown('🧙‍♂️ 🎉 Auction creation complete!'));
       ctx.scene.leave(); // End the wizard
@@ -102,31 +107,11 @@ export class AuctionWizard {
     }
   }
 
-  private async getUserSession(userId: number): Promise<any> {
-    const redis = (await this.redisService.getRedis())[0];
-    const redisKey = `user:${userId}`;
-    const sessionStr = await redis.get(redisKey);
-    return sessionStr ? JSON.parse(sessionStr) : {};
-  }
-
-  private async updateSession(userId: number, extra: Partial<CreateAuctionIntentExtra>): Promise<void> {
-    const redis = (await this.redisService.getRedis())[0];
-    const redisKey = `user:${userId}`;
-    const currentSession = await this.getUserSession(userId);
-
-    if (!currentSession.last_intent_extra) {
-      currentSession.last_intent_extra = {};
-    }
-
-    currentSession.last_intent_extra = { ...currentSession.last_intent_extra, ...extra };
-    await redis.set(redisKey, JSON.stringify(currentSession));
-  }
-
   private async finalizeAuctionCreation(
     ctx: BotContext,
-    session: Partial<CreateAuctionDto>,
+    session: CreateAuctionIntentExtra,
   ): Promise<void> {
-    const { name, description, startDate, endDate } = session;
+    const { name, description, startDate, endDate } = session.data;
     if (!name || !description || !startDate || !endDate) {
       await ctx.reply(escapeMarkdown('🧙‍♂️ Missing required fields to create the auction.'));
       return;
@@ -148,4 +133,38 @@ export class AuctionWizard {
       await ctx.reply(escapeMarkdown('🧙‍♂️ Failed to create the auction. Please try again later.'));
     }
   }
+
+
+
+  private async updateSessionSpaceIntentExtra(userId: number, extra: Partial<CreateAuctionIntentExtra>): Promise<void> {
+    const redis = (await this.redisService.getRedis())[0];
+    const redisKey = `user:${userId}`;
+    const currentSessionStr = await redis.get(redisKey);
+
+    if (!currentSessionStr) {
+      console.log(`No session found for user ${userId}`);
+      return;
+    }
+
+    const currentSession = JSON.parse(currentSessionStr);
+
+    if (!currentSession.last_intent_extra) {
+      currentSession.last_intent_extra = {};
+    }
+
+    currentSession.last_intent_extra = { ...currentSession.last_intent_extra, ...extra };
+    await redis.set(redisKey, JSON.stringify(currentSession));
+  }
+
+  async getSessionSpace(userId: number): Promise<SessionSpace | null> {
+    const redis = (await this.redisService.getRedis())[0];
+    const sessionStr = await redis.get(`user:${userId}`);
+    console.log("Session: ", sessionStr);
+    return sessionStr ? JSON.parse(sessionStr) : null;
+  }
+  async setSessionSpace(userId: number, session: SessionSpace): Promise<void> {
+      const redis = (await this.redisService.getRedis())[0];
+      await redis.set(`user:${userId}`, JSON.stringify(session));
+    }
+
 }
