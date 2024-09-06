@@ -19,7 +19,7 @@ export class AppService {
   private readonly log = new Logger(AppService.name);
   private auctionCount: number;
   private readonly intentTTL = parseInt(process.env.INTENT_TTL_!) || 3600 * 1000;
-  private readonly maxLockTTL = parseInt(process.env.SESSION_SPACE_LOCK!) || 1 * 1000;
+  private readonly maxLockTTL = parseInt(process.env.SESSION_SPACE_LOCK!) || 10 * 1000;
 
   constructor(
     @InjectBot() private readonly bot: Telegraf<BotContext>,
