@@ -85,7 +85,7 @@ export class RedisClusterService {
     if (redisClients.length === 0) {
       await this.initializeRedis();
     }
-    return redisClients;
+    return redisClients[0]
   }
 
   async getRedlock() {
