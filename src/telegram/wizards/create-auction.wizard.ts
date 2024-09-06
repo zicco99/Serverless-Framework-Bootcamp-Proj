@@ -38,7 +38,8 @@ export class AuctionWizard {
 
   @SceneEnter()
   async onSceneEnter(@Ctx() ctx: BotContext) {
-    await this.updateSession(ctx.from?.id!, { stepIndex: 1 });
+
+    await this.updateSessionSpace(ctx.from?.id!, { stepIndex: 1, data: {} });
     await ctx.reply(escapeMarkdown('🧙‍♂️ Welcome! Let’s create your auction. What’s the auction name?'));
   }
 
@@ -72,7 +73,7 @@ export class AuctionWizard {
     const userId = ctx.from?.id;
 
     if (userId && auctionName) {
-      await this.updateSession(userId, { stepIndex: 2, data: { name: auctionName } });
+      await this.updateSessionSpace(userId, { stepIndex: 2, data: { name: auctionName } });
       await ctx.reply(escapeMarkdown(`🧙‍♂️ Auction name set to "${auctionName}". What’s the auction description?`));
     } else {
       await this.sendError(ctx, '🧙‍♂️ Please provide a valid name.');
@@ -84,7 +85,7 @@ export class AuctionWizard {
     const userId = ctx.from?.id;
 
     if (userId && description) {
-      await this.updateSession(userId, { stepIndex: 3, data: { description } });
+      await this.updateSessionSpace(userId, { stepIndex: 3, data: { description } });
       await ctx.reply(escapeMarkdown('🧙‍♂️ Description saved! When should the auction start? (YYYY-MM-DD)'));
     } else {
       await this.sendError(ctx, '🧙‍♂️ Please provide a valid description.');
@@ -102,7 +103,7 @@ export class AuctionWizard {
         return;
       }
 
-      await this.updateSession(userId, { stepIndex: 4, data: { startDate: startDate.toISOString() } });
+      await this.updateSessionSpace(userId, { stepIndex: 4, data: { startDate: startDate.toISOString() } });
       await ctx.reply(escapeMarkdown('🧙‍♂️ Start date saved! When should the auction end? (YYYY-MM-DD)'));
     } else {
       await this.sendError(ctx, '🧙‍♂️ Please provide a valid date.');
@@ -120,7 +121,7 @@ export class AuctionWizard {
         return;
       }
 
-      await this.updateSession(userId, { stepIndex: 5, data: { endDate: endDate.toISOString() } });
+      await this.updateSessionSpace(userId, { stepIndex: 5, data: { endDate: endDate.toISOString() } });
       const session = await this.getSessionSpace(userId);
 
       if (!session) {
@@ -163,7 +164,7 @@ export class AuctionWizard {
     }
   }
 
-  private async updateSession(userId: number, extra: Partial<CreateAuctionIntentExtra>): Promise<void> {
+  public async updateSessionSpace(userId: number, extra: CreateAuctionIntentExtra): Promise<void> {
     const redis = await this.redisService.getRedis();
     const redisKey = `user:${userId}`;
 
@@ -195,7 +196,7 @@ export class AuctionWizard {
 
   }
 
-  private async getSessionSpace(userId: number): Promise<SessionSpace | null> {
+  public async getSessionSpace(userId: number): Promise<SessionSpace | null> {
     const redis = await this.redisService.getRedis();
     const sessionStr = await redis.get(`user:${userId}`);
 

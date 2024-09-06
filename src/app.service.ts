@@ -119,7 +119,7 @@ export class AppService {
     await this.redisService.handleWithLock(userId, this.maxLockTTL,
       //Auth and session check wrapper for gateway
       async () => {
-        const { session_space } = await getOrInitUserSessionSpace(userId, ctx, this.auctionWizard.getSessionSpace.bind(this), this.auctionWizard.setSessionSpace.bind(this));
+        const { session_space } = await getOrInitUserSessionSpace(userId, ctx, this.auctionWizard.getSessionSpace.bind(this), this.auctionWizard.updateSessionSpace.bind(this));
         if (!session_space) {
           await ctx.telegram.sendMessage(userId, "No session found. Please try again.", { parse_mode: 'MarkdownV2' });
           return;
