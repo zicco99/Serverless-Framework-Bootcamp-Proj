@@ -21,14 +21,21 @@ export class AppService {
   private readonly intentTTL = parseInt(process.env.INTENT_TTL_!) || 3600 * 1000;
   private readonly lockTTL = parseInt(process.env.SESSION_SPACE_LOCK!) || 0.1 * 1000;
 
+
+  public nodeClusterRefresh: number = 0;
+  public REFRESH_INTERVAL = 3 * 60 * 1000; // 3 minutes
+
   constructor(
     @InjectBot() private readonly bot: Telegraf<BotContext>,
     private readonly auctions: AuctionsService,
-    private readonly botStateService: RedisClusterService,
+    private readonly redisService: RedisClusterService,
     private readonly auctionWizard: AuctionWizard
-  ) {}
+  ) {
+  }
 
   async onModuleInit() {
+    await this.redisService.initializeRedis();
+    await this.redisService.getRedis();
     await this.setupCommands();
   }
 
@@ -77,7 +84,7 @@ export class AppService {
 
   @Action(Intent.CREATE_AUCTION)
   async createAuction(ctx: BotContext) {
-    
+
     await this.gateway(ctx, async (userId, session_space) => {
       console.log("Out of gateway");
       //User authenticated and no intent in session_space
@@ -116,7 +123,7 @@ export class AppService {
     const userId = ctx.from?.id;
     if (!userId) return ctx.reply('Unable to identify you. Please try again.', { parse_mode: 'MarkdownV2' });
 
-    await this.botStateService.handleWithLock(userId, this.lockTTL,
+    await this.redisService.handleWithLock(userId, this.lockTTL,
       //Auth and session check wrapper for gateway
       async () => {
         const { session_space } = await getOrInitUserSessionSpace(userId, ctx, this.auctionWizard.getSessionSpace.bind(this), this.auctionWizard.setSessionSpace.bind(this));

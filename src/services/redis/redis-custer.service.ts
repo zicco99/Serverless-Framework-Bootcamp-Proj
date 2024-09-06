@@ -5,8 +5,6 @@ import Redlock from 'redlock';
 
 let redisClients: Redis[] = [];
 let redlock: Redlock | null = null;
-let lastRefresh: number = 0;
-const REFRESH_INTERVAL = 3 * 60 * 1000; // 3 minutes
 
 @Injectable()
 export class RedisClusterService {
@@ -15,15 +13,7 @@ export class RedisClusterService {
   private readonly redisClusterId = process.env.BOT_STATE_REDIS_CLUSTER_ID;
   private refreshInterval: NodeJS.Timeout | null = null;
 
-  constructor() {
-    this.initializeRedis().catch(err => this.log.error('Error initializing Redis nodes:', err));
-    
-    this.refreshInterval = setInterval(() => {
-      this.initializeRedis().catch(err => this.log.error('Error refreshing Redis nodes:', err));
-    }, REFRESH_INTERVAL);
-  }
-
-  private async initializeRedis() {
+  public async initializeRedis(lastRefresh = 0, REFRESH_INTERVAL = 3 * 60 * 1000) {
     this.log.log('Refreshing Redis Cluster nodes...');
 
     const now = Date.now();
