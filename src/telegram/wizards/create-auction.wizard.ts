@@ -38,7 +38,9 @@ export class AuctionWizard {
 
   @SceneEnter()
   async onSceneEnter(@Ctx() ctx: BotContext) {
-
+    const userId = ctx.from?.id!;
+    this.logWithPrefix('auction-wizard', userId, 'Entering scene.');
+    
     await this.updateSessionSpace(ctx.from?.id!, { stepIndex: 1, data: {} });
     await ctx.reply(escapeMarkdown('🧙‍♂️ Welcome! Let’s create your auction. What’s the auction name?'));
   }
@@ -52,7 +54,9 @@ export class AuctionWizard {
       return;
     }
 
-    //Use redis to retrieve current step
+    this.logWithPrefix('auction-wizard', userId, `Received text: ${message}`);
+    
+    // Use Redis to retrieve the current step
     const stepIndex = await this.getCurrentStepIndex(userId);
     const handler = this.stepHandlers[stepIndex];
 
@@ -64,11 +68,12 @@ export class AuctionWizard {
     }
   }
 
-
   private async handleStep1(ctx: BotContext, message: string) {
     const auctionName = message.trim();
     const userId = ctx.from?.id;
 
+    this.logWithPrefix('auction-wizard', userId, `Handling Step 1: Name - ${auctionName}`);
+    
     if (userId && auctionName) {
       await this.updateSessionSpace(userId, { stepIndex: 2, data: { name: auctionName } });
       await ctx.reply(escapeMarkdown(`🧙‍♂️ Auction name set to "${auctionName}". What’s the auction description?`));
@@ -81,6 +86,8 @@ export class AuctionWizard {
     const description = message.trim();
     const userId = ctx.from?.id;
 
+    this.logWithPrefix('auction-wizard', userId, `Handling Step 2: Description - ${description}`);
+    
     if (userId && description) {
       await this.updateSessionSpace(userId, { stepIndex: 3, data: { description } });
       await ctx.reply(escapeMarkdown('🧙‍♂️ Description saved! When should the auction start? (YYYY-MM-DD)'));
@@ -93,6 +100,8 @@ export class AuctionWizard {
     const startDateStr = message.trim();
     const userId = ctx.from?.id;
 
+    this.logWithPrefix('auction-wizard', userId, `Handling Step 3: Start Date - ${startDateStr}`);
+    
     if (userId && startDateStr) {
       const startDate = parseISO(startDateStr);
       if (!isValid(startDate)) {
@@ -111,6 +120,8 @@ export class AuctionWizard {
     const endDateStr = message.trim();
     const userId = ctx.from?.id;
 
+    this.logWithPrefix('auction-wizard', userId, `Handling Step 4: End Date - ${endDateStr}`);
+    
     if (userId && endDateStr) {
       const endDate = parseISO(endDateStr);
       if (!isValid(endDate)) {
@@ -139,6 +150,10 @@ export class AuctionWizard {
     session: CreateAuctionIntentExtra,
   ): Promise<void> {
     const { name, description, startDate, endDate } = session.data;
+    const userId = ctx.from?.id;
+    
+    this.logWithPrefix('auction-wizard', userId, `Finalizing auction creation. Data: ${JSON.stringify(session.data)}`);
+    
     if (!name || !description || !startDate || !endDate) {
       await this.sendError(ctx, '🧙‍♂️ Missing required fields to create the auction.');
       return;
@@ -155,8 +170,9 @@ export class AuctionWizard {
     try {
       const auction = await this.auctions.createAuction(createAuctionDto);
       await ctx.reply(escapeMarkdown(`🧙‍♂️ Auction created! ID: ${auction.id}`));
-    } catch (error) {
-      console.error('Error creating auction:', error);
+      this.logWithPrefix('auction-wizard', userId, `Auction created with ID: ${auction.id}`);
+    } catch (error: any) {
+      this.logWithPrefix('auction-wizard', userId, `Error creating auction: ${error.message}`, 'error');
       await this.sendError(ctx, '🧙‍♂️ Failed to create the auction. Please try again later.');
     }
   }
@@ -165,10 +181,12 @@ export class AuctionWizard {
     const redis = await this.redisService.getRedis();
     const redisKey = `user:${userId}`;
 
+    this.logWithPrefix('auction-wizard', userId, `Updating session space with data: ${JSON.stringify(extra)}`);
+
     const currentSession = await this.getSessionSpace(userId);
 
     if (!currentSession) {
-      console.log(`No session found for user ${userId}`);
+      this.logWithPrefix('auction-wizard', userId, `No session found to update.`);
       return;
     }
 
@@ -184,30 +202,32 @@ export class AuctionWizard {
   private async getCurrentStepIndex(userId: number): Promise<number> {
     const session = await this.getSessionSpace(userId);
     const extra = session?.last_intent_extra as CreateAuctionIntentExtra;
-
-    if (!extra) {
-      return 0;
-    }
-    
-    return extra.stepIndex || 0;
-
+    this.logWithPrefix('auction-wizard', userId, `Getting current step index: ${extra?.stepIndex || 0}`);
+    return extra?.stepIndex || 0;
   }
 
   public async getSessionSpace(userId: number): Promise<SessionSpace | null> {
     const redis = await this.redisService.getRedis();
     const sessionStr = await redis.get(`user:${userId}`);
 
+    this.logWithPrefix('auction-wizard', userId, `Getting session space.`);
+    
     if (sessionStr) {
       try {
         return JSON.parse(sessionStr) as SessionSpace;
-      } catch (error) {
-        console.log("Error parsing session:", error);
+      } catch (error: any) {
+        this.logWithPrefix('auction-wizard', userId, `Error parsing session: ${error.message}`, 'error');
       }
     } else {
-      console.log(`No session found for user ${userId}`);
+      this.logWithPrefix('auction-wizard', userId, `No session found.`);
     }
 
     return null;
+  }
+
+  private logWithPrefix(scene: string, userId: number | undefined, message: string, level: 'info' | 'error' = 'info') {
+    const prefix = `[${scene}][${userId ?? 'unknown'}]`;
+    console[level](`${prefix} ${message}`);
   }
 
   private async sendError(ctx: BotContext, message: string) {
