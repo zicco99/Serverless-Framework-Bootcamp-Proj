@@ -177,6 +177,17 @@ export class AuctionWizard {
     }
   }
 
+  public async createSessionSpace(userId: number, session: SessionSpace): Promise<SessionSpace> {
+    const redis = await this.redisService.getRedis();
+    const redisKey = `user:${userId}`;
+    const sessionStr = JSON.stringify(session);
+
+    this.logWithPrefix('auction-wizard', userId, `Creating session space for user [${userId}] with data: ${sessionStr}`);
+
+    await redis.set(redisKey, sessionStr);
+    return session;
+  }
+
   public async updateSessionSpace(userId: number, extra: CreateAuctionIntentExtra): Promise<void> {
     const redis = await this.redisService.getRedis();
     const redisKey = `user:${userId}`;
