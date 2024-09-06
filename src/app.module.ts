@@ -2,12 +2,12 @@ import { Module } from '@nestjs/common';
 import { TelegrafModule, TelegrafModuleOptions } from 'nestjs-telegraf';
 import { AppService } from './app.service';
 import { AuctionsModule } from './auctions/auctions.module';
-import { Context } from 'telegraf';
+import { Context, Scenes } from 'telegraf';
 import { SessionSpace } from './users/models/user.model';
 import { AuctionWizard } from './telegram/wizards/create-auction.wizard';
-import { BotStateService } from './services/redis/bot-state.service';
+import { RedisClusterService } from './services/redis/bot-state.service';
 
-interface BotContext extends Context {
+interface BotContext extends Context, Scenes.WizardContext {
   session_space: SessionSpace;
 }
 
@@ -40,7 +40,7 @@ interface BotContext extends Context {
     } as TelegrafModuleOptions),
   ],
   controllers: [],
-  providers: [AppService, AuctionWizard, BotStateService],
+  providers: [AppService, AuctionWizard, RedisClusterService],
 })
 export class AppModule {}
 

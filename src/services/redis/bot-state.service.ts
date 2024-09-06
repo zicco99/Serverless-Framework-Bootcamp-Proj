@@ -9,8 +9,8 @@ let lastRefresh: number = 0;
 const REFRESH_INTERVAL = 3 * 60 * 1000; // Redis Cluster Node Refresh: A setInterval is used to refresh the Redis cluster nodes every 45 seconds, clients are kept up-to-date, especially in dynamic cloud environments like AWS ElastiCache.
 
 @Injectable()
-export class BotStateService {
-  private readonly log = new Logger(BotStateService.name);
+export class RedisClusterService {
+  private readonly log = new Logger(RedisClusterService.name);
   private readonly awsRegion = process.env.AWS_REGION;
   private readonly redisClusterId = process.env.BOT_STATE_REDIS_CLUSTER_ID;
   private refreshInterval: NodeJS.Timeout | null = null;

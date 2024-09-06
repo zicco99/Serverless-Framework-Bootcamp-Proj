@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Hears, Help, Start, Update, Action, InjectBot, Message, Context } from 'nestjs-telegraf';
 import { Markup, Telegraf } from 'telegraf';
-import { BotStateService } from './services/redis/bot-state.service';
-import { AuctionWizard, CreateAuctionIntentExtra } from './telegram/wizards/create-auction.wizard';
+import { RedisClusterService } from './services/redis/bot-state.service';
+import { AuctionWizard } from './telegram/wizards/create-auction.wizard';
 import { AuctionsService } from './auctions/auctions.service';
 import { Auction } from './auctions/models/auction.model';
 import { welcomeMessage } from './telegram/messages/welcome';
@@ -10,7 +10,7 @@ import { auctionListMessage } from './telegram/messages/auction';
 import { InlineKeyboardMarkup } from 'telegraf/typings/core/types/typegram';
 import { escapeMarkdown } from './telegram/messages/.utils';
 import { BotContext, SessionSpace } from './app.module';
-import { Intent, showSessionSpace, getOrInitUserSessionSpace} from './users/models/user.model';
+import { Intent, showSessionSpace, getOrInitUserSessionSpace } from './users/models/user.model';
 
 @Injectable()
 @Update()
@@ -24,7 +24,7 @@ export class AppService {
     @InjectBot() private readonly bot: Telegraf<BotContext>,
     private readonly auctionWizard: AuctionWizard,
     private readonly auctions: AuctionsService,
-    private readonly botStateService: BotStateService
+    private readonly botStateService: RedisClusterService
   ) {}
 
   async onModuleInit() {
@@ -76,14 +76,10 @@ export class AppService {
   @Action(Intent.CREATE_AUCTION)
   async createAuction(ctx: BotContext) {
     await this.gateway(ctx, async (userId, session_space) => {
-      console.log("Gateway Passed: User Autorization Successful and No Intent Pending");
-      console.log("Current Intent: " + session_space?.last_intent);
-      console.log("Current Intent Extra: " + JSON.stringify(session_space?.last_intent_extra));
+      //User authenticated and no intent in session_space
 
-      console.log(`User ${userId} - Session: ${JSON.stringify(session_space)}`);
-
-      const starting_create_auction_extra : CreateAuctionIntentExtra = { stepIndex: 0, data: {} };
-      await this.auctionWizard.handleMessage(userId, Intent.CREATE_AUCTION, starting_create_auction_extra, ctx, undefined, false);
+      //Get in the auction_wizard scene
+      await ctx.scene.enter('auction-wizard');
     });
   }
 
@@ -102,11 +98,12 @@ export class AppService {
 
   @Hears(/.*/)
   async onText(@Context() ctx: BotContext, @Message('text') message: string) {
-    await this.gateway(ctx, async (userId, session_space, message) => { // Post-gateway function : No pending intent in cache + user authenticated
-      console.log("Gateway Passed: User Autorization Successful and No Intent Pending");
-      console.log("Current Intent: " + session_space?.last_intent);
-      console.log("Current Intent Extra: " + JSON.stringify(session_space?.last_intent_extra));
-      ctx.telegram.sendMessage(userId, `GW PASSED AHHHH :O : ${message}`);
+    await this.gateway(ctx, async (userId, session_space, message) => {
+      if (session_space?.last_intent === Intent.CREATE_AUCTION) {
+        await ctx.scene.enter('auction-wizard');
+      } else {
+        ctx.telegram.sendMessage(userId, `Received your message: ${message}`);
+      }
     }, message);
   }
 
@@ -126,14 +123,13 @@ export class AppService {
         if (!isExpired) {
           switch (session_space.last_intent) {
             case Intent.CREATE_AUCTION:
-              await this.auctionWizard.handleMessage(userId, session_space.last_intent, session_space.last_intent_extra as CreateAuctionIntentExtra, ctx, message, true);
+              await ctx.scene.enter('auction-wizard');
               return;
             case Intent.VIEW_AUCTIONS:
               await this.viewAuctions(ctx);
               return;
           }
         } else {
-          await this.auctionWizard.setLastIntent(userId, Intent.NONE);
           await ctx.reply("Session has timed out. Cleaning up 🧹.");
           return;
         }
