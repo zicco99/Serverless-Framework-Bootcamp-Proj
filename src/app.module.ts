@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { TelegrafModule, TelegrafModuleOptions } from 'nestjs-telegraf';
 import { AppService } from './app.service';
 import { AuctionsModule } from './auctions/auctions.module';
-import { Context, Scenes } from 'telegraf';
+import { Context, Scenes, session } from 'telegraf';
 import { SessionSpace } from './users/models/user.model';
 import { AuctionWizard } from './telegram/wizards/create-auction.wizard';
 import { RedisClusterService } from 'src/services/redis/redis-custer.service';
@@ -16,6 +16,7 @@ interface BotContext extends Context, Scenes.WizardContext {
     AuctionsModule,
     TelegrafModule.forRoot({
       token: process.env.BOT_TELEGRAM_KEY || '',
+      middlewares: [session()],
       launchOptions: {
         webhook: {
           domain: process.env.GATEWAY_URL || '',
