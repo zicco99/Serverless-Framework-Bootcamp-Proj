@@ -24,6 +24,7 @@ enum Intent {
 }
 
 interface IntentExtra{
+  data: any;
 
 }
 

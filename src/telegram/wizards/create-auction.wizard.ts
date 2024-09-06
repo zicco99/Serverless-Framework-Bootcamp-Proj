@@ -134,7 +134,6 @@ export class AuctionWizard {
         return;
       }
 
-      await this.updateSessionSpace(userId, { stepIndex: 5, data: { endDate: endDate.toISOString() } });
       const session = await this.getSessionSpace(userId);
 
       if (!session) {
@@ -142,8 +141,19 @@ export class AuctionWizard {
         return;
       }
 
-      await this.finalizeAuctionCreation(ctx, session.last_intent_extra as CreateAuctionIntentExtra);
+      // Complete the extra
+      const last_intent_extra : CreateAuctionIntentExtra = {
+        ...session.last_intent_extra,
+        stepIndex: 5,
+        data: {
+          ...session.last_intent_extra.data,
+          endDate: endDate.toISOString(),
+      }
+      };
+
+      await this.finalizeAuctionCreation(ctx, last_intent_extra);
       await ctx.reply(escapeMarkdown('🧙‍♂️ 🎉 Auction creation complete!'));
+
       ctx.scene.leave();
     } else {
       await this.sendError(ctx, '🧙‍♂️ Please provide a valid date.');
