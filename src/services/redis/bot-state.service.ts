@@ -1,22 +1,36 @@
-import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import * as AWS from 'aws-sdk';
 import Redis from 'ioredis';
 import Redlock from 'redlock';
 
+let redisClients: Redis[] = [];
+let redlock: Redlock | null = null;
+let lastRefresh: number = 0;
+const REFRESH_INTERVAL = 3 * 60 * 1000; // Redis Cluster Node Refresh: A setInterval is used to refresh the Redis cluster nodes every 45 seconds, clients are kept up-to-date, especially in dynamic cloud environments like AWS ElastiCache.
+
 @Injectable()
-export class BotStateService implements OnModuleInit, OnModuleDestroy {
+export class BotStateService {
   private readonly log = new Logger(BotStateService.name);
-  private redisClients: Redis[] = [];
-  private redlock: Redlock;
   private readonly awsRegion = process.env.AWS_REGION;
   private readonly redisClusterId = process.env.BOT_STATE_REDIS_CLUSTER_ID;
+  private refreshInterval: NodeJS.Timeout | null = null;
 
-  async onModuleInit() {
-    await this.initializeRedis();
+  constructor() {
+    this.refreshInterval = setInterval(() => {
+      this.initializeRedis().catch(err => this.log.error('Error refreshing Redis nodes:', err));
+    }, REFRESH_INTERVAL);
   }
 
   private async initializeRedis() {
-    this.log.log('Connecting to AWS ElastiCache Redis Cluster...');
+    console.log('Refreshing Redis Cluster nodes...');
+
+    const now = Date.now();
+
+    if (now - lastRefresh < REFRESH_INTERVAL && redisClients.length > 0) {
+      // Skip reinitialization if within refresh interval and clients exist
+      return;
+    }
+
     const elastiCache = new AWS.ElastiCache({ region: this.awsRegion });
 
     try {
@@ -27,7 +41,7 @@ export class BotStateService implements OnModuleInit, OnModuleDestroy {
 
       const cacheNodes = data.CacheClusters?.[0]?.CacheNodes;
       if (cacheNodes && cacheNodes.length > 0) {
-        this.redisClients = cacheNodes
+        const newRedisClients = cacheNodes
           .map((node) => {
             if (node.Endpoint?.Address && node.Endpoint?.Port) {
               return new Redis({ host: node.Endpoint.Address, port: node.Endpoint.Port });
@@ -35,18 +49,19 @@ export class BotStateService implements OnModuleInit, OnModuleDestroy {
           })
           .filter((redis): redis is Redis => redis !== undefined);
 
-        this.redlock = new Redlock(this.redisClients, {
-          driftFactor: 0.01,
-          retryCount: 10,
-          retryDelay: 200,
-        });
+        if (newRedisClients.length > 0) {
+          redisClients.forEach(redis => redis.quit());
+          redisClients = newRedisClients;
+          this.log.log(`Redis nodes connected: ${redisClients.map(redis => `${redis.options.host}:${redis.options.port}`).join(', ')}`);
 
-        this.redisClients.forEach(redis => {
-          redis.on('error', (err) => this.log.error('Redis error:', err));
-          redis.on('connect', () => this.log.log('Connected to Redis'));
-        });
+          redlock = new Redlock(redisClients, {
+            driftFactor: 0.01,
+            retryCount: 10,
+            retryDelay: 200,
+          });
+        }
 
-        this.log.log(`Redis nodes connected: ${this.redisClients.map(redis => `${redis.options.host}:${redis.options.port}`).join(', ')}`);
+        lastRefresh = now; // Update last refresh timestamp
       } else {
         this.log.error('No cache node endpoint found.');
         throw new Error('No cache node endpoint found.');
@@ -58,17 +73,17 @@ export class BotStateService implements OnModuleInit, OnModuleDestroy {
   }
 
   async getRedis() {
-    if (this.redisClients.length === 0) {
+    if (redisClients.length === 0) {
       await this.initializeRedis();
     }
-    return this.redisClients;
+    return redisClients;
   }
 
   async getRedlock() {
-    if (!this.redlock) {
+    if (!redlock) {
       await this.initializeRedis();
     }
-    return this.redlock;
+    return redlock!;
   }
 
   async handleWithLock(userId: number, ttl: number, authAndSessionCheck: () => Promise<void>) {
@@ -93,8 +108,10 @@ export class BotStateService implements OnModuleInit, OnModuleDestroy {
       throw error;
     }
   }
-
   onModuleDestroy() {
-    this.redisClients.forEach(redis => redis.quit());
+    if (this.refreshInterval) {
+      clearInterval(this.refreshInterval);
+    }
+    redisClients.forEach(redis => redis.quit());
   }
 }
