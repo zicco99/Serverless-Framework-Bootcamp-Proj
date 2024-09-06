@@ -11,6 +11,7 @@ import { InlineKeyboardMarkup } from 'telegraf/typings/core/types/typegram';
 import { escapeMarkdown } from './telegram/messages/.utils';
 import { BotContext, SessionSpace } from './app.module';
 import { Intent, showSessionSpace, getOrInitUserSessionSpace } from './users/models/user.model';
+import { initial } from 'lodash';
 
 @Injectable()
 @Update()
@@ -48,6 +49,7 @@ export class AppService {
     console.log(`User ${ctx.from?.id} started the bot at ${new Date()}`);
 
     await this.gateway(ctx, async (userId, session_space) => {
+      console.log("Out of gateway");
       const message = session_space
         ? `👋 Welcome back! Here is your user: \n${escapeMarkdown(showSessionSpace(userId, session_space))}`
         : '👋 👋 You are new here!';
@@ -75,7 +77,9 @@ export class AppService {
 
   @Action(Intent.CREATE_AUCTION)
   async createAuction(ctx: BotContext) {
+    
     await this.gateway(ctx, async (userId, session_space) => {
+      console.log("Out of gateway");
       //User authenticated and no intent in session_space
 
       //Get in the auction_wizard scene
@@ -99,6 +103,7 @@ export class AppService {
   @Hears(/.*/)
   async onText(@Context() ctx: BotContext, @Message('text') message: string) {
     await this.gateway(ctx, async (userId, session_space, message) => {
+      console.log("Out of gateway");
       if (session_space?.last_intent === Intent.CREATE_AUCTION) {
         await ctx.scene.enter('auction-wizard');
       } else {

@@ -40,7 +40,7 @@ interface BotContext extends Context, Scenes.WizardContext {
     } as TelegrafModuleOptions),
   ],
   controllers: [],
-  providers: [AppService, AuctionWizard, RedisClusterService],
+  providers: [AppService, RedisClusterService, AuctionWizard],
 })
 export class AppModule {}
 
