@@ -43,7 +43,7 @@ function showSessionSpace(userId: number, user: SessionSpace) : string {
            `  Content Language: ${user.preferences?.contentLanguage}\n`;
 }
 
-async function getOrInitUserSessionSpace(userId: number, ctx: BotContext,  getSessionSpaceBind : (userId: number) => Promise<SessionSpace | null>, createSessionSpace : (userId: number, session: SessionSpace) => Promise<SessionSpace>) : Promise<{session_space: SessionSpace | null, session_newly_created: boolean}> {
+async function getOrInitUserSessionSpace(userId: number, ctx: BotContext,  getSessionSpaceBind : (userId: number) => Promise<SessionSpace | null>, initSessionSpace : (userId: number, session: SessionSpace) => Promise<SessionSpace>) : Promise<{session_space: SessionSpace | null, session_newly_created: boolean}> {
     let session_space = await getSessionSpaceBind(userId);
     const session_newly_created = session_space === null;
 
@@ -67,7 +67,7 @@ async function getOrInitUserSessionSpace(userId: number, ctx: BotContext,  getSe
       
 
       console.log("Found no session space, created new one: ", session_space);
-      await createSessionSpace(userId, session_space);
+      await initSessionSpace(userId, session_space);
       console.log("New session space saved!")
     }
     return { session_space, session_newly_created };
