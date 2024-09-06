@@ -27,7 +27,7 @@ export class BotStateService {
     const now = Date.now();
 
     if (now - lastRefresh < REFRESH_INTERVAL && redisClients.length > 0) {
-      // Skip reinitialization if within refresh interval and clients exist
+      // - Till interval is not expired and there are redis clients
       return;
     }
 
@@ -41,34 +41,52 @@ export class BotStateService {
 
       const cacheNodes = data.CacheClusters?.[0]?.CacheNodes;
       if (cacheNodes && cacheNodes.length > 0) {
-        const newRedisClients = cacheNodes
-          .map((node) => {
-            if (node.Endpoint?.Address && node.Endpoint?.Port) {
-              return new Redis({ host: node.Endpoint.Address, port: node.Endpoint.Port });
+        const newRedisClients = await Promise.all(
+          cacheNodes.map(async (node) => {
+            const address = node.Endpoint?.Address;
+            const port = node.Endpoint?.Port;
+
+            if (address && port) {
+              const existingClient = redisClients.find(client => 
+                client.options.host === address &&
+                client.options.port === port
+              );
+
+              if (existingClient) {
+                try {
+                  await existingClient.ping();
+                } catch (err) {
+                  return undefined;
+                }
+                return existingClient;
+              } else {
+                return new Redis({ host: address, port });
+              }
+            } else {
+              this.log.warn('Skipping node with missing address or port.');
+              return undefined;
             }
           })
-          .filter((redis): redis is Redis => redis !== undefined);
+        );
 
-        if (newRedisClients.length > 0) {
-          redisClients.forEach(redis => redis.quit());
-          redisClients = newRedisClients;
-          this.log.log(`Redis nodes connected: ${redisClients.map(redis => `${redis.options.host}:${redis.options.port}`).join(', ')}`);
+        redisClients = newRedisClients.filter((client): client is Redis => client !== undefined);
 
-          redlock = new Redlock(redisClients, {
-            driftFactor: 0.01,
-            retryCount: 10,
-            retryDelay: 200,
-          });
-        }
+        this.log.log(`Redis nodes connected: ${redisClients.map(redis => `${redis.options.host}:${redis.options.port}`).join(', ')}`);
 
-        lastRefresh = now; // Update last refresh timestamp
+        redlock = new Redlock(redisClients, {
+          driftFactor: 0.01,
+          retryCount: 10,
+          retryDelay: 200,
+        });
+
+        lastRefresh = Date.now();
       } else {
         this.log.error('No cache node endpoint found.');
         throw new Error('No cache node endpoint found.');
       }
-    } catch (err) {
-      this.log.error('Error fetching cache cluster info:', err);
-      throw err;
+    } catch (error) {
+      this.log.error('Error refreshing Redis nodes:', error); 
+      throw error;
     }
   }
 
