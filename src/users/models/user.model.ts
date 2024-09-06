@@ -44,7 +44,7 @@ function showSessionSpace(userId: number, user: SessionSpace) : string {
 }
 
 async function getOrInitUserSessionSpace(userId: number, ctx: BotContext, getSessionSpaceBind : (userId: number) => Promise<SessionSpace | null>, setSessionSpaceBind : (userId: number, session_space: SessionSpace) => Promise<void>): Promise<{ session_space: SessionSpace | null, session_newly_created: boolean }> {
-    let session_space = await getSessionSpaceBind (userId);
+    let session_space = await getSessionSpaceBind(userId);
     const session_newly_created = session_space === null;
 
     if (!session_space) {
@@ -64,7 +64,9 @@ async function getOrInitUserSessionSpace(userId: number, ctx: BotContext, getSes
         }),
       };
 
+      console.log("Found no session space, created new one: ", session_space);
       await setSessionSpaceBind(userId, session_space);
+      console.log("New session space saved!")
     }
     return { session_space, session_newly_created };
 }
