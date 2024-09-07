@@ -293,12 +293,17 @@ export class AuctionWizard {
     const numberOfUpdates = Math.floor(timeToWait / fixedInterval);
     for (let i = 0; i < numberOfUpdates && i < messages.length; i++) {
       await new Promise(resolve => setTimeout(resolve, timeToWait));
-      await ctx.telegram.editMessageText(
-        ctx.chat.id,
-        initialMessage.message_id,
-        undefined,
-        escapeMarkdown(messages[i])
-      );
+      try {
+        await ctx.telegram.editMessageText(
+          ctx.chat.id,
+          initialMessage.message_id,
+          undefined,
+          escapeMarkdown(messages[i])
+        );
+      } catch (error) {
+        console.error('Failed to edit message:', error);
+        break;
+      }
     }
   
     await new Promise(resolve => setTimeout(resolve, timeToWait));
