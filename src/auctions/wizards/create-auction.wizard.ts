@@ -1,4 +1,4 @@
-import { Scene, SceneEnter, On, Ctx, Message, SceneLeave } from 'nestjs-telegraf';
+import { Scene, SceneEnter, On, Ctx, Message } from 'nestjs-telegraf';
 import { AuctionsService } from 'src/auctions/auctions.service';
 import { CreateAuctionDto } from 'src/auctions/dtos/create-auction.dto';
 import { BotContext } from 'src/users/models/user.model';
@@ -12,6 +12,11 @@ export interface CreateAuctionIntentExtra extends IntentExtra {
   stepIndex: number;
   data: Partial<CreateAuctionDto>;
 }
+
+const INIT_CREATE_AUCTION_EXTRA: CreateAuctionIntentExtra = {
+  stepIndex: 1,
+  data: {},
+};
 
 const sceneOption = { 
   ttl: 300,
@@ -37,14 +42,12 @@ export class AuctionWizard {
       1: this.handleStep1.bind(this),
       2: this.handleStep2.bind(this),
       3: this.handleStep3.bind(this),
-      4: this.handleStep4.bind(this)
+      4: this.handleStep4.bind(this),
     };
   }
 
   @SceneEnter()
   async onSceneEnter(@Ctx() ctx: BotContext) {
-    const userId = ctx.from?.id!;
-    
     await ctx.reply(escapeMarkdown('🧙‍♂️ Welcome! Let’s create your auction. What’s the auction name?'));
   }
 
@@ -52,8 +55,8 @@ export class AuctionWizard {
   async onText(@Ctx() ctx: BotContext, @Message('text') message: string) {
     const userId = ctx.from?.id;
 
-    if (!message) {
-      await this.sendError(ctx, '🧙‍♂️ Please provide a valid text.');
+    if (!message || !userId) {
+      await this.sendError(ctx, '🧙‍♂️ Please provide valid input.');
       return;
     }
 
@@ -63,27 +66,29 @@ export class AuctionWizard {
       return;
     }
 
-    if (!userId) {
-      await this.sendError(ctx, '🧙‍♂️ Please provide a valid user ID.');
-      return;
-    }
-
     logWithPrefix('auction-wizard', userId, `Received text: ${message}`);
 
-    let session = await this.getSessionSpace(userId);
+    const session = await this.getSessionSpace(userId);
 
     if (!session) {
-      await this.sendError(ctx, '🧙‍♂️ Session not found. Please try again.');
+      await this.sendError(ctx, '🧙‍♂️ Session not found. Please start over.');
       return;
     }
 
     const { stepIndex } = session.last_intent_extra as CreateAuctionIntentExtra;
 
-    if(stepIndex === 5) {
-      await this.finalizeAuctionCreation(ctx, session.last_intent_extra as CreateAuctionIntentExtra);
+    if (stepIndex === 5) {
+      const success = await this.finalizeAuctionCreation(ctx, session.last_intent_extra as CreateAuctionIntentExtra);
+      if (success) {
+        await ctx.reply(escapeMarkdown('🧙‍♂️ 🎉 Auction creation complete!'));
+        this.updateSessionSpace(userId, INIT_CREATE_AUCTION_EXTRA);
+        ctx.scene.leave();
+        return;
+      }
+      await this.sendError(ctx, '🧙‍♂️ There was an issue completing the auction. Please try again.');
+      return;
     }
 
-    // Step handler selection
     const handler = this.stepHandlers[stepIndex];
 
     if (handler) {
@@ -94,15 +99,10 @@ export class AuctionWizard {
     }
   }
 
-
-  // Steps handlers
-
   private async handleStep1(ctx: BotContext, message: string) {
     const auctionName = message.trim();
     const userId = ctx.from?.id;
 
-    logWithPrefix('auction-wizard', userId, `Handling Step 1: Name - ${auctionName}`);
-    
     if (userId && auctionName) {
       await this.updateSessionSpace(userId, { stepIndex: 2, data: { ...ctx.session_space.last_intent_extra.data, name: auctionName } });
       await ctx.reply(escapeMarkdown(`🧙‍♂️ Auction name set to "${auctionName}". What’s the auction description?`));
@@ -115,10 +115,8 @@ export class AuctionWizard {
     const description = message.trim();
     const userId = ctx.from?.id;
 
-    logWithPrefix('auction-wizard', userId, `Handling Step 2: Description - ${description}`);
-    
     if (userId && description) {
-      await this.updateSessionSpace(userId, { stepIndex: 3, data: { ...ctx.session_space.last_intent_extra.data, description: description } });
+      await this.updateSessionSpace(userId, { stepIndex: 3, data: { ...ctx.session_space.last_intent_extra.data, description } });
       await ctx.reply(escapeMarkdown('🧙‍♂️ Description saved! When should the auction start? (YYYY-MM-DD)'));
     } else {
       await this.sendError(ctx, '🧙‍♂️ Please provide a valid description.');
@@ -129,9 +127,7 @@ export class AuctionWizard {
     const startDateStr = message.trim();
     const userId = ctx.from?.id;
 
-    logWithPrefix('auction-wizard', userId, `Handling Step 3: Start Date - ${startDateStr}`);
-    
-    if (userId && startDateStr) {
+    if (userId) {
       const startDate = parseISO(startDateStr);
       if (!isValid(startDate)) {
         await this.sendError(ctx, '🧙‍♂️ Invalid date format! Please provide a valid date (YYYY-MM-DD).');
@@ -141,7 +137,7 @@ export class AuctionWizard {
       await this.updateSessionSpace(userId, { stepIndex: 4, data: { ...ctx.session_space.last_intent_extra.data, startDate: startDate.toISOString() } });
       await ctx.reply(escapeMarkdown('🧙‍♂️ Start date saved! When should the auction end? (YYYY-MM-DD)'));
     } else {
-      await this.sendError(ctx, '🧙‍♂️ Please provide a valid date.');
+      await this.sendError(ctx, '🧙‍♂️ Please provide a valid start date.');
     }
   }
 
@@ -149,71 +145,53 @@ export class AuctionWizard {
     const endDateStr = message.trim();
     const userId = ctx.from?.id;
 
-    logWithPrefix('auction-wizard', userId, `Handling Step 4: End Date - ${endDateStr}`);
-    
-    if (userId && endDateStr) {
+    if (userId) {
       const endDate = parseISO(endDateStr);
       if (!isValid(endDate)) {
         await this.sendError(ctx, '🧙‍♂️ Invalid date format! Please provide a valid date (YYYY-MM-DD).');
         return;
       }
 
-      const session = await this.getSessionSpace(userId);
-
-      if (!session) {
-        await this.sendError(ctx, '🧙‍♂️ Session not found. Please try again.');
-        return;
-      }
-
       const last_intent_extra: CreateAuctionIntentExtra = {
-        ...session.last_intent_extra,
+        ...ctx.session_space.last_intent_extra,
         stepIndex: 5,
         data: {
-            ...session.last_intent_extra.data,
-            endDate: endDate.toISOString(),
+          ...ctx.session_space.last_intent_extra.data,
+          endDate: endDate.toISOString(),
         }
       };
 
-      if(await this.finalizeAuctionCreation(ctx, last_intent_extra) === true) {
+      const success = await this.finalizeAuctionCreation(ctx, last_intent_extra);
+      if (success) {
         await ctx.reply(escapeMarkdown('🧙‍♂️ 🎉 Auction creation complete!'));
+        this.updateSessionSpace(userId, INIT_CREATE_AUCTION_EXTRA);
         ctx.scene.leave();
-        return;
+      } else {
+        await ctx.reply(escapeMarkdown('🧙‍♂️ We encountered an issue, and your auction details have been saved. Please try again later.'));
+        await this.updateSessionSpace(userId, last_intent_extra);
       }
-
-      await this.updateSessionSpace(userId, last_intent_extra);
-      await ctx.reply(escapeMarkdown('🧙‍♂️ You tried but did not work, im gonna save the data and lo again\\.'));
-
     } else {
-      await this.sendError(ctx, '🧙‍♂️ Please provide a valid date.');
+      await this.sendError(ctx, '🧙‍♂️ Please provide a valid end date.');
     }
   }
 
-  private async finalizeAuctionCreation(
-    ctx: BotContext,
-    session: CreateAuctionIntentExtra,
-  ): Promise<boolean> {
+  private async finalizeAuctionCreation(ctx: BotContext, session: CreateAuctionIntentExtra): Promise<boolean> {
     const { name, description, startDate, endDate } = session.data;
     const userId = ctx.from?.id!;
 
-
-    
-    logWithPrefix('auction-wizard', userId, `Finalizing auction creation. Data: ${JSON.stringify(session.data)}`);
-    
     if (!name || !description || !startDate || !endDate) {
       await this.sendError(ctx, '🧙‍♂️ Missing required fields to create the auction.');
 
       await ctx.reply(
-          `🧙‍♂️ - Here is the data I got in the bag:\n\n` +
-          `*Name:* \`${name}\`\n` +
-          `*Description:* \`${description}\`\n` +
-          `*Start Date:* \`${startDate}\`\n` +
-          `*End Date:* \`${endDate}\``
-        );
-      
+        `🧙‍♂️ Here is the data I have:\n` +
+        `*Name:* \`${name}\`\n` +
+        `*Description:* \`${description}\`\n` +
+        `*Start Date:* \`${startDate}\`\n` +
+        `*End Date:* \`${endDate}\``
+      );
 
-      await this.updateSessionSpace(userId, { stepIndex: 1, data: {} });
-      await ctx.reply(`🧙‍♂️ - Alright, everything has been thrown in the trash universe, let's start again. We were talking about a certain auction, what about its name?`)
-
+      await this.updateSessionSpace(userId, INIT_CREATE_AUCTION_EXTRA);
+      await ctx.reply(escapeMarkdown('🧙‍♂️ Let’s start again. What’s the name of the auction?'));
       return false;
     }
 
@@ -236,8 +214,6 @@ export class AuctionWizard {
       return false;
     }
   }
-
-  // Manage Session Space
 
   public async initSessionSpace(userId: number, session: SessionSpace): Promise<SessionSpace> {
     const redis = await this.redisService.getRedis();
@@ -291,36 +267,32 @@ export class AuctionWizard {
     return null;
   }
 
-  public async entertainUserWhileWaiting(ctx: any, timeToWait: number): Promise<number> {
-    const initialMessage = await ctx.reply(escapeMarkdown('🧙‍♂️ Welcome! Wait some time...'));
+  public async entertainUserWhileWaiting(ctx: any, timeToWait: number): Promise<void> {
+    const initialMessage = await ctx.reply(escapeMarkdown('🧙‍♂️ Hang tight...'));
   
     const messages = [
       'Casting spells... ✨',
       'Conjuring magic... 🌀',
-      'Summoning the ancient forces... 🔮',
+      'Summoning ancient forces... 🔮',
       'Almost there... 🧙‍♂️',
     ];
   
     const timePerMessage = Math.floor(timeToWait / messages.length);
-    for (let i = 0; i < messages.length; i++) {
+    for (const msg of messages) {
       await new Promise(resolve => setTimeout(resolve, timePerMessage));
       try {
         await ctx.telegram.editMessageText(
           ctx.chat.id,
           initialMessage.message_id,
           undefined,
-          escapeMarkdown(messages[i])
+          escapeMarkdown(msg)
         );
       } catch (error) {
         console.error('Failed to edit message:', error);
         break;
       }
     }
-
-    return initialMessage.message_id;
-
   }
-  
 
   private async sendError(ctx: BotContext, message: string) {
     await ctx.reply(escapeMarkdown(message));
