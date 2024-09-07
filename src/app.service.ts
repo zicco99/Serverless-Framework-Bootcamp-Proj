@@ -10,15 +10,13 @@ import { auctionListMessage } from './telegram/messages/auction';
 import { InlineKeyboardMarkup } from 'telegraf/typings/core/types/typegram';
 import { escapeMarkdown } from './telegram/messages/.utils';
 import { BotContext } from './app.module';
-import { Intent, showSessionSpace, getOrInitUserSessionSpace, SessionSpace } from './users/models/user.model';
+import { Intent, showSessionSpace } from './users/models/user.model';
 
 @Injectable()
 @Update()
 export class AppService {
   private readonly log = new Logger(AppService.name);
   private auctionCount: number;
-  private readonly intentTTL = 3600 * 1000;
-  private readonly maxLockTTL = parseInt(process.env.SESSION_SPACE_LOCK!) || 2 * 1000;
   private lastUpdateRedis: number;
   private updateRedisInterval: number = 3 * 60 * 1000;
 

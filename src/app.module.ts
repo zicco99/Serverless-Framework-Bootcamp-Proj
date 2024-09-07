@@ -16,7 +16,6 @@ export interface BotContext extends Context, Scenes.WizardContext {
   session_space: SessionSpace;
 }
 
-
 const AUTH_LOCK_MAX_TTL = 500;
 const MAX_SCENE_TTL = 3600 * 1000;
 
@@ -53,6 +52,7 @@ export class InjectSessionSpaceMiddleware {
           if (!isExpired) {
             switch (session_space.last_intent) {
               case Intent.CREATE_AUCTION:
+                console.log("Found intent: CREATE_AUCTION, entering the scene!");
                 await ctx.scene.enter('auction-wizard');
                 return;
             }
