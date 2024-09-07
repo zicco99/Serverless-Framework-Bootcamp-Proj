@@ -47,7 +47,7 @@ export class AuctionWizard {
 
     logWithPrefix('auction-wizard', userId, 'Entering scene.');
 
-    this.entertainUserWhileWaiting(ctx, 1500 + Math.random() * 1500);
+    await this.entertainUserWhileWaiting(ctx, 1500 + Math.random() * 1500);
 
     await this.updateSessionSpace(ctx.from?.id!, { stepIndex: 1, data: {} });    
 
