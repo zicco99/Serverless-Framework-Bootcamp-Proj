@@ -47,9 +47,12 @@ export class AuctionWizard {
 
     logWithPrefix('auction-wizard', userId, 'Entering scene.');
 
-    await this.entertainUserWhileWaiting(ctx, 1500 + Math.random() * 1500);
+    const messageId = await this.entertainUserWhileWaiting(ctx, 1500 + Math.random() * 1500);
+    await this.updateSessionSpace(ctx.from?.id!, { stepIndex: 1, data: {} });
 
-    await this.updateSessionSpace(ctx.from?.id!, { stepIndex: 1, data: {} });    
+    await ctx.deleteMessage(messageId);
+
+
 
     await ctx.reply(escapeMarkdown('🧙‍♂️ Welcome! Let’s create your auction. What’s the auction name?'));
   }
@@ -278,7 +281,7 @@ export class AuctionWizard {
     return null;
   }
 
-  public async entertainUserWhileWaiting(ctx: any, timeToWait: number) {
+  public async entertainUserWhileWaiting(ctx: any, timeToWait: number): Promise<number> {
     const initialMessage = await ctx.reply(escapeMarkdown('🧙‍♂️ Welcome! Wait some time...'));
   
     const messages = [
@@ -305,9 +308,9 @@ export class AuctionWizard {
         break;
       }
     }
-  
-    await new Promise(resolve => setTimeout(resolve, timeToWait));
-    await ctx.telegram.deleteMessage(ctx.chat.id, initialMessage.message_id);
+
+    return initialMessage.message_id;
+
   }
   
 
