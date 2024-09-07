@@ -47,13 +47,11 @@ export class AuctionWizard {
 
     logWithPrefix('auction-wizard', userId, 'Entering scene.');
 
-    const messageId = await this.entertainUserWhileWaiting(ctx, 1500 + Math.random() * 1500);
-    await this.updateSessionSpace(ctx.from?.id!, { stepIndex: 1, data: {} });
+    this.updateSessionSpace(ctx.from?.id!, { stepIndex: 1, data: {} });
+
+    const messageId = await this.entertainUserWhileWaiting(ctx, 1500 + Math.random() * 1000);
 
     await ctx.deleteMessage(messageId);
-
-
-
     await ctx.reply(escapeMarkdown('🧙‍♂️ Welcome! Let’s create your auction. What’s the auction name?'));
   }
 
@@ -288,14 +286,12 @@ export class AuctionWizard {
       'Casting spells... ✨',
       'Conjuring magic... 🌀',
       'Summoning the ancient forces... 🔮',
-      'Preparing your auction wizard... 🛠',
-      'Almost done... 🕑'
+      'Almost there... 🧙‍♂️',
     ];
   
-    const fixedInterval = 300; 
-    const numberOfUpdates = Math.floor(timeToWait / fixedInterval);
-    for (let i = 0; i < numberOfUpdates && i < messages.length; i++) {
-      await new Promise(resolve => setTimeout(resolve, timeToWait));
+    const timePerMessage = Math.floor(timeToWait / messages.length);
+    for (let i = 0; i < messages.length; i++) {
+      await new Promise(resolve => setTimeout(resolve, timePerMessage));
       try {
         await ctx.telegram.editMessageText(
           ctx.chat.id,
