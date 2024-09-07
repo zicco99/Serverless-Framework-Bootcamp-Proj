@@ -44,14 +44,7 @@ export class AuctionWizard {
   @SceneEnter()
   async onSceneEnter(@Ctx() ctx: BotContext) {
     const userId = ctx.from?.id!;
-
-    logWithPrefix('auction-wizard', userId, 'Entering scene.');
-
-    this.updateSessionSpace(ctx.from?.id!, { stepIndex: 1, data: {} });
-
-    const messageId = await this.entertainUserWhileWaiting(ctx, 1500 + Math.random() * 1000);
-
-    await ctx.deleteMessage(messageId);
+    
     await ctx.reply(escapeMarkdown('🧙‍♂️ Welcome! Let’s create your auction. What’s the auction name?'));
   }
 
@@ -90,6 +83,8 @@ export class AuctionWizard {
       await this.finalizeAuctionCreation(ctx, session.last_intent_extra as CreateAuctionIntentExtra);
     }
 
+    // Step handler selection
+    
     const handler = this.stepHandlers[stepIndex];
 
     if (handler) {
@@ -101,6 +96,7 @@ export class AuctionWizard {
   }
 
 
+  // Steps handlers
 
   private async handleStep1(ctx: BotContext, message: string) {
     const auctionName = message.trim();
@@ -226,6 +222,8 @@ export class AuctionWizard {
       return false;
     }
   }
+
+  // Manage Session Space
 
   public async initSessionSpace(userId: number, session: SessionSpace): Promise<SessionSpace> {
     const redis = await this.redisService.getRedis();
