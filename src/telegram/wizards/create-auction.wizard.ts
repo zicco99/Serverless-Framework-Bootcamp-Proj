@@ -172,9 +172,9 @@ export class AuctionWizard {
             ...session.last_intent_extra.data,
             endDate: endDate.toISOString(),
         }
-    };
+      };
 
-      if(await this.finalizeAuctionCreation(ctx, last_intent_extra)) {
+      if(await this.finalizeAuctionCreation(ctx, last_intent_extra) === true) {
         await ctx.reply(escapeMarkdown('🧙‍♂️ 🎉 Auction creation complete!'));
         ctx.scene.leave();
         return;

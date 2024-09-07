@@ -5,6 +5,7 @@ import Redlock from 'redlock';
 
 let redisClients: Redis[] = [];
 let redlock: Redlock | null = null;
+let writeTTL: number = 500;
 
 @Injectable()
 export class RedisClusterService {
@@ -108,6 +109,9 @@ export class RedisClusterService {
       } finally {
         await lock.release();
         this.log.log('Lock released');
+
+        //Wait writeTTL ms before acquiring lock again
+        await new Promise(resolve => setTimeout(resolve, writeTTL));
       }
     } catch (error) {
       this.log.error('Error acquiring lock:', error);
