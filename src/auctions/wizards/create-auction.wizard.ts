@@ -3,7 +3,7 @@ import { AuctionsService } from 'src/auctions/auctions.service';
 import { CreateAuctionDto } from 'src/auctions/dtos/create-auction.dto';
 import { BotContext } from 'src/users/models/user.model';
 import { RedisClusterService } from 'src/services/redis/redis-custer.service';
-import { escapeMarkdown } from '../messages/.utils';
+import { escapeMarkdown } from 'src/telegram/messages/.utils';
 import { parseISO, isValid } from 'date-fns';
 import { IntentExtra, SessionSpace } from 'src/users/models/user.model';
 import { v4 as uuid } from 'uuid';

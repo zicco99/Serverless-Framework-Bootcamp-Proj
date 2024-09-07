@@ -1,6 +1,7 @@
-
-import { CreateAuctionIntentExtra } from "src/telegram/wizards/create-auction.wizard";
 import { Context, Scenes } from "telegraf";
+
+import { CreateAuctionIntentExtra } from "src/auctions/wizards/create-auction.wizard";
+
 
 /**
  * A type that extends the default Context with SessionSpace,

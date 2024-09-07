@@ -1,5 +1,5 @@
 import { Injectable, NestMiddleware } from '@nestjs/common';
-import { AuctionWizard } from '../wizards/create-auction.wizard';
+import { AuctionWizard } from 'src/auctions/wizards/create-auction.wizard';
 import { RedisClusterService } from 'src/services/redis/redis-custer.service';
 import { BotContext } from 'src/users/models/user.model';
 import { getOrInitUserSessionSpace, Intent } from 'src/users/models/user.model';
