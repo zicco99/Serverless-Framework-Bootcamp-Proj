@@ -11,7 +11,6 @@ import { session } from 'telegraf';
   imports: [
     AuctionsModule,
     TelegrafModule.forRootAsync({
-      imports: [AuctionsModule],
       inject: [AuctionWizard, RedisClusterService],
       useFactory: (auctionWizard: AuctionWizard, redisService: RedisClusterService): TelegrafModuleOptions => ({
         token: process.env.BOT_TELEGRAM_KEY || '',
