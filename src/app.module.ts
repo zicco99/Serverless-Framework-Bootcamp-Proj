@@ -11,10 +11,10 @@ import { session } from 'telegraf';
   imports: [
     AuctionsModule,
     TelegrafModule.forRootAsync({
+      imports: [AuctionsModule],
       inject: [AuctionWizard, RedisClusterService],
       useFactory: (auctionWizard: AuctionWizard, redisService: RedisClusterService): TelegrafModuleOptions => {
         const sessionSpaceMiddleware = new InjectSessionSpaceMiddleware(auctionWizard, redisService).use;
-
         return {
           token: process.env.BOT_TELEGRAM_KEY || '',
           middlewares: [
