@@ -23,6 +23,7 @@ export class InjectSessionSpaceMiddleware implements NestMiddleware {
     }
 
     try {
+      
       await this.redisService.handleWithLock(userId, AUTH_LOCK_MAX_TTL, async () => {
         const { session_space } = await getOrInitUserSessionSpace(
           userId,
