@@ -193,12 +193,27 @@ export class AuctionWizard {
     session: CreateAuctionIntentExtra,
   ): Promise<boolean> {
     const { name, description, startDate, endDate } = session.data;
-    const userId = ctx.from?.id;
+    const userId = ctx.from?.id!;
+
+
     
     logWithPrefix('auction-wizard', userId, `Finalizing auction creation. Data: ${JSON.stringify(session.data)}`);
     
     if (!name || !description || !startDate || !endDate) {
       await this.sendError(ctx, '🧙‍♂️ Missing required fields to create the auction.');
+
+      await ctx.reply(
+          `🧙‍♂️ - Here is the data I got in the bag:\n\n` +
+          `*Name:* \`${name}\`\n` +
+          `*Description:* \`${description}\`\n` +
+          `*Start Date:* \`${startDate}\`\n` +
+          `*End Date:* \`${endDate}\``
+        );
+      
+
+      await this.updateSessionSpace(userId, { stepIndex: 1, data: {} });
+      await ctx.reply(`🧙‍♂️ - Alright, everything has been thrown in the trash universe, let's start again. We were talking about a certain auction, what about its name?`)
+
       return false;
     }
 

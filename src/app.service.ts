@@ -45,6 +45,7 @@ export class AppService {
     try {
       await this.bot.telegram.setMyCommands([
         { command: 'start', description: 'Start the bot' },
+        { command: 'menu', description: 'Get menu' },
         { command: 'help', description: 'Get help' },
       ]);
     } catch (error) {
