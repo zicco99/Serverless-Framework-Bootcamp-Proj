@@ -9,7 +9,6 @@ import { session } from 'telegraf';
 
 @Module({
   imports: [
-    AuctionsModule,
     TelegrafModule.forRootAsync({
       imports: [AuctionsModule],
       inject: [AuctionWizard, RedisClusterService],
