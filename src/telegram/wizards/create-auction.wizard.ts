@@ -165,25 +165,24 @@ export class AuctionWizard {
         return;
       }
 
-      // Complete the extra
-      const last_intent_extra : CreateAuctionIntentExtra = {
+      const last_intent_extra: CreateAuctionIntentExtra = {
         ...session.last_intent_extra,
         stepIndex: 5,
         data: {
-          ...session.last_intent_extra.data,
-          endDate: endDate.toISOString(),
-      }
-      };
-
-      console.log()
+            ...session.last_intent_extra.data,
+            endDate: endDate.toISOString(),
+        }
+    };
 
       if(await this.finalizeAuctionCreation(ctx, last_intent_extra)) {
         await ctx.reply(escapeMarkdown('🧙‍♂️ 🎉 Auction creation complete!'));
         ctx.scene.leave();
+        return;
       }
 
+      await this.updateSessionSpace(userId, last_intent_extra);
+      await ctx.reply(escapeMarkdown('🧙‍♂️ You tried but did not work, im gonna save the data and lo again\\.'));
 
-      ctx.scene.leave();
     } else {
       await this.sendError(ctx, '🧙‍♂️ Please provide a valid date.');
     }
