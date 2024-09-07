@@ -1,16 +1,16 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Hears, Help, Start, Update, Action, InjectBot, Message, Context } from 'nestjs-telegraf';
-import { Markup, Telegraf } from 'telegraf';
+import { Help, Start, Update, Action, InjectBot, Message, Context } from 'nestjs-telegraf';
+import { Markup,Telegraf } from 'telegraf';
 import { RedisClusterService } from 'src/services/redis/redis-custer.service';
-import { AuctionWizard, CreateAuctionIntentExtra } from './telegram/wizards/create-auction.wizard';
 import { AuctionsService } from './auctions/auctions.service';
 import { Auction } from './auctions/models/auction.model';
 import { welcomeMessage } from './telegram/messages/welcome';
 import { auctionListMessage } from './telegram/messages/auction';
 import { InlineKeyboardMarkup } from 'telegraf/typings/core/types/typegram';
 import { escapeMarkdown } from './telegram/messages/.utils';
-import { BotContext } from './app.module';
+import { BotContext } from './users/models/user.model';
 import { Intent, showSessionSpace } from './users/models/user.model';
+
 
 @Injectable()
 @Update()

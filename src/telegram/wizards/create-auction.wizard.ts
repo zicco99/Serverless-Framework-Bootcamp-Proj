@@ -1,7 +1,7 @@
 import { Scene, SceneEnter, On, Ctx, Message, SceneLeave } from 'nestjs-telegraf';
 import { AuctionsService } from 'src/auctions/auctions.service';
 import { CreateAuctionDto } from 'src/auctions/dtos/create-auction.dto';
-import { BotContext } from 'src/app.module';
+import { BotContext } from 'src/users/models/user.model';
 import { RedisClusterService } from 'src/services/redis/redis-custer.service';
 import { escapeMarkdown } from '../messages/.utils';
 import { parseISO, isValid } from 'date-fns';

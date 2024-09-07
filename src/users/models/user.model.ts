@@ -1,5 +1,16 @@
-import { BotContext } from "src/app.module";
+
 import { CreateAuctionIntentExtra } from "src/telegram/wizards/create-auction.wizard";
+import { Context, Scenes } from "telegraf";
+
+/**
+ * A type that extends the default Context with SessionSpace,
+ * which is used to store user session data.
+ * It extends the default Context and Scene Context.
+ */
+export interface BotContext extends Context, Scenes.WizardContext {
+  session_space: SessionSpace;
+}
+
 
 interface SessionSpace{
     username?: string;            

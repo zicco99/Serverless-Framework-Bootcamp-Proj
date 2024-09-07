@@ -2,7 +2,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import * as AWS from 'aws-sdk';
 import Redis from 'ioredis';
 import Redlock from 'redlock';
-import { BotContext } from 'src/app.module';
 
 let redisClients: Redis[] = [];
 let redlock: Redlock | null = null;
