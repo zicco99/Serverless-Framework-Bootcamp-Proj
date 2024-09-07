@@ -49,6 +49,13 @@ export class AuctionWizard {
   @SceneEnter()
   async onSceneEnter(@Ctx() ctx: BotContext) {
     await ctx.reply(escapeMarkdown('🧙‍♂️ Welcome! Let’s create your auction. What’s the auction name?'));
+
+    await ctx.telegram.setMyCommands([
+      { command: 'start', description: 'Start the bot' },
+      { command: 'menu', description: 'Get menu' },
+      { command: 'help', description: 'Get help' },
+    ]);
+
   }
 
   @On('text')
@@ -60,7 +67,7 @@ export class AuctionWizard {
       return;
     }
 
-    if (message === 'cancel') {
+    if (message === '/cancel') {
       await ctx.reply(escapeMarkdown('🧙‍♂️ Auction creation canceled.'));
       ctx.scene.leave();
       return;
