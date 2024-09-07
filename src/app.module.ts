@@ -68,7 +68,7 @@ export class InjectSessionSpaceMiddleware {
   imports: [
     AuctionsModule,
     TelegrafModule.forRootAsync({
-      imports: [AuctionsModule, RedisClusterService],
+      imports: [AuctionsModule],
       inject: [AuctionWizard, RedisClusterService],
       useFactory: (auctionWizard: AuctionWizard, redisService: RedisClusterService): TelegrafModuleOptions => ({
         token: process.env.BOT_TELEGRAM_KEY || '',
