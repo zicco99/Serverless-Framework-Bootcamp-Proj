@@ -69,6 +69,7 @@ export class AuctionWizard {
 
     if (message === '/cancel') {
       await ctx.reply(escapeMarkdown('🧙‍♂️ Auction creation canceled.'));
+      this.updateSessionSpace(userId, INIT_CREATE_AUCTION_EXTRA);
       ctx.scene.leave();
       return;
     }
