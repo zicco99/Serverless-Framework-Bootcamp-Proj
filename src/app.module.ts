@@ -14,12 +14,11 @@ import { session } from 'telegraf';
       imports: [AuctionsModule],
       inject: [AuctionWizard, RedisClusterService],
       useFactory: (auctionWizard: AuctionWizard, redisService: RedisClusterService): TelegrafModuleOptions => {
-        const sessionSpaceMiddleware = new InjectSessionSpaceMiddleware(auctionWizard, redisService).use;
         return {
           token: process.env.BOT_TELEGRAM_KEY || '',
           middlewares: [
             session(),
-            sessionSpaceMiddleware,
+            new InjectSessionSpaceMiddleware(auctionWizard, redisService).use,
           ],
           launchOptions: {
             webhook: {
@@ -47,6 +46,6 @@ import { session } from 'telegraf';
     }),
   ],
   controllers: [],
-  providers: [AppService, RedisClusterService, AuctionWizard, InjectSessionSpaceMiddleware],
+  providers: [AppService],
 })
 export class AppModule {}
