@@ -44,9 +44,13 @@ export class AuctionWizard {
   @SceneEnter()
   async onSceneEnter(@Ctx() ctx: BotContext) {
     const userId = ctx.from?.id!;
+
     logWithPrefix('auction-wizard', userId, 'Entering scene.');
-    
-    await this.updateSessionSpace(ctx.from?.id!, { stepIndex: 1, data: {} });
+
+    this.entertainUserWhileWaiting(ctx, 1500 + Math.random() * 1500);
+
+    await this.updateSessionSpace(ctx.from?.id!, { stepIndex: 1, data: {} });    
+
     await ctx.reply(escapeMarkdown('🧙‍♂️ Welcome! Let’s create your auction. What’s the auction name?'));
   }
 
@@ -274,6 +278,33 @@ export class AuctionWizard {
     return null;
   }
 
+  public async entertainUserWhileWaiting(ctx: any, timeToWait: number) {
+    const initialMessage = await ctx.reply(escapeMarkdown('🧙‍♂️ Welcome! Wait some time...'));
+  
+    const messages = [
+      'Casting spells... ✨',
+      'Conjuring magic... 🌀',
+      'Summoning the ancient forces... 🔮',
+      'Preparing your auction wizard... 🛠',
+      'Almost done... 🕑'
+    ];
+  
+    const fixedInterval = 500; 
+    const numberOfUpdates = Math.floor(timeToWait / fixedInterval);
+    for (let i = 0; i < numberOfUpdates && i < messages.length; i++) {
+      await new Promise(resolve => setTimeout(resolve, timeToWait));
+      await ctx.telegram.editMessageText(
+        ctx.chat.id,
+        initialMessage.message_id,
+        undefined,
+        escapeMarkdown(messages[i])
+      );
+    }
+  
+    await new Promise(resolve => setTimeout(resolve, timeToWait));
+    await ctx.telegram.deleteMessage(ctx.chat.id, initialMessage.message_id);
+  }
+  
 
   private async sendError(ctx: BotContext, message: string) {
     await ctx.reply(escapeMarkdown(message));
