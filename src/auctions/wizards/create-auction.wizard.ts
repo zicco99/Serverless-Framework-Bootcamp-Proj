@@ -181,20 +181,20 @@ export class AuctionWizard {
 
     if (!name || !description || !startDate || !endDate) {
       await this.sendError(ctx, '🧙‍♂️ Missing required fields to create the auction.');
-
       await ctx.reply(
         `🧙‍♂️ Here is the data I have:\n` +
-        `*Name:* \`${name}\`\n` +
-        `*Description:* \`${description}\`\n` +
-        `*Start Date:* \`${startDate}\`\n` +
-        `*End Date:* \`${endDate}\``
+        `*Name:* [${name || 'N/A'}] \`\n` +
+        `*Description:* [${description || 'N/A'}]\n` +
+        `*Start Date:* [${startDate || 'N/A'}]\n` +
+        `*End Date:* [${endDate || 'N/A'}]\n`
       );
 
       await this.updateSessionSpace(userId, INIT_CREATE_AUCTION_EXTRA);
-      await ctx.reply(escapeMarkdown('🧙‍♂️ Let’s start again. What’s the name of the auction?'));
+      await ctx.reply(escapeMarkdown('🧙‍♂️ Let\\’s start again. What\\’s the name of the auction?'));
+
       return false;
     }
-
+    else {
     const createAuctionDto: CreateAuctionDto = {
       idUser: uuid(),
       name,
@@ -210,10 +210,11 @@ export class AuctionWizard {
       return true;
     } catch (error: any) {
       logWithPrefix('auction-wizard', userId, `Error creating auction: ${error.message}`, 'error');
-      await this.sendError(ctx, '🧙‍♂️ Failed to create the auction. Please try again later.');
+      await this.sendError(ctx, '🧙‍♂️ Failed to create the auction. Please try again later\\.');
       return false;
     }
   }
+}
 
   public async initSessionSpace(userId: number, session: SessionSpace): Promise<SessionSpace> {
     const redis = await this.redisService.getRedis();
