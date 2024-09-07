@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TelegrafModule, TelegrafModuleOptions } from 'nestjs-telegraf';
 import { AppService } from './app.service';
-import { AuctionsModule } from './auctions/auctions.module';
 import { InjectSessionSpaceMiddleware } from './telegram/middlewares/session-space.middleware';
 import { AuctionWizard } from './auctions/wizards/create-auction.wizard'; 
 import { RedisClusterService } from 'src/services/redis/redis-custer.service'; 
