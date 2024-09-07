@@ -118,7 +118,7 @@ export class AuctionWizard {
     logWithPrefix('auction-wizard', userId, `Handling Step 2: Description - ${description}`);
     
     if (userId && description) {
-      await this.updateSessionSpace(userId, { stepIndex: 3, data: { description } });
+      await this.updateSessionSpace(userId, { stepIndex: 3, data: { description: description } });
       await ctx.reply(escapeMarkdown('🧙‍♂️ Description saved! When should the auction start? (YYYY-MM-DD)'));
     } else {
       await this.sendError(ctx, '🧙‍♂️ Please provide a valid description.');
