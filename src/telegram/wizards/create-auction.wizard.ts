@@ -292,7 +292,7 @@ export class AuctionWizard {
       'Almost done... 🕑'
     ];
   
-    const fixedInterval = 500; 
+    const fixedInterval = 300; 
     const numberOfUpdates = Math.floor(timeToWait / fixedInterval);
     for (let i = 0; i < numberOfUpdates && i < messages.length; i++) {
       await new Promise(resolve => setTimeout(resolve, timeToWait));
