@@ -47,6 +47,6 @@ import { session } from 'telegraf';
     }),
   ],
   controllers: [],
-  providers: [AppService, InjectSessionSpaceMiddleware],
+  providers: [AppService, RedisClusterService, AuctionWizard, InjectSessionSpaceMiddleware],
 })
 export class AppModule {}
