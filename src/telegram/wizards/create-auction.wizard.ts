@@ -84,7 +84,7 @@ export class AuctionWizard {
     }
 
     // Step handler selection
-    
+
     const handler = this.stepHandlers[stepIndex];
 
     if (handler) {

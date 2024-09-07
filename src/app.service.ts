@@ -112,38 +112,28 @@ export class AppService {
   }
 
 
+  //
   private async gateway(ctx: BotContext, post: (userId: number, session_space: SessionSpace | null, message?: string) => Promise<void>, message?: string) {
-    const userId = ctx.from?.id;
-    if (!userId) return ctx.reply('Unable to identify you. Please try again.', { parse_mode: 'MarkdownV2' });
-
-    await this.redisService.handleWithLock(userId, this.maxLockTTL,
-      //Auth and session check wrapper for gateway
-      async () => {
-        const { session_space } = await getOrInitUserSessionSpace(userId, ctx, this.auctionWizard.getSessionSpace.bind(this), this.auctionWizard.initSessionSpace.bind(this));
-        if (!session_space) {
-          await ctx.telegram.sendMessage(userId, "No session found. Please try again.", { parse_mode: 'MarkdownV2' });
-          return;
-        }
-
-        if (session_space.last_intent !== Intent.NONE) {
-          const isExpired = (Date.now() - new Date(session_space.last_intent_timestamp).getTime()) > this.intentTTL;
-          if (!isExpired) {
-            switch (session_space.last_intent) {
-              case Intent.CREATE_AUCTION:
-                await ctx.scene.enter('auction-wizard');
-                return;
-              case Intent.VIEW_AUCTIONS:
-                await this.viewAuctions(ctx);
-                return;
-            }
-          } else {
-            await ctx.reply("Session has timed out. Cleaning up 🧹.");
+    const userId = ctx.from?.id!;
+    if(!userId) return;
+    
+    let session_space : SessionSpace = ctx.session_space;
+    if (session_space.last_intent !== Intent.NONE) {
+      const isExpired = (Date.now() - new Date(session_space.last_intent_timestamp).getTime()) > this.intentTTL;
+      if (!isExpired) {
+        switch (session_space.last_intent) {
+          case Intent.CREATE_AUCTION:
+            await ctx.scene.enter('auction-wizard');
             return;
-          }
+          case Intent.VIEW_AUCTIONS:
+            await this.viewAuctions(ctx);
+            return;
         }
-
-        await post(userId, session_space, message);
-    });
+      } else {
+        await ctx.reply("Session has timed out. Cleaning up 🧹.");
+        return;
+      }
+      await post(userId, session_space, message);
+    }
   }
-
 }
