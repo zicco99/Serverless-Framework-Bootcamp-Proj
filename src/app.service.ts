@@ -26,7 +26,6 @@ export class AppService {
     @InjectBot() private readonly bot: Telegraf<BotContext>,
     private readonly auctions: AuctionsService,
     private readonly redisService: RedisClusterService,
-    private readonly auctionWizard: AuctionWizard
   ) {
   }
 
@@ -57,28 +56,24 @@ export class AppService {
 
   @Start()
   async start(ctx: BotContext) {
-    console.log(`User ${ctx.from?.id} started the bot at ${new Date()}`);
+    const userId = ctx.from?.id!;
 
-    await this.gateway(ctx, async (userId, session_space) => {
-      console.log("Out of gateway");
-      const message = session_space
-        ? `👋 Welcome back! Here is your user: \n${escapeMarkdown(showSessionSpace(userId, session_space))}`
-        : '👋 👋 You are new here!';
-      
-      await ctx.reply(message);
+    console.log(`User ${userId} started the bot at ${new Date()}`);
 
-      this.auctionCount ??= (await this.auctions.findAll()).length;
+    const message = `👋 Welcome back! Here is your user: \n${escapeMarkdown(showSessionSpace(userId, ctx.session_space))}`
+    
+    await ctx.reply(message);
 
-      const inlineKeyboard: InlineKeyboardMarkup = Markup.inlineKeyboard([
-        [Markup.button.callback('📦 Create Auction', Intent.CREATE_AUCTION)],
-        [Markup.button.callback('🔍 View Auctions', Intent.VIEW_AUCTIONS)],
-      ]).reply_markup as InlineKeyboardMarkup;
+    this.auctionCount ??= (await this.auctions.findAll()).length;
 
-      await ctx.reply(
-        welcomeMessage(ctx.from?.first_name || 'Buddy', this.auctionCount),
-        { parse_mode: 'MarkdownV2', reply_markup: inlineKeyboard }
-      );
-    });
+    const inlineKeyboard: InlineKeyboardMarkup = Markup.inlineKeyboard([
+      [Markup.button.callback('📦 Create Auction', Intent.CREATE_AUCTION)],
+      [Markup.button.callback('🔍 View Auctions', Intent.VIEW_AUCTIONS)],
+    ]).reply_markup as InlineKeyboardMarkup;
+
+    await ctx.reply(
+      welcomeMessage(ctx.from?.first_name || 'Buddy', this.auctionCount),
+      { parse_mode: 'MarkdownV2', reply_markup: inlineKeyboard });
   }
 
   @Help()
@@ -88,14 +83,9 @@ export class AppService {
 
   @Action(Intent.CREATE_AUCTION)
   async createAuction(ctx: BotContext) {
-
-    await this.gateway(ctx, async (userId, session_space) => {
-      console.log("Out of gateway");
-
-      console.log("Scene joining..")
-      await ctx.scene.enter('auction-wizard');
-      console.log("Scene joined!")
-    });
+    console.log("Scene joining..")
+    await ctx.scene.enter('auction-wizard');
+    console.log("Scene joined!")
   }
 
   @Action(Intent.VIEW_AUCTIONS)
@@ -111,29 +101,4 @@ export class AppService {
     }
   }
 
-
-  //
-  private async gateway(ctx: BotContext, post: (userId: number, session_space: SessionSpace | null, message?: string) => Promise<void>, message?: string) {
-    const userId = ctx.from?.id!;
-    if(!userId) return;
-    
-    let session_space : SessionSpace = ctx.session_space;
-    if (session_space.last_intent !== Intent.NONE) {
-      const isExpired = (Date.now() - new Date(session_space.last_intent_timestamp).getTime()) > this.intentTTL;
-      if (!isExpired) {
-        switch (session_space.last_intent) {
-          case Intent.CREATE_AUCTION:
-            await ctx.scene.enter('auction-wizard');
-            return;
-          case Intent.VIEW_AUCTIONS:
-            await this.viewAuctions(ctx);
-            return;
-        }
-      } else {
-        await ctx.reply("Session has timed out. Cleaning up 🧹.");
-        return;
-      }
-      await post(userId, session_space, message);
-    }
-  }
 }
