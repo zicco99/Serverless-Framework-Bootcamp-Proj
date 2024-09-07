@@ -259,7 +259,7 @@ export class AuctionWizard {
     const redis = await this.redisService.getRedis();
     const sessionStr = await redis.get(`user:${userId}`);
 
-    logWithPrefix('auction-wizard', userId, `Getting session space.`);
+    logWithPrefix('auction-wizard', userId, `Getting session space. SessionSpace: ${sessionStr}`);
     
     if (sessionStr) {
       try {
