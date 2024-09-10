@@ -39,6 +39,7 @@ export class AppService {
     await this.redisService.getRedis();
     await this.setupCommands();
   }
+  
 
   private async setupCommands() {
     this.log.log('Setting up commands...');
