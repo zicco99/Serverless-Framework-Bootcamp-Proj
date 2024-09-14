@@ -306,4 +306,5 @@ export class AuctionWizard {
   private async sendError(ctx: BotContext, message: string) {
     await ctx.reply(escapeMarkdown(message));
   }
+  
 }
