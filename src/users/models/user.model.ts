@@ -9,18 +9,18 @@ import { CreateAuctionIntentExtra } from "src/auctions/wizards/create-auction.wi
  * It extends the default Context and Scene Context.
  */
 export interface BotContext extends Context, Scenes.WizardContext {
-  session_space: SessionSpace;
+  session_space: SessionSpace<IntentExtra>;
 }
 
 
-interface SessionSpace{
+interface SessionSpace<T extends IntentExtra> {
     username?: string;            
     firstName: string;            // The user's first name
     lastName?: string;            // The user's last name (optional)
     languageCode?: string;        // The user's preferred language code (optional)
     chatId: number;               // The unique identifier for the chat
     last_intent : Intent;
-    last_intent_extra : IntentExtra | CreateAuctionIntentExtra;
+    last_intent_extra : T;
     last_intent_timestamp : string;
     firstInteraction: string;       // The timestamp of the user's first interaction with the bot
     initialContext?: string;      // Information about the initial context of the interaction (e.g., command used)
@@ -37,7 +37,6 @@ enum Intent {
 
 interface IntentExtra{
   data: any;
-
 }
 
 interface Preferences {
@@ -45,7 +44,7 @@ interface Preferences {
     contentLanguage?: string;
 }
 
-function showSessionSpace(userId: number, user: SessionSpace) : string {
+function showSessionSpace<T extends IntentExtra>(userId: number, user: SessionSpace<T>) : string {
     return `\n User ID: ${userId}\n` +
            `Username: ${user.username}\n` +
            `First Name: ${user.firstName}\n` +
@@ -56,7 +55,14 @@ function showSessionSpace(userId: number, user: SessionSpace) : string {
            `  Content Language: ${user.preferences?.contentLanguage}\n`;
 }
 
-async function getOrInitUserSessionSpace(userId: number, ctx: BotContext,  getSessionSpaceBind : (userId: number) => Promise<SessionSpace | null>, initSessionSpace : (userId: number, session: SessionSpace) => Promise<SessionSpace>) : Promise<{session_space: SessionSpace | null, session_newly_created: boolean}> {
+async function getOrInitUserSessionSpace<T extends IntentExtra>(
+  userId: number,
+  ctx: BotContext,  
+  getSessionSpaceBind : (userId: number) => Promise<SessionSpace<T> | null>, 
+  initSessionSpace : (userId: number, session: SessionSpace<T>) => Promise<SessionSpace<T>>) : Promise<{session_space: SessionSpace<T> | null,
+  session_newly_created: boolean}
+  >{
+    
     let session_space = await getSessionSpaceBind(userId);
     const session_newly_created = session_space === null;
 
@@ -68,7 +74,7 @@ async function getOrInitUserSessionSpace(userId: number, ctx: BotContext,  getSe
         firstInteraction: new Date().toISOString(),
         languageCode: ctx.from?.language_code || '',
         last_intent: Intent.NONE,
-        last_intent_extra: {} as IntentExtra,
+        last_intent_extra: {} as T,
         last_intent_timestamp: "",
         initialContext: JSON.stringify({
           chat: ctx.chat,
